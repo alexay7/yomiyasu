@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { hashData } from './helpers/helper';
@@ -13,13 +12,15 @@ import { AuthDto } from './dto/auth.dto';
 import { TokensService } from '../tokens/tokens.service';
 import { Types } from 'mongoose';
 import { randomUUID } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-    private tokensService: TokensService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly tokensService: TokensService,
+    private readonly configService: ConfigService,
   ) {}
 
   // INICIO FUNCIONES RELACIONADAS CON TOKENS
@@ -47,7 +48,7 @@ export class AuthService {
           uuid,
         },
         {
-          secret: jwtConstants.secret,
+          secret: this.configService.get<string>('ACCESS_SECRET'),
           /**
            * El frontend enviará una petición cada 59 minutos para renovar el token.
            * Es un valor relativamente alto para un token de acceso, pero al ser
@@ -64,7 +65,7 @@ export class AuthService {
           uuid,
         },
         {
-          secret: 'soy un secreto',
+          secret: this.configService.get<string>('REFRESH_SECRET'),
           // TODO: ajustar esto para que exista un rememberme que dure 1 mes
           expiresIn: '7d',
         },
