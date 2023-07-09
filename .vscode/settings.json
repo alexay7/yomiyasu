@@ -1,5 +1,5 @@
 {
-    "eslint.workingDirectories": ["tfgback","tfgfront"],
+    "eslint.workingDirectories": ["back","front"],
     "eslint.validate": [
       "typescript",
       "typescriptreact"

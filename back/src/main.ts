@@ -5,9 +5,14 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './filters/all-exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
+  console.log(process.env.MONGOURL);
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const configService = app.get(ConfigService);
+  console.log(configService.get('MONGOURL'));
 
   // Definir el prefijo del backend en /api, necesario para la redirección del nginx
   app.setGlobalPrefix('api');
