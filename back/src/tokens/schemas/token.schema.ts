@@ -19,3 +19,5 @@ export class UserToken {
 }
 
 export const UserTokenSchema = SchemaFactory.createForClass(UserToken);
+
+UserTokenSchema.index({ user: 1, uuid: 1 }, { unique: true });
