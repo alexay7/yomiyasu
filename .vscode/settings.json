@@ -1,0 +1,9 @@
+{
+    "eslint.workingDirectories": ["tfgback","tfgfront"],
+    "eslint.validate": [
+      "typescript",
+      "typescriptreact"
+    ],
+    "jest.jestCommandLine": "npm run test --",
+    "jest.rootPath": "tfgback"
+  }

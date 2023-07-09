@@ -1,0 +1,17 @@
+services:
+  api:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    image: tfg-api
+    volumes:
+      - type: bind
+        source: ./exterior
+        target: /usr/src/exterior
+  client:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    image: tfg-frontend
+    ports:
+      - "1423:80"

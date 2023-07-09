@@ -1,0 +1,6 @@
+node_modules
+vault
+dist
+exterior/*
+build
+.env
