@@ -6,12 +6,16 @@ import { UsersModule } from './users/users.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TokensModule } from './tokens/tokens.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BooksModule } from './books/books.module';
+import { SeriesModule } from './series/series.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     AuthModule,
     UsersModule,
+    ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('MONGOURL'),
@@ -19,6 +23,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       inject: [ConfigService],
     }),
     TokensModule,
+    BooksModule,
+    SeriesModule,
   ],
 
   controllers: [AppController],
