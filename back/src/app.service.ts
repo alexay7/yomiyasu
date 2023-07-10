@@ -3,10 +3,15 @@ import { SeriesService } from './series/series.service';
 import { Cron } from '@nestjs/schedule';
 import { join, extname } from 'path';
 import * as fs from 'fs';
+import { BooksService } from './books/books.service';
+import { extractUrlFromHtml } from './books/helpers/helpers';
 
 @Injectable()
 export class AppService {
-  constructor(private readonly seriesService: SeriesService) {}
+  constructor(
+    private readonly seriesService: SeriesService,
+    private readonly booksService: BooksService,
+  ) {}
   private readonly logger = new Logger(AppService.name);
 
   getHello(): string {
@@ -30,11 +35,15 @@ export class AppService {
    * La otra opción que tendrá es restaurar el elemento con el
    * mismo nombre para que se le quite la propiedad "missing"
    */
-  @Cron('0 0 3 * * *')
+  @Cron('*/10 * * * * *')
   async testing() {
     this.logger.log('\x1b[34mEscaneando biblioteca...');
     const existingFolders: string[] = [];
-    const existingBooks: string[] = [];
+    const existingBooks: {
+      seriePath: string;
+      bookName: string;
+      bookPath?: string;
+    }[] = [];
     const mainFolderPath = join(process.cwd(), '..', 'exterior');
 
     const items = fs.readdirSync(mainFolderPath);
@@ -51,19 +60,28 @@ export class AppService {
         const existingBooksInSubfolder = subItems.filter(
           (subItem) => extname(subItem) === '.html',
         );
-        existingBooks.push(...existingBooksInSubfolder);
+        existingBooksInSubfolder.forEach((foundBook) => {
+          existingBooks.push({
+            seriePath: item,
+            bookName: foundBook.replace('.html', ''),
+            bookPath: join(itemPath, foundBook),
+          });
+        });
       }
     });
 
+    // INICIO PROCESO DE SERIES
     // Busca todas las series no marcadas como desaparecidas de la base de datos
     const savedFolders = (await this.seriesService.findNonMissing()).map(
       (item) => item.path,
     );
 
+    // Filtra las series nuevas
     const foldersToAddInDb = existingFolders.filter(
       (value) => !savedFolders.includes(value),
     );
 
+    // Filtra las series a marcar como borradas
     const foldersToMarkAsDeleted = savedFolders.filter(
       (value) => !existingFolders.includes(value),
     );
@@ -88,5 +106,61 @@ export class AppService {
         await this.seriesService.markAsMissing(elem);
       });
     }
+    // FIN PROCESO DE SERIES
+
+    // INICIO PROCESO DE LIBROS
+    // Busca todos los libros no marcados como desaparecidos de la base de datos
+    const savedBooks = (await this.booksService.findNonMissing()).map(
+      (item) => {
+        return {
+          bookName: item.path,
+          seriePath: item.serie,
+        };
+      },
+    );
+
+    // Filtra los libros nuevos
+    const booksToAddInDb = existingBooks.filter(
+      (value) =>
+        !savedBooks.map((elem) => elem.bookName).includes(value.bookName),
+    );
+
+    // Filtra los libros a marcar como borrados
+    const booksToMarkAsDeleted = savedBooks.filter(
+      (value) =>
+        !existingBooks.map((elem) => elem.bookName).includes(value.bookName),
+    );
+
+    // Añade los libros nuevos a la base de datos
+    if (booksToAddInDb.length > 0) {
+      this.logger.log('\x1b[34mEncontrados libros nuevos');
+
+      booksToAddInDb.forEach(async (elem) => {
+        if (elem.bookPath) {
+          const imagesFolder = extractUrlFromHtml(elem.bookPath);
+
+          if (imagesFolder) {
+            const newBook = {
+              path: elem.bookName,
+              visibleName: elem.bookName,
+              sortName: elem.bookName,
+              imagesFolder: imagesFolder.folderName,
+              serie: elem.seriePath,
+              thumbnailPath: imagesFolder.thumbnailPath,
+            };
+            await this.booksService.updateOrCreate(newBook);
+          }
+        }
+      });
+    }
+
+    // Marca los libros no encontrados como desaparecidos
+    if (booksToMarkAsDeleted.length > 0) {
+      this.logger.log('\x1b[34mEncontrados libros desaparecidos');
+      booksToMarkAsDeleted.forEach(async (elem) => {
+        await this.booksService.markAsMissing(elem.bookName);
+      });
+    }
+    // FIN PROCESO DE LIBROS
   }
 }

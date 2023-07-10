@@ -1,9 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Cron } from '@nestjs/schedule';
-import * as fs from 'fs';
-import { join } from 'path';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Serie, SerieDocument } from './schemas/series.schema';
 
 @Injectable()
