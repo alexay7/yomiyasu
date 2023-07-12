@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Book, BookDocument } from './schemas/book.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 @Injectable()
 export class BooksService {
   constructor(@InjectModel(Book.name) private bookModel: Model<BookDocument>) {}
   private readonly logger = new Logger(BooksService.name);
+
+  async findById(id: Types.ObjectId): Promise<Book | null> {
+    return this.bookModel.findById(id);
+  }
 
   async updateOrCreate(newBook: {
     path: string;
@@ -14,6 +18,7 @@ export class BooksService {
     sortName: string;
     imagesFolder: string;
     serie: string;
+    pages: number;
   }): Promise<Book | null> {
     const found = await this.bookModel.findOne({ path: newBook.path });
 

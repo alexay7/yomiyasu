@@ -36,14 +36,14 @@ export class AuthController {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
-          expires: new Date(Date.now() + 1000 * 60 * 2),
+          expires: new Date(Date.now() + 1000 * 60 * 60 * 2),
         })
         .cookie('refresh_token', refreshToken, {
           httpOnly: true,
           secure: false,
           sameSite: 'lax',
           // TODO: ajustar esto para que exista un rememberme que dure 1 mes
-          expires: new Date(Date.now() + 1000 * 60 * 24 * 7),
+          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         })
         .send({ status: 'ok', sessionId: uuid });
     } else {

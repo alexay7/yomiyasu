@@ -13,6 +13,9 @@ export class Book {
   @Prop({ type: String, require: true })
   serie: string;
 
+  @Prop({ type: Number, required: true })
+  pages: number;
+
   @Prop({ type: String, required: true })
   visibleName: string;
 

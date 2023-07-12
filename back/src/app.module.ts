@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BooksModule } from './books/books.module';
 import { SeriesModule } from './series/series.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ReadprogressModule } from './readprogress/readprogress.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     TokensModule,
     BooksModule,
     SeriesModule,
+    ReadprogressModule,
   ],
 
   controllers: [AppController],

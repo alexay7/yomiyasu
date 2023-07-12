@@ -35,7 +35,7 @@ export class AppService {
    * La otra opción que tendrá es restaurar el elemento con el
    * mismo nombre para que se le quite la propiedad "missing"
    */
-  @Cron('*/10 * * * * *')
+  @Cron('0 0 3 * * *')
   async testing() {
     this.logger.log('\x1b[34mEscaneando biblioteca...');
     const existingFolders: string[] = [];
@@ -147,6 +147,7 @@ export class AppService {
               imagesFolder: imagesFolder.folderName,
               serie: elem.seriePath,
               thumbnailPath: imagesFolder.thumbnailPath,
+              pages: imagesFolder.totalImages,
             };
             await this.booksService.updateOrCreate(newBook);
           }

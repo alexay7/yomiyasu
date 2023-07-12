@@ -12,9 +12,14 @@ function extractFirstFileNameFromFolder(folderPath: string): string | null {
   return null; // Return null if no files found
 }
 
+function countFilesInFolder(folderPath: string): number {
+  const files = fs.readdirSync(folderPath);
+  return files.length;
+}
+
 export function extractUrlFromHtml(
   bookPath: string,
-): { folderName: string; thumbnailPath: string } | null {
+): { folderName: string; thumbnailPath: string; totalImages: number } | null {
   const htmlContent = fs.readFileSync(bookPath, 'utf8');
   const urlRegex = /url\("([^/]+)\/[^/]+\.[a-z]+\"\)/i;
   const match = htmlContent.match(urlRegex);
@@ -23,12 +28,14 @@ export function extractUrlFromHtml(
     const imagesName = match[1];
     const imagesPath = join(dirname(bookPath), imagesName);
     const firstImage = extractFirstFileNameFromFolder(imagesPath);
+    const totalImages = countFilesInFolder(imagesPath);
 
     if (!firstImage) return null;
 
     return {
       folderName: imagesName,
       thumbnailPath: firstImage,
+      totalImages,
     };
   }
 
