@@ -18,11 +18,15 @@ import {
   ReadProgressWithBook,
   UpdateReadProgress,
 } from './interfaces/readprogress.interface';
+import { ReadlistService } from '../readlist/readlist.service';
 
 @Controller('readprogress')
 @UseGuards(JwtAuthGuard)
 export class ReadprogressController {
-  constructor(private readonly readprogressService: ReadprogressService) {}
+  constructor(
+    private readonly readprogressService: ReadprogressService,
+    private readonly readListService: ReadlistService,
+  ) {}
 
   @Post()
   async create(
@@ -49,6 +53,12 @@ export class ReadprogressController {
       book: createReadprogressDto.book,
       user: userId,
     };
+
+    // En caso de que el libro esté en la lista de leer, eliminarlo
+    await this.readListService.removeBookFromUserList(
+      userId,
+      createReadprogressDto.book,
+    );
 
     return this.readprogressService.create(newReadProgress);
   }
