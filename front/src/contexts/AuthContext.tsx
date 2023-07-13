@@ -73,13 +73,12 @@ export function AuthProvider(props:AuthContextProps):React.ReactElement {
                 // Excepción encontrada, se comprueba si es por 401
                 const error = e as HttpError;
 
-                if (error.status !== 401) {
-                    // Otra cosa ha causado la excepción, interrumpir login
+                if (error.status !== 401 || error.tokenStatus !== "REFRESH") {
+                    // Otra cosa ha causado la excepción o no existe token de refresco, interrumpir login
                     setLoggedIn(false);
                     setLoading(false);
                     return;
                 }
-
                 // Excepción 401, se prueba a refrescar el access token con el refresh token
                 try {
                     await checkRefreshToken();

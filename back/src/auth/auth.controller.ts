@@ -146,10 +146,14 @@ export class AuthController {
       return this.setAuthCookies(res, {});
     }
 
+    const {refresh_token,access_token}=req.cookies
+
     res.json({
-      _id:foundUser._id,
-      username:foundUser.username,
-      email:foundUser.email
+      user:{
+        _id:foundUser._id,
+        username:foundUser.username,
+        email:foundUser.email
+      }
     })
   }
 }
