@@ -4,3 +4,5 @@ dist
 exterior/*
 build
 .env
+yarn-error.log
+yarn.lock

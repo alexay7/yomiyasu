@@ -13,6 +13,7 @@ import { TokensService } from '../tokens/tokens.service';
 import { Types } from 'mongoose';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -107,9 +108,10 @@ export class AuthService {
   }
   // FIN FUNCIONES RELACIONADAS CON TOKENS
 
-  async signUp(
-    createUserDto: CreateUserDto,
-  ): Promise<{ uuid: string; accessToken: string; refreshToken: string }> {
+  async signUp(createUserDto: CreateUserDto): Promise<{
+    tokens: { uuid: string; accessToken: string; refreshToken: string };
+    user: User;
+  }> {
     // Comprueba si el usuario ya existe
     const userExists = await this.usersService.findByUsername(
       createUserDto.username,
@@ -140,12 +142,13 @@ export class AuthService {
       tokens.refreshToken,
     );
 
-    return tokens;
+    return { tokens, user: newUser };
   }
 
   async signIn(
     data: AuthDto,
-  ): Promise<{ uuid: string; accessToken: string; refreshToken: string }> {
+  ): Promise<{tokens: { uuid: string; accessToken: string; refreshToken: string };
+  user: User;}> {
     // Comprueba que el usuario esté registrado
     const user = await this.usersService.findByUsername(data.username);
 
@@ -173,7 +176,7 @@ export class AuthService {
     // Añade los tokens generados a la base de datos
     await this.updateRefreshToken(tokens.uuid, user._id, tokens.refreshToken);
 
-    return tokens;
+    return { tokens, user: user };
   }
 
   async signOut(uuid: string, user: Types.ObjectId) {

@@ -210,7 +210,7 @@
         "no-restricted-imports": "off",
         "@typescript-eslint/no-restricted-imports": ["error"],
 
-        "import/no-default-export": "error",
+        "import/no-default-export": "off",
 
         "no-duplicate-imports": "off",
         "@typescript-eslint/no-duplicate-imports": ["error"],
