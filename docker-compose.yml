@@ -7,7 +7,7 @@ services:
       - server-network
     image: tfg-api
     depends_on:
-      - mongodb
+      - "mongodb"
     volumes:
       - type: bind
         source: ./exterior
@@ -16,6 +16,8 @@ services:
     build:
       context: ./front
       dockerfile: Dockerfile
+    depends_on:
+      - "api"
     networks:
       - server-network
     image: tfg-frontend
@@ -23,14 +25,8 @@ services:
       - "1423:80"
   mongodb:
     image: mongo:4.4.22
-    container_name: server-mongodb
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=usuario
-      - MONGO_INITDB_ROOT_PASSWORD=pass
     networks:
       - server-network
-    ports:
-      - 27018:27017
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
       interval: 30s
