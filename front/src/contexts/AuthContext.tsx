@@ -15,6 +15,7 @@ type AuthContextType = {
     loading:boolean;
     registerUser:(username:string, email:string, password:string)=>Promise<AuthResponse | undefined>;
     loginUser:(usernameOrEmail:string, password:string)=>Promise<AuthResponse | undefined>;
+    logoutUser:()=>Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -60,6 +61,16 @@ export function AuthProvider(props:AuthContextProps):React.ReactElement {
         } catch (e) {
             toast.error("No se encontró la combinación de correo/usuario y contraseña");
         }
+    }
+
+    async function logoutUser():Promise<void> {
+        // Get uuid if it exists
+        setLoading(true);
+        const uuid = window.localStorage.getItem("uuid") || "";
+        await api.post<{uuid:string}, void>("auth/logout", {uuid});
+        setUserData(undefined);
+        setLoggedIn(false);
+        setLoading(false);
     }
 
     useEffect(()=>{
@@ -123,7 +134,8 @@ export function AuthProvider(props:AuthContextProps):React.ReactElement {
             registerUser:registerUser,
             loginUser:loginUser,
             loggedIn:loggedIn,
-            loading:loading
+            loading:loading,
+            logoutUser:logoutUser
         }}
         >
             {children}

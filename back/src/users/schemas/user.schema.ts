@@ -18,6 +18,9 @@ export class User {
 
   @Prop({ type: String })
   refreshToken: string | null;
+
+  @Prop({type:Boolean,default:false})
+  admin:boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -58,20 +58,10 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signup(@Res() res: Response, @Body() createUserDto: CreateUserDto) {
+  async signup( @Body() createUserDto: CreateUserDto) {
     const authResult = await this.authService.signUp(createUserDto);
 
-    const response = this.setAuthCookies(res, authResult.tokens);
-
-    response.json({
-      status: 'ok',
-      uuid: authResult.tokens.uuid,
-      user: {
-        _id:authResult.user._id,
-        username:authResult.user.username,
-        email:authResult.user.email
-      },
-    }).send()
+    return authResult;
   }
 
   @Post('login')
@@ -88,7 +78,8 @@ export class AuthController {
       user: {
         _id:authResult.user._id,
         username:authResult.user.username,
-        email:authResult.user.email
+        email:authResult.user.email,
+        admin:authResult.user.admin
       },
     }).send()
   }
@@ -106,7 +97,11 @@ export class AuthController {
 
     this.authService.signOut(body.uuid, userId);
 
-    return this.setAuthCookies(res, {});
+    const response = this.setAuthCookies(res, {});
+    response.json({
+      status: 'ok',
+      uuid: body.uuid,
+    }).send()
   }
 
   @UseGuards(RefreshJwtAuthGuard)
@@ -146,14 +141,11 @@ export class AuthController {
       return this.setAuthCookies(res, {});
     }
 
-    const {refresh_token,access_token}=req.cookies
-
     res.json({
-      user:{
         _id:foundUser._id,
         username:foundUser.username,
-        email:foundUser.email
-      }
+        email:foundUser.email,
+        admin:foundUser.admin
     })
   }
 }

@@ -1,0 +1,80 @@
+/* Left Bar */
+.leftbar-enter {
+    left: -256px;
+}
+  
+.leftbar-enter-active {
+    left:0;
+    transition: left 300ms ease;
+}
+
+.leftbar-enter-done {
+    left: 0;
+}
+  
+.leftbar-exit {
+    left:0;
+}
+  
+.leftbar-exit-active {
+    left:-256px;
+    transition: left 300ms ease;
+}
+
+.leftbar-exit-done {
+    left:-256px;
+}
+  
+/* Main Content */
+.maincontent-enter {
+    padding-left: 0!important;
+}
+  
+.maincontent-enter-active {
+    padding-left:256px!important;
+    transition: padding 300ms ease;
+}
+
+.maincontent-enter-done {
+    padding-left:256px!important;
+}
+  
+.maincontent-exit {
+    padding-left:256px!important;
+}
+  
+.maincontent-exit-active {
+    padding-left:0!important;
+    transition: padding 300ms ease;
+}
+
+.maincontent-exit-done {
+    padding-left:0!important;
+}
+
+/* Search Bar */
+.searchbar-enter {
+    left: 0!important;
+}
+  
+.searchbar-enter-active {
+    left:256px!important;
+    transition: left 300ms ease;
+}
+
+.searchbar-enter-done {
+    left:256px!important;
+}
+  
+.searchbar-exit {
+    left:256px!important;
+}
+  
+.searchbar-exit-active {
+    left:0!important;
+    transition: left 300ms ease;
+}
+
+.searchbar-exit-done {
+    left:0!important;
+}

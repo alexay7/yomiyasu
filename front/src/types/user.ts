@@ -1,9 +1,11 @@
 export interface LoggedUser {
     _id:string;
 
-    username:string
+    username:string;
 
-    email:string
+    email:string;
+
+    admin:boolean;
 }
 
 export interface RegisterUser {
