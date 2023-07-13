@@ -1,11 +1,16 @@
-import {Outlet} from "react-router-dom";
 import {ProtectedRoute} from "./ProtectedRoute";
 import React from "react";
 
-export function ProtectedLayout():React.ReactElement {
+interface ProtectedLayoutProps {
+    children:React.JSX.Element
+}
+
+export function ProtectedLayout(props:ProtectedLayoutProps):React.ReactElement {
+    const {children} = props;
+
     return (
         <ProtectedRoute>
-            <Outlet/>
+            {children}
         </ProtectedRoute>
     );
 }

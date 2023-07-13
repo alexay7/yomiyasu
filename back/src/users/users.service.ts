@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { isEmail } from 'class-validator';
 
 @Injectable()
 export class UsersService {
@@ -21,8 +22,11 @@ export class UsersService {
     return this.userModel.findById(id);
   }
 
-  async findByUsername(username: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ username });
+  async findByUsernameOrEmail(usernameOrEmail: string): Promise<UserDocument | null> {
+    if (isEmail(usernameOrEmail)){
+      return this.userModel.findOne({ email:usernameOrEmail });
+    }
+    return this.userModel.findOne({ username:usernameOrEmail });
   }
 
   async update(

@@ -2,16 +2,25 @@ import React from "react";
 import {Navigate, Route, Routes} from "react-router-dom";
 import Login from "./pages/Login/Login";
 import {ProtectedLayout} from "./components/Protection/ProtectedLayout";
+import {useAuth} from "./contexts/AuthContext";
+import {AppLayout} from "./components/AppLayout/AppLayout";
+import {Home} from "./components/Home/Home";
 
 export function App():React.ReactElement {
+    const {loading} = useAuth();
+
+    if (loading) {
+        return <p>Cargando</p>;
+    }
+
     return (
         <Routes>
-            <Route path="/" element={<></>}/>
             <Route path="/login" element={<Login/>}/>
-            <Route path="/protected" element={<ProtectedLayout/>}>
-                <Route path="a" element={<img src="http://localhost/api/static/yotsubato/Yotsuba-to--14/001.jpg" alt="" />}/>
+            <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
+                <Route index element={<Home/>}/>
+                <Route path="*" element={<Navigate to="/app"/>}/>
             </Route>
-            <Route path="*" element={<Navigate to="login"/>}/>
+            <Route path="*" element={<Navigate to="/app"/>}/>
         </Routes>
     );
 }

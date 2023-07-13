@@ -3,6 +3,7 @@ import {LoggedUser, LoginUser, RegisterUser} from "./../types/user";
 import {api} from "../api/api";
 import {AuthResponse, RefreshResponse} from "../types/responses";
 import {HttpError} from "../types/error";
+import {toast} from "react-toastify";
 
 interface AuthContextProps {
     children:React.ReactNode
@@ -12,8 +13,8 @@ type AuthContextType = {
     userData:LoggedUser | undefined;
     loggedIn:boolean;
     loading:boolean;
-    registerUser:(username:string, email:string, password:string)=>Promise<void>;
-    loginUser:(password:string, usernameOrEmail:string)=>Promise<void>;
+    registerUser:(username:string, email:string, password:string)=>Promise<AuthResponse | undefined>;
+    loginUser:(usernameOrEmail:string, password:string)=>Promise<AuthResponse | undefined>;
 };
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -27,22 +28,38 @@ export function AuthProvider(props:AuthContextProps):React.ReactElement {
     const [loggedIn, setLoggedIn] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    async function registerUser(username:string, email:string, password:string):Promise<void> {
+    async function registerUser(username:string, email:string, password:string):Promise<AuthResponse | undefined> {
         const body = {username, email, password};
-        const response = await api.post<RegisterUser, AuthResponse>("auth/signup", body);
-        setUserData(response.user);
+        try {
+            const response = await api.post<RegisterUser, AuthResponse>("auth/signup", body);
+            setUserData(response.user);
 
-        // El backend ha generado un uuid para este dispositivo, guardarlo en el localstorage para refrescar el token
-        window.localStorage.setItem("uuid", response.uuid);
+            // El backend ha generado un uuid para este dispositivo, guardarlo en el localstorage para refrescar el token
+            window.localStorage.setItem("uuid", response.uuid);
+            return response;
+        } catch (e) {
+            toast.error("No se pudo registrar al usuario");
+        }
     }
 
-    async function loginUser(usernameOrEmail:string, password:string):Promise<void> {
-        const body = {usernameOrEmail, password};
-        const response = await api.post<LoginUser, AuthResponse>("auth/login", body);
-        setUserData(response.user);
+    async function loginUser(usernameOrEmail:string, password:string):Promise<AuthResponse | undefined> {
+        // Get uuid if it exists
+        const uuid = window.localStorage.getItem("uuid");
+        const body = {usernameOrEmail, password, uuid};
+        setLoading(true);
 
-        // El backend ha generado un uuid para este dispositivo, guardarlo en el localstorage para refrescar el token
-        window.localStorage.setItem("uuid", response.uuid);
+        try {
+            const response = await api.post<LoginUser, AuthResponse>("auth/login", body);
+            setUserData(response.user);
+            setLoggedIn(true);
+            setLoading(false);
+
+            // El backend ha generado un uuid para este dispositivo, guardarlo en el localstorage para refrescar el token
+            window.localStorage.setItem("uuid", response.uuid);
+            return response;
+        } catch (e) {
+            toast.error("No se encontró la combinación de correo/usuario y contraseña");
+        }
     }
 
     useEffect(()=>{

@@ -1,48 +1,62 @@
-import React, {useContext, useState} from "react";
-import {AuthContext} from "../../contexts/AuthContext";
+import React, {useState, useEffect} from "react";
+import TextField from "@mui/material/TextField";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import {Button, Divider} from "@mui/material";
+import {useAuth} from "../../contexts/AuthContext";
 import {useNavigate} from "react-router-dom";
+import PersonIcon from "@mui/icons-material/Person";
 
 function Login():React.ReactElement {
-    const {registerUser} = useContext(AuthContext);
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
+    const {loginUser, loading, loggedIn} = useAuth();
+    const [emailUser, setEmailUser] = useState("");
     const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const navigate = useNavigate();
 
-    async function register(e:React.FormEvent<HTMLFormElement>):Promise<void> {
+    useEffect(()=>{
+        if (loggedIn) {
+            navigate("/");
+        }
+    }, [loading, loggedIn, navigate]);
+
+    async function handleSubmit(e:React.FormEvent<HTMLFormElement>):Promise<void> {
         e.preventDefault();
-        if (!username || !email || !password || !confirmPassword) return;
 
-        if (password !== confirmPassword) return;
+        if (!emailUser || !password) return;
 
-        await registerUser(username, email, password);
-
-        return;
+        const response = await loginUser(emailUser, password);
+        if (response && response.status === "ok") {
+            navigate("/");
+        }
     }
 
     return (
-        <div className="">
-            <form action="" onSubmit={register}>
-                <input type="text" value={username} onChange={(e)=>{
-                    setUsername(e.target.value);
-                }}
-                />
-                <input type="text" value={email} onChange={(e)=>{
-                    setEmail(e.target.value);
-                }}
-                />
-                <input type="password" value={password} onChange={(e)=>{
-                    setPassword(e.target.value);
-                }}
-                />
-                <input type="password" value={confirmPassword} onChange={(e)=>{
-                    setConfirmPassword(e.target.value);
-                }}
-                />
-                <button>Enviar</button>
-            </form>
-            <button onClick={()=>navigate("/")}>hola</button>
+        <div className="h-screen flex justify-center items-center bg-cover bg-gradient-radial from-gray-500 to-[#000011]">
+            <div className="bg-[#2D2D2D] w-11/12 md:w-2/3 lg:w-1/2 xl:w-1/3 rounded-xl text-white flex flex-col items-center py-8">
+                <h1>Inicio de Sesión</h1>
+                <Divider className="w-3/4"/>
+                <div className="border-4 border-primary border-solid rounded-full p-2 my-4">
+                    <PersonIcon sx={{fontSize:"120px"}} className="text-primary"/>
+                </div>
+                <form className="flex flex-col gap-4 w-1/2" onSubmit={handleSubmit}>
+                    <TextField required type="text" className="w-full shadow-md" id="usernameemail"
+                        label="Nombre de Usuario/Email" variant="standard"
+                        value={emailUser} onChange={(e)=>setEmailUser(e.target.value)}
+                    />
+                    <TextField required autoComplete="currentPassword" type="password"
+                        className="w-full shadow-md" id="password" label="Contraseña" variant="standard"
+                        value={password} onChange={(e)=>setPassword(e.target.value)}
+                    />
+                    <FormControlLabel className="select-none flex items-center" control={(
+                        <Checkbox checked={rememberMe} onChange={(e)=>{
+                            setRememberMe(e.target.checked);
+                        }}
+                        />)} label="Recuérdame"
+                    />
+                    <Button type="submit" className="bg-primary text-white">Iniciar Sesión</Button>
+                </form>
+            </div>
         </div>
     );
 }

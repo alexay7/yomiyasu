@@ -108,12 +108,9 @@ export class AuthService {
   }
   // FIN FUNCIONES RELACIONADAS CON TOKENS
 
-  async signUp(createUserDto: CreateUserDto): Promise<{
-    tokens: { uuid: string; accessToken: string; refreshToken: string };
-    user: User;
-  }> {
+  async signUp(createUserDto: CreateUserDto): Promise<User> {
     // Comprueba si el usuario ya existe
-    const userExists = await this.usersService.findByUsername(
+    const userExists = await this.usersService.findByUsernameOrEmail(
       createUserDto.username,
     );
     if (userExists) {
@@ -129,20 +126,7 @@ export class AuthService {
       password: hash,
     });
 
-    // Genera un uuid para el dispositivo (al ser registro se entiende que no tiene uuid)
-    const uuid = randomUUID();
-
-    // Genera los tokens de refresco para ese uuid
-    const tokens = await this.getTokens(uuid, newUser._id);
-
-    // Añade los tokens generados a la base de datos
-    await this.updateRefreshToken(
-      tokens.uuid,
-      newUser._id,
-      tokens.refreshToken,
-    );
-
-    return { tokens, user: newUser };
+    return newUser;
   }
 
   async signIn(
@@ -150,7 +134,7 @@ export class AuthService {
   ): Promise<{tokens: { uuid: string; accessToken: string; refreshToken: string };
   user: User;}> {
     // Comprueba que el usuario esté registrado
-    const user = await this.usersService.findByUsername(data.username);
+    const user = await this.usersService.findByUsernameOrEmail(data.usernameOrEmail);
 
     if (!user) throw new BadRequestException('User does not exist');
 
