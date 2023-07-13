@@ -39,6 +39,7 @@ export function AuthProvider(props:AuthContextProps):React.ReactElement {
             window.localStorage.setItem("uuid", response.uuid);
             return response;
         } catch (e) {
+            setLoading(false);
             toast.error("No se pudo registrar al usuario");
         }
     }
@@ -59,6 +60,7 @@ export function AuthProvider(props:AuthContextProps):React.ReactElement {
             window.localStorage.setItem("uuid", response.uuid);
             return response;
         } catch (e) {
+            setLoading(false);
             toast.error("No se encontró la combinación de correo/usuario y contraseña");
         }
     }

@@ -1,7 +1,7 @@
 import {HttpError} from "../types/error";
 
 async function request<TResponse>(url:string, config:RequestInit):Promise<TResponse> {
-    const response = await fetch(`http://localhost/api/${url}`, config);
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/${url}`, config);
     if (response.status > 399) {
         const errorData = await response.json() as {status:"ACCESS" | "REFRESH" | "NONE"};
         throw new HttpError(response.statusText, response.status, errorData.status);
