@@ -28,7 +28,7 @@ export function AppLayout():React.ReactElement {
                         <Autocomplete options={[{title:"Test"}, {title:"Tests"}, {title:"Tests"}, {title:"Tests"}, {title:"Tests"}, {title:"Tests"}]}
                             renderOption={(props, option)=>(
                                 <Box component="li" sx={{"& > img": {mr: 2, flexShrink: 0}}} {...props}>
-                                    <img width="50" src={`${process.env.REACT_APP_API_URL}/api/static/yotsubato/Yotsuba-to--14/001.jpg`} alt="" />
+                                    <img width="50" src={"/api/static/yotsubato/Yotsuba-to--14/001.jpg"} alt="" />
                                     <p className="w-2/3 flex-grow">{option.title}</p>
                                 </Box>
                             )}
