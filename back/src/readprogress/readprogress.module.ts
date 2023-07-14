@@ -7,6 +7,7 @@ import {
   ReadProgressSchema,
 } from './schemas/readprogress.schema';
 import { ReadlistModule } from '../readlist/readlist.module';
+import { SeriesprogressModule } from '../seriesprogress/seriesprogress.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ReadlistModule } from '../readlist/readlist.module';
       { name: ReadProgress.name, schema: ReadProgressSchema },
     ]),
     ReadlistModule,
+    SeriesprogressModule
   ],
   controllers: [ReadprogressController],
   providers: [ReadprogressService],

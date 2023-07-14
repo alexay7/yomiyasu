@@ -3,10 +3,16 @@ import { BooksService } from './books.service';
 import { BooksController } from './books.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Book, BookSchema } from './schemas/book.schema';
+import { ReadlistModule } from '../readlist/readlist.module';
+import { ReadprogressModule } from '../readprogress/readprogress.module';
+import { SeriesprogressModule } from '../seriesprogress/seriesprogress.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Book.name, schema: BookSchema }]),
+    ReadlistModule,
+    ReadprogressModule,
+    SeriesprogressModule
   ],
   controllers: [BooksController],
   providers: [BooksService],

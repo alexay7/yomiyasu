@@ -14,4 +14,7 @@ export class UpdateReadprogressDto {
 
   @IsNumber()
   currentPage: number;
+
+  @IsString()
+  serie:string;
 }

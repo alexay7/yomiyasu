@@ -19,6 +19,7 @@ import {
   UpdateReadProgress,
 } from './interfaces/readprogress.interface';
 import { ReadlistService } from '../readlist/readlist.service';
+import { SeriesprogressService } from '../seriesprogress/seriesprogress.service';
 
 @Controller('readprogress')
 @UseGuards(JwtAuthGuard)
@@ -26,6 +27,7 @@ export class ReadprogressController {
   constructor(
     private readonly readprogressService: ReadprogressService,
     private readonly readListService: ReadlistService,
+    private readonly seriesProgressService:SeriesprogressService
   ) {}
 
   @Post()
@@ -88,6 +90,7 @@ export class ReadprogressController {
     if (foundProgress.bookInfo.pages <= updateReadProgressDto.currentPage) {
       updateReadProgress.completed = true;
       updateReadProgress.endDate = new Date();
+      await this.seriesProgressService.create({user:userId,serie:updateReadProgressDto.serie})
     }
 
     return this.readprogressService.updateProgress(
