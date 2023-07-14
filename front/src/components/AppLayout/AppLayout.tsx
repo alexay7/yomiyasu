@@ -57,7 +57,7 @@ export function AppLayout():React.ReactElement {
             <CSSTransition classNames="leftbar" timeout={300} in={showMenu}>
                 <div className="w-[256px] bg-[#363636] h-screen fixed">
                     <div className="h-16 justify-center text-white flex items-center">
-                        <h1>YomiYasu</h1>
+                        <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>window.location.href = "/app"}>YomiYasu</h1>
                     </div>
                     <Divider/>
                     <ul className="mt-4 select-none">

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+*{
+  --primary-color:#24B14D
+}
+
 body {
   margin: 0;
   font-family: "Montserrat", 'Segoe UI', 'Roboto', 'Oxygen',
@@ -28,4 +32,13 @@ ul,li{
 img {
   max-width: 100%;
   height: auto;
+}
+
+a{
+  color:unset;
+  text-decoration: none;
+}
+
+a:hover{
+  text-decoration: underline;
 }
