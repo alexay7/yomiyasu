@@ -20,7 +20,7 @@ export function AppLayout():React.ReactElement {
         <div className="h-screen">
             {/* Barra de búsqueda */}
             <CSSTransition classNames="searchbar" timeout={300} in={showMenu}>
-                <div className="bg-[#272727] h-16 left-[256px] fixed right-0 flex px-4 items-center justify-around">
+                <div className="bg-[#272727] h-16 left-[256px] fixed right-0 flex px-4 items-center justify-around z-10">
                     <IconButton onClick={toggleMenu}>
                         <Menu className="text-white p-1"/>
                     </IconButton>

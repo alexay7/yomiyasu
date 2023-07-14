@@ -21,7 +21,7 @@ export function Home():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     return (
-        <div className="bg-[#121212]">
+        <div className="bg-[#121212] overflow-x-hidden">
             <div className="min-h-screen text-white px-8 py-4 flex flex-col gap-4">
                 {progresoData && progresoData.length > 0 && (
                     <Fragment>
