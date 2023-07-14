@@ -33,10 +33,10 @@ export class BooksService {
     // JOIN a la tabla de PROGRESOS
     aggregate.lookup({
       from:"readprogresses",
-      localField:"_id",
-      foreignField:"book",
+      let: { book_id: "$_id" },
       as:"progress",
       pipeline:[
+        {"$match":{$expr:{$eq:["$$book_id","$book"]}}},
         {"$match":{"user":new Types.ObjectId(user)}},
         { $sort: { _id: -1 } },
         { $limit: 1 }
@@ -45,10 +45,10 @@ export class BooksService {
     // JOIN a la tabla de LISTAS DE LECTURA
     .lookup({
       from:"readlists",
-      localField:"_id",
-      foreignField:"book",
+      let: { book_id: "$_id" },
       as:"readlist",
       pipeline:[
+        {"$match":{$expr:{$eq:["$$book_id","$book"]}}},
         {"$match":{"user":new Types.ObjectId(user)}}
       ]
     })
