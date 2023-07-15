@@ -1,0 +1,26 @@
+/* Tools */
+.tools-enter {
+    opacity: 0!important;
+}
+  
+.tools-enter-active {
+    opacity:1!important;
+    transition: opacity 150ms ease-in-out!important;
+}
+
+.tools-enter-done {
+    opacity:1!important;
+}
+  
+.tools-exit {
+    opacity:1!important;
+}
+  
+.tools-exit-active {
+    opacity:0!important;
+    transition: opacity 150ms ease-in-out!important;
+}
+
+.tools-exit-done {
+    opacity:0!important;
+}
