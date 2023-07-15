@@ -11,14 +11,14 @@ export interface BookWithProgress {
     summary: string,
     authors: string[],
     missing: boolean,
-    progress?: [
-        {
-            startDate: Date,
-            time: number,
-            currentPage: number,
-            completed: boolean,
-            endDate?: Date
-        }
-    ],
+    progress?:
+    {
+        startDate: Date,
+        time: number,
+        currentPage: number,
+        completed: boolean,
+        endDate?: Date
+    }[]
+    ,
     status: "READING" | "NOT_READING" | "READLIST" | "COMPLETED"
 }
