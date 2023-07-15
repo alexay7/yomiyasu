@@ -40,7 +40,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 style={{backgroundImage:`url(/api/static/${bookData.serie}/${bookData.imagesFolder}/${bookData.thumbnailPath})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
-                        window.location.href = "/pagina-leer-libro";
+                        window.location.href = `/book/${bookData._id}`;
                     }
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
@@ -60,7 +60,9 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
                 <Fade in={onItem}>
                     <div>
-                        <PlayCircle className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full"/>
+                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>window.location.href = `/book/${bookData._id}`}>
+                            <PlayCircle className="w-16 h-16"/>
+                        </IconButton>
                         <>
                             <IconButton className="absolute text-center right-2 bottom-2" onClick={(e)=>{
                                 handleClick(e);
@@ -85,7 +87,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                                     </MenuItem>
                                 )}
                                 {(bookData.status !== "READLIST" && (!bookData.progress || bookData.progress.length === 0)) && (
-                                    <MenuItem key="read" onClick={handleClose}>
+                                    <MenuItem key="readlist" onClick={handleClose}>
                                         Añadir a &quot;Leer más tarde&quot;
                                     </MenuItem>
                                 )}
@@ -106,7 +108,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             </div>
 
             <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-4 rounded-b gap-2">
-                <a href="/página-leer-libro" className="line-clamp-2 h-12">{bookData.visibleName}</a>
+                <a href={`/book/${bookData._id}`} className="line-clamp-2 h-12">{bookData.visibleName}</a>
                 <p className="text-gray-300 text-xs">{bookData.pages} páginas</p>
             </div>
         </div>

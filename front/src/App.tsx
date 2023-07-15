@@ -4,7 +4,8 @@ import Login from "./pages/Login/Login";
 import {ProtectedLayout} from "./components/Protection/ProtectedLayout";
 import {useAuth} from "./contexts/AuthContext";
 import {AppLayout} from "./components/AppLayout/AppLayout";
-import {Home} from "./components/Home/Home";
+import {Home} from "./pages/Home/Home";
+import {Reader} from "./pages/Reader/Reader";
 
 export function App():React.ReactElement {
     const {loading} = useAuth();
@@ -20,6 +21,7 @@ export function App():React.ReactElement {
                 <Route index element={<Home/>}/>
                 <Route path="*" element={<Navigate to="/app"/>}/>
             </Route>
+            <Route path="book/:id" element={<Reader/>}/>
             <Route path="*" element={<Navigate to="/app"/>}/>
         </Routes>
     );

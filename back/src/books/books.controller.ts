@@ -1,10 +1,11 @@
-import { Controller,Get,Req,UnauthorizedException,UseGuards,Query } from '@nestjs/common';
+import { Controller,Get,Req,UnauthorizedException,UseGuards,Query, Param } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { Request } from 'express';
 import { Types } from 'mongoose';
 import { JwtAuthGuard } from '../auth/strategies/jwt.strategy';
 import { SearchQuery, UserBook } from './interfaces/query';
 import { SeriesprogressService } from '../seriesprogress/seriesprogress.service';
+import { Book } from './schemas/book.schema';
 
 @Controller('books')
 @UseGuards(JwtAuthGuard)
@@ -51,5 +52,10 @@ export class BooksController {
     )
 
     return(returnBooks)
+  }
+
+  @Get(":id")
+  async getBook(@Param("id") book:Types.ObjectId){
+    return this.booksService.findById(book)
   }
 }

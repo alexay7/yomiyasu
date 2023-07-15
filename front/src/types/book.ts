@@ -22,3 +22,18 @@ export interface BookWithProgress {
     ,
     status: "READING" | "NOT_READING" | "READLIST" | "COMPLETED"
 }
+
+export interface Book {
+    _id: string,
+    path: string,
+    serie: string,
+    pages: number,
+    visibleName: string,
+    sortName: string,
+    imagesFolder: string,
+    thumbnailPath: string,
+    createdDate: Date,
+    summary: string,
+    authors: string[],
+    missing: boolean
+}

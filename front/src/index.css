@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-*{
+:root {
+  --height: 100vh;
   --primary-color:#24B14D
 }
 
@@ -44,3 +45,10 @@ a{
 a:hover{
   text-decoration: underline;
 }
+
+iframe{
+  border:0;
+  overflow: hidden;
+}
+
+.measure{height: var(--height)}

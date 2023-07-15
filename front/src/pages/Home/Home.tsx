@@ -2,7 +2,7 @@ import React, {Fragment} from "react";
 import {api} from "../../api/api";
 import {useQuery} from "react-query";
 import {BookWithProgress} from "../../types/book";
-import {BookComponent} from "../BookComponent/BookComponent";
+import {BookComponent} from "../../components/BookComponent/BookComponent";
 
 export function Home():React.ReactElement {
     const {data:progresoData} = useQuery("progreso", async()=> {
