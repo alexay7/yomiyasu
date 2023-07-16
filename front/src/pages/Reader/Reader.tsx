@@ -20,6 +20,10 @@ export function Reader():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     useEffect(()=>{
+        /**
+         * Cuando se tengan los datos del libro del backend, se analiza el localstorage para ver
+         * la configuración anterior del volumen
+         */
         if (bookData) {
             const rawProgress = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.serie)}/${encodeURI(bookData.path)}.html`) as string;
             if (rawProgress) {
@@ -31,18 +35,22 @@ export function Reader():React.ReactElement {
     }, [bookData]);
 
     useEffect(()=>{
+        // Recibe mensajes del iframe para modificar la página anterior
         addEventListener("message", (e)=>{
             const {newPage} = e.data as {newPage:number};
             if (newPage || newPage === 0) {
                 setCurrentPage(newPage + 1);
             }
         });
+
+        // Define la altura del document según la altura de la pantalla FIX IOS
         document.documentElement.style.setProperty("--height", `${window.innerHeight}px`);
         window.addEventListener("resize", () => {
             const doc = document.documentElement;
             doc.style.setProperty("--height", `${window.innerHeight}px`);
         });
 
+        // Permite cambiar de página con keybinds
         document.body.addEventListener("keydown", (e)=>{
             switch (e.key) {
                 case "ArrowLeft":{
@@ -61,42 +69,73 @@ export function Reader():React.ReactElement {
         });
     }, []);
 
+    // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {
         iframe.current?.contentWindow?.postMessage({action:"setPage", page:newPage});
     }
 
+    /**
+     * Esta función modifica el código del script incluido en el mokuro
+     * para hacerlo compatible con el formato iframe dentro de otro documento.
+     */
     function injectCustomScript():void {
         if (!iframe || !iframe.current || !iframe.current.contentWindow) return;
 
         const customMokuro = document.createElement("script");
         customMokuro.innerHTML = `
             (function(){
+                /**
+                 * Recibe los mensajes del parent para realizar las acciones indicadas
+                 */ 
                     window.addEventListener("message",
-                (event) => {
-                    if (event.origin !== window.location.origin) return;
-                    
-                    switch(event.data.action){
-                        case "goRight":{
-                            inputRight();
-                            break;
-                        };
-                        case "goLeft":{
-                            inputLeft();
-                            break;
-                        };
-                        case "setPage":{
-                            updatePage(event.data.page-1);
-                            break;
-                        };
+                    (event) => {
+                        if (event.origin !== window.location.origin) return;
+                        
+                        switch(event.data.action){
+                            case "goRight":{
+                                inputRight();
+                                break;
+                            };
+                            case "goLeft":{
+                                inputLeft();
+                                break;
+                            };
+                            case "setPage":{
+                                updatePage(event.data.page-1);
+                                break;
+                            };
                     };
                 });
 
+                // Permite cambiar de página con keybinds también dentro del iframe
+                document.body.addEventListener("keydown",(e)=>{
+                    switch(e.key){
+                        case "ArrowLeft":{
+                            inputLeft();
+                            break;
+                        };
+                        case " ":{
+                            inputLeft();
+                            break;
+                        };
+                        case "ArrowRight":{
+                            inputRight();
+                            break;
+                        };
+                    };
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                });
+
+                // Desactiva el menú de mokuro
                 pz.pause();
 
+                // Oculta el menú de mokuro
                 document.getElementById('topMenu').style.display="none";
                 document.getElementById('showMenuA').style.display="none";
                 document.body.style.backgroundColor = "black";
 
+                // Permite pasar de página con swipes
                 var touchStart = null;
                 var touchEnd = null;
 
@@ -119,6 +158,11 @@ export function Reader():React.ReactElement {
                     }
                 });
 
+                /**
+                 * Reemplaza la función de pasar de página por una que, además de
+                 * hacer las mismas funciones que la anterior, mande un mensaje al parent
+                 * avisando del cambio de página
+                 */
                 let oldUpdate = window.updatePage;
 
                 window.updatePage = function(new_page_idx){
@@ -129,6 +173,7 @@ export function Reader():React.ReactElement {
             `;
         iframe.current.contentWindow.document.head.appendChild(customMokuro);
 
+        // Muestra/oculta las barras superior/inferior haciendo doble click al documento
         iframe.current.contentWindow.document.body.addEventListener("dblclick", (e)=>{
             setShowToolbar((prev)=>!prev);
         });
