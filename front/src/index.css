@@ -52,3 +52,31 @@ iframe{
 }
 
 .measure{height: var(--height)}
+
+
+/* Blurred backgrounds */
+.blurred-enter {
+  opacity: 0!important;
+}
+
+.blurred-enter-active {
+  opacity: 0.4!important;
+  transition: opacity 150ms ease-in-out!important;
+}
+
+.blurred-enter-done {
+  opacity: 0.4!important;
+}
+
+.blurred-exit {
+  opacity: 0.4!important;
+}
+
+.blurred-exit-active {
+  opacity: 0!important;
+  transition: opacity 150ms ease-in-out!important;
+}
+
+.blurred-exit-done {
+  opacity: 0!important;
+}

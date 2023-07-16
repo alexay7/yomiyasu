@@ -4,8 +4,10 @@ import {useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book} from "../../types/book";
-import {Icon, IconButton, Slider} from "@mui/material";
-import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack} from "@mui/icons-material";
+import {IconButton, Slider} from "@mui/material";
+import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, MoreVert, Translate} from "@mui/icons-material";
+import {ReaderSettings} from "./components/ReaderSettings";
+import {ReaderConfig} from "../../types/readerSettings";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -13,6 +15,8 @@ export function Reader():React.ReactElement {
     const [currentPage, setCurrentPage] = useState(1);
     const [showToolBar, setShowToolbar] = useState(true);
     const [doublePages, setDoublePages] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [initialSettings, setInitialSettings] = useState<ReaderConfig | null>(null);
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -35,11 +39,22 @@ export function Reader():React.ReactElement {
     }, [bookData]);
 
     useEffect(()=>{
-        // Recibe mensajes del iframe para modificar la página anterior
+        // Recibe mensajes del iframe
         addEventListener("message", (e)=>{
-            const {newPage} = e.data as {newPage:number};
-            if (newPage || newPage === 0) {
-                setCurrentPage(newPage + 1);
+            switch (e.data.action as string) {
+                case "newPage": {
+                    const {value} = e.data as {value:number};
+                    if (value || value === 0) {
+                        setCurrentPage(value + 1);
+                    }
+                    break;
+                }
+
+                case "settings": {
+                    const {value} = e.data as {value:ReaderConfig};
+                    setInitialSettings(value);
+                    break;
+                }
             }
         });
 
@@ -104,8 +119,30 @@ export function Reader():React.ReactElement {
                                 updatePage(event.data.page-1);
                                 break;
                             };
-                    };
-                });
+                            case "getSettings":{
+                                window.parent.postMessage({"action":"settings",value:state},"*");
+                                break;
+                            };
+                            case "setSettings":{
+                                switch(event.data.property){
+                                    case "doublePage":{
+                                        document.getElementById("menuDoublePageView").click();
+                                        break;
+                                    };
+                                    case "coverPage":{
+                                        document.getElementById("menuHasCover").click();
+                                        break;
+                                    };
+                                    case "defaultZoom":{
+                                        document.getElementById("menuDefaultZoom").value=event.data.value;
+                                        const newEvent = new Event("change");
+                                        document.getElementById("menuDefaultZoom").dispatchEvent(newEvent);
+                                        break;
+                                    };
+                                }
+                            }
+                        };
+                    });
 
                 // Permite cambiar de página con keybinds también dentro del iframe
                 document.body.addEventListener("keydown",(e)=>{
@@ -167,7 +204,7 @@ export function Reader():React.ReactElement {
 
                 window.updatePage = function(new_page_idx){
                     oldUpdate(new_page_idx);
-                    window.parent.postMessage({newPage:new_page_idx},"*");
+                    window.parent.postMessage({action:"newPage",value:new_page_idx},"*");
                 }
             })()
             `;
@@ -177,18 +214,42 @@ export function Reader():React.ReactElement {
         iframe.current.contentWindow.document.body.addEventListener("dblclick", (e)=>{
             setShowToolbar((prev)=>!prev);
         });
+        iframe.current.contentWindow.postMessage({action:"getSettings"});
+    }
+
+    function closeSettingsMenu():void {
+        setShowSettings(false);
     }
 
     return (
         <div className="text-black relative overflow-hidden h-100vh flex flex-col">
+            {iframe && iframe.current && iframe.current.contentWindow && initialSettings && (
+                <ReaderSettings showMenu={showSettings} closeSettings={closeSettingsMenu}
+                    iframeWindow={iframe.current.contentWindow} currentSettings={initialSettings}
+                    setCurrentSettings={setInitialSettings}
+                />
+            )}
             {bookData && (
                 <Fragment>
                     {showToolBar && (
-                        <div className="bg-[#272727] w-full h-[5vh] text-white flex items-center px-4 fixed top-0 gap-4">
-                            <IconButton onClick={()=>window.location.href = "/app"}>
-                                <ArrowBack/>
-                            </IconButton>
-                            <h1 className="text-xl">{bookData.visibleName}</h1>
+                        <div className="bg-[#272727] w-full h-[5vh] text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
+                            <div className="w-1/2 flex items-center gap-2 px-2">
+                                <IconButton onClick={()=>window.location.href = "/app"}>
+                                    <ArrowBack/>
+                                </IconButton>
+                                <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
+                            </div>
+                            <div className="flex items-center flex-row px-2 gap-1">
+                                <IconButton>
+                                    <Translate/>
+                                </IconButton>
+                                <IconButton onClick={()=>setShowSettings(true)}>
+                                    <Settings/>
+                                </IconButton>
+                                <IconButton>
+                                    <MoreVert/>
+                                </IconButton>
+                            </div>
                         </div>
                     )}
                     <iframe
@@ -198,8 +259,8 @@ export function Reader():React.ReactElement {
                         onLoad={injectCustomScript}
                     />
                     {showToolBar && (
-                        <div className="bg-[#272727] h-[5vh] w-full text-white flex justify-center items-center fixed bottom-0" >
-                            <div className="w-1/4 lg:w-[10%] flex items-center">
+                        <div className="bg-[#272727] h-[5vh] w-full text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
+                            <div className="justify-between flex items-center">
                                 <IconButton onClick={()=>alert("[EN PROGRESO] Esto te llevaría al vol anterior")}>
                                     <ArrowLeft/>
                                 </IconButton>
@@ -216,7 +277,7 @@ export function Reader():React.ReactElement {
                             }}
                             step={doublePages ? 2 : 1}
                             />
-                            <div className="w-1/4 lg:w-[10%] flex items-center">
+                            <div className="justify-between flex items-center">
                                 <p>{bookData?.pages}</p>
                                 <IconButton  onClick={()=>{
                                     setPage(bookData.pages);

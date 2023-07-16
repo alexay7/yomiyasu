@@ -1,0 +1,26 @@
+/* Config Menu */
+.readerconf-enter {
+    bottom:-100vh!important;
+}
+  
+.readerconf-enter-active {
+    bottom:0!important;
+    transition: bottom 100ms ease-out!important;
+}
+
+.readerconf-enter-done {
+    bottom:0!important;
+}
+  
+.readerconf-exit {
+    bottom:0!important;
+}
+  
+.readerconf-exit-active {
+    bottom:-100vh!important;
+    transition: bottom 100ms ease-out!important;
+}
+
+.readerconf-exit-done {
+    bottom:-100vh!important;
+}
