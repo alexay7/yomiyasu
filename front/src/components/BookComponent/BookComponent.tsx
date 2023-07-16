@@ -63,53 +63,54 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                         <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>window.location.href = `/book/${bookData._id}`}>
                             <PlayCircle className="w-16 h-16"/>
                         </IconButton>
-                        <>
-                            <IconButton className="absolute text-center right-2 bottom-2" onClick={(e)=>{
-                                handleClick(e);
-                            }}
-                            >
-                                <MoreVert className="w-6 h-6"/>
-                            </IconButton>
-                            <Menu id="long-menu" keepMounted anchorEl={anchorEl}
-                                open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
-                            >
-                                <MenuItem key="serie" onClick={handleClose}>
-                                    Ir a la serie
-                                </MenuItem>
-                                {userData?.admin && (
-                                    <MenuItem key="edit" onClick={handleClose}>
-                                        Editar
-                                    </MenuItem>
-                                )}
-                                {userData?.admin && (
-                                    <MenuItem key="metadata" onClick={handleClose}>
-                                        Actualizar metadatos
-                                    </MenuItem>
-                                )}
-                                {(bookData.status !== "READLIST" && (!bookData.progress || bookData.progress.length === 0)) && (
-                                    <MenuItem key="readlist" onClick={handleClose}>
-                                        Añadir a &quot;Leer más tarde&quot;
-                                    </MenuItem>
-                                )}
-                                {(!bookData.progress || bookData.progress.length === 0) && (
-                                    <MenuItem key="read" onClick={handleClose}>
-                                        Marcar como leído
-                                    </MenuItem>
-                                )}
-                                {bookData.progress && bookData.progress.length > 0 && (
-                                    <MenuItem key="unread" onClick={handleClose}>
-                                        Marcar como no leído
-                                    </MenuItem>
-                                )}
-                            </Menu>
-                        </>
+
                     </div>
                 </Fade>
             </div>
 
-            <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-4 rounded-b gap-2">
+            <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
                 <a href={`/book/${bookData._id}`} className="line-clamp-2 h-12">{bookData.visibleName}</a>
-                <p className="text-gray-300 text-xs">{bookData.pages} páginas</p>
+                <div className="flex items-center justify-between">
+                    <p className="text-gray-300 text-xs">{bookData.pages} páginas</p>
+                    <IconButton className="text-center" onClick={(e)=>{
+                        handleClick(e);
+                    }}
+                    >
+                        <MoreVert className="w-6 h-6"/>
+                    </IconButton>
+                    <Menu id="long-menu" keepMounted anchorEl={anchorEl}
+                        open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
+                    >
+                        <MenuItem key="serie" onClick={handleClose}>
+                            Ir a la serie
+                        </MenuItem>
+                        {userData?.admin && (
+                            <MenuItem key="edit" onClick={handleClose}>
+                                Editar
+                            </MenuItem>
+                        )}
+                        {userData?.admin && (
+                            <MenuItem key="metadata" onClick={handleClose}>
+                                Actualizar metadatos
+                            </MenuItem>
+                        )}
+                        {(bookData.status !== "READLIST" && (!bookData.progress || bookData.progress.length === 0)) && (
+                            <MenuItem key="readlist" onClick={handleClose}>
+                                Añadir a &quot;Leer más tarde&quot;
+                            </MenuItem>
+                        )}
+                        {(!bookData.progress || bookData.progress.length === 0) && (
+                            <MenuItem key="read" onClick={handleClose}>
+                                Marcar como leído
+                            </MenuItem>
+                        )}
+                        {bookData.progress && bookData.progress.length > 0 && (
+                            <MenuItem key="unread" onClick={handleClose}>
+                                Marcar como no leído
+                            </MenuItem>
+                        )}
+                    </Menu>
+                </div>
             </div>
         </div>
     );
