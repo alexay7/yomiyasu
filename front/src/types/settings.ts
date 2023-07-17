@@ -2,7 +2,7 @@ export interface ReaderConfig {
     r2l:boolean; // activa el modo derecha-a-izquierda
     ctrlToPan:boolean; // hace falta pulsar ctrl para hacer zoom (solo pc)
     defaultZoomMode:"fit to screen" | "fit to width" | "original size" | "keep zoom level"; // zoom que se hace al pasar de página
-    displayOcr:boolean; // activa el texto generado por el ocr
+    displayOCR:boolean; // activa el texto generado por el ocr
     singlePageView:boolean; // vista a página simple
     hasCover:boolean; // la primera pág del libro es la portada
     textBoxBorders:boolean; // muestra los cuadros de texto de los bocadillos

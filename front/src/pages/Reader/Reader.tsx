@@ -259,10 +259,10 @@ export function Reader():React.ReactElement {
             iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
         }
         if (readerSettings.ctrlToPan !== currentSettings.ctrlToPan) {
-            iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"ctrlToPan"});
         }
         iframe.current.contentWindow.postMessage({action:"setSettings", property:"defaultZoom", value:readerSettings.defaultZoomMode});
-        if (readerSettings.displayOcr !== currentSettings.displayOcr) {
+        if (readerSettings.displayOCR !== currentSettings.displayOCR) {
             iframe.current.contentWindow.postMessage({action:"setSettings", property:"ocr"});
         }
         if (readerSettings.singlePageView !== currentSettings.singlePageView) {

@@ -22,7 +22,7 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
         r2l:true,
         ctrlToPan:true,
         defaultZoomMode:"fit to screen",
-        displayOcr:true,
+        displayOCR:true,
         singlePageView:isTabletOrMobile, //si el usuario usa móvil es más cómodo página simple
         hasCover:true,
         textBoxBorders:false,
