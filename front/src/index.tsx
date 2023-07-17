@@ -8,6 +8,7 @@ import {ThemeProvider, createTheme} from "@mui/material/styles";
 import "react-toastify/dist/ReactToastify.css";
 import {ToastContainer} from "react-toastify";
 import {QueryClient, QueryClientProvider} from "react-query";
+import {SettingsProvider} from "./contexts/SettingsContext";
 
 const root = createRoot(
     document.getElementById("root") as HTMLElement
@@ -26,10 +27,12 @@ root.render(
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={darkTheme}>
                 <AuthProvider>
-                    <BrowserRouter>
-                        <ToastContainer/>
-                        <App/>
-                    </BrowserRouter>
+                    <SettingsProvider>
+                        <BrowserRouter>
+                            <ToastContainer/>
+                            <App/>
+                        </BrowserRouter>
+                    </SettingsProvider>
                 </AuthProvider>
             </ThemeProvider>
         </QueryClientProvider>

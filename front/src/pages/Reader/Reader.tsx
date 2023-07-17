@@ -7,16 +7,18 @@ import {Book} from "../../types/book";
 import {IconButton, Slider} from "@mui/material";
 import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, MoreVert, Translate} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
-import {ReaderConfig} from "../../types/readerSettings";
+import {useSettings} from "../../contexts/SettingsContext";
+import {ReaderConfig} from "../../types/settings";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
     const iframe = useRef<HTMLIFrameElement>(null);
+    const {readerSettings} = useSettings();
+
     const [currentPage, setCurrentPage] = useState(1);
     const [showToolBar, setShowToolbar] = useState(true);
     const [doublePages, setDoublePages] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    const [initialSettings, setInitialSettings] = useState<ReaderConfig | null>(null);
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -47,12 +49,6 @@ export function Reader():React.ReactElement {
                     if (value || value === 0) {
                         setCurrentPage(value + 1);
                     }
-                    break;
-                }
-
-                case "settings": {
-                    const {value} = e.data as {value:ReaderConfig};
-                    setInitialSettings(value);
                     break;
                 }
             }
@@ -97,11 +93,14 @@ export function Reader():React.ReactElement {
         if (!iframe || !iframe.current || !iframe.current.contentWindow) return;
 
         const customMokuro = document.createElement("script");
+
         customMokuro.innerHTML = `
             (function(){
                 /**
                  * Recibe los mensajes del parent para realizar las acciones indicadas
                  */ 
+                let zoomEnabled = true;
+
                     window.addEventListener("message",
                     (event) => {
                         if (event.origin !== window.location.origin) return;
@@ -125,6 +124,14 @@ export function Reader():React.ReactElement {
                             };
                             case "setSettings":{
                                 switch(event.data.property){
+                                    case "r2l":{
+                                        document.getElementById("menuR2l").click();
+                                        break;
+                                    };
+                                    case "ctrlToPan":{
+                                        document.getElementById("menuCtrlToPan").click();
+                                        break;
+                                    };
                                     case "doublePage":{
                                         document.getElementById("menuDoublePageView").click();
                                         break;
@@ -133,10 +140,38 @@ export function Reader():React.ReactElement {
                                         document.getElementById("menuHasCover").click();
                                         break;
                                     };
+                                    case "borders":{
+                                        document.getElementById("menuTextBoxBorders").click();
+                                        break;
+                                    };
+                                    case "ocr":{
+                                        document.getElementById("menuDisplayOCR").click();
+                                        break;
+                                    };
+                                    case "fontSize":{
+                                        document.getElementById("menuFontSize").value=event.data.value;
+                                        const newEvent = new Event("change");
+                                        document.getElementById("menuFontSize").dispatchEvent(newEvent);
+                                        break;
+                                    };
                                     case "defaultZoom":{
                                         document.getElementById("menuDefaultZoom").value=event.data.value;
                                         const newEvent = new Event("change");
                                         document.getElementById("menuDefaultZoom").dispatchEvent(newEvent);
+                                        break;
+                                    };
+                                    case "toggleBoxes":{
+                                        document.getElementById("menuToggleOCRTextBoxes").click();
+                                        break;
+                                    };
+                                    case "enableZoom":{
+                                        pz.resume();
+                                        zoomEnabled=true;
+                                        break;
+                                    };
+                                    case "disableZoom":{
+                                        pz.pause();
+                                        zoomEnabled=false;
                                         break;
                                     };
                                 }
@@ -164,8 +199,8 @@ export function Reader():React.ReactElement {
                     e.stopImmediatePropagation();
                 });
 
-                // Desactiva el menú de mokuro
-                pz.pause();
+                // Desactiva el menú de mokuro si así lo pone en ajustes
+                ${readerSettings.panAndZoom ? "" : "pz.pause();zoomEnabled=false;"}
 
                 // Oculta el menú de mokuro
                 document.getElementById('topMenu').style.display="none";
@@ -181,6 +216,7 @@ export function Reader():React.ReactElement {
                     touchStart = e.targetTouches[0].clientX;
                 });
                 document.body.addEventListener("touchmove",(e)=>{
+                    if(zoomEnabled && e.targetTouches.length<2)return;
                     touchEnd = e.targetTouches[0].clientX;
                 });
                 document.body.addEventListener("touchend",(e)=>{
@@ -214,7 +250,34 @@ export function Reader():React.ReactElement {
         iframe.current.contentWindow.document.body.addEventListener("dblclick", (e)=>{
             setShowToolbar((prev)=>!prev);
         });
-        iframe.current.contentWindow.postMessage({action:"getSettings"});
+
+        // Establece los ajustes del usuario
+        if (!bookData) return;
+        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.serie)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
+
+        if (readerSettings.r2l !== currentSettings.r2l) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
+        }
+        if (readerSettings.ctrlToPan !== currentSettings.ctrlToPan) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
+        }
+        iframe.current.contentWindow.postMessage({action:"setSettings", property:"defaultZoom", value:readerSettings.defaultZoomMode});
+        if (readerSettings.displayOcr !== currentSettings.displayOcr) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"ocr"});
+        }
+        if (readerSettings.singlePageView !== currentSettings.singlePageView) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"doublePage"});
+        }
+        if (readerSettings.hasCover !== currentSettings.hasCover) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"coverPage"});
+        }
+        if (readerSettings.textBoxBorders !== currentSettings.textBoxBorders) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"borders"});
+        }
+        iframe.current.contentWindow.postMessage({action:"setSettings", property:"fontSize", value:readerSettings.fontSize});
+        if (readerSettings.toggleOCRTextBoxes !== currentSettings.toggleOCRTextBoxes) {
+            iframe.current.contentWindow.postMessage({action:"setSettings", property:"toggleBoxes"});
+        }
     }
 
     function closeSettingsMenu():void {
@@ -223,10 +286,9 @@ export function Reader():React.ReactElement {
 
     return (
         <div className="text-black relative overflow-hidden h-100vh flex flex-col">
-            {iframe && iframe.current && iframe.current.contentWindow && initialSettings && (
+            {iframe && iframe.current && iframe.current.contentWindow && (
                 <ReaderSettings showMenu={showSettings} closeSettings={closeSettingsMenu}
-                    iframeWindow={iframe.current.contentWindow} currentSettings={initialSettings}
-                    setCurrentSettings={setInitialSettings}
+                    iframeWindow={iframe.current.contentWindow}
                 />
             )}
             {bookData && (

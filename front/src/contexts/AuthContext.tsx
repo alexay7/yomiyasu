@@ -5,7 +5,7 @@ import {AuthResponse, RefreshResponse} from "../types/responses";
 import {HttpError} from "../types/error";
 import {toast} from "react-toastify";
 
-interface AuthContextProps {
+export interface ContextProps {
     children:React.ReactNode
 }
 
@@ -23,7 +23,7 @@ export function useAuth():AuthContextType {
     return useContext(AuthContext);
 }
 
-export function AuthProvider(props:AuthContextProps):React.ReactElement {
+export function AuthProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
     const [userData, setUserData] = useState<LoggedUser | undefined>();
     const [loggedIn, setLoggedIn] = useState(false);

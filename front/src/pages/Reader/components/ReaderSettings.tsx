@@ -3,7 +3,7 @@ import "./style.css";
 import {CSSTransition} from "react-transition-group";
 import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/material";
 import {Close} from "@mui/icons-material";
-import {ReaderConfig} from "../../../types/readerSettings";
+import {useSettings} from "../../../contexts/SettingsContext";
 
 interface SettingsItemProps extends LiHTMLAttributes<HTMLLIElement> {
     label:string;
@@ -30,34 +30,41 @@ interface ReaderSettingsProps {
     showMenu:boolean;
     closeSettings:()=>void;
     iframeWindow:Window;
-    currentSettings:ReaderConfig;
-    setCurrentSettings:(value: React.SetStateAction<ReaderConfig | null>) => void
 }
 
 export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
-    const {showMenu, iframeWindow, closeSettings, currentSettings, setCurrentSettings} = props;
+    const {readerSettings, setReaderSettings} = useSettings();
+    const {showMenu, iframeWindow, closeSettings} = props;
 
     function setDoublePage():void {
         iframeWindow.postMessage({action:"setSettings", property:"doublePage"});
-        setCurrentSettings((prev)=>{
-            if (!prev) return null;
+        setReaderSettings((prev)=>{
             return ({...prev, singlePageView:!prev.singlePageView});
         });
     }
 
     function setCoverPage():void {
         iframeWindow.postMessage({action:"setSettings", property:"coverPage"});
-        setCurrentSettings((prev)=>{
-            if (!prev) return null;
+        setReaderSettings((prev)=>{
             return ({...prev, hasCover:!prev.hasCover});
         });
     }
 
     function setZoom(e:SelectChangeEvent):void {
         iframeWindow.postMessage({action:"setSettings", property:"defaultZoom", value:e.target.value});
-        setCurrentSettings((prev)=>{
-            if (!prev) return null;
-            return ({...prev, defaultZoomMode:e.target.value});
+        setReaderSettings((prev)=>{
+            return ({...prev, defaultZoomMode:e.target.value as "fit to screen" | "fit to width" | "original size" | "keep zoom level"});
+        });
+    }
+
+    function setZoomPan():void {
+        if (readerSettings.panAndZoom) {
+            iframeWindow.postMessage({action:"setSettings", property:"disableZoom"});
+        } else {
+            iframeWindow.postMessage({action:"setSettings", property:"enableZoom"});
+        }
+        setReaderSettings((prev)=>{
+            return ({...prev, panAndZoom:!prev.panAndZoom});
         });
     }
 
@@ -69,33 +76,38 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                 />
             </CSSTransition>
             <CSSTransition in={showMenu} timeout={300} classNames="readerconf" unmountOnExit>
-                <div className="w-1/2 absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
+                <div className="w-full lg:w-1/2 absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
                     <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl text-white">
                         <IconButton onClick={closeSettings}>
                             <Close/>
                         </IconButton>
                         <p className="text-lg">Ajustes del Lector</p>
                     </div>
-                    <div className="flex flex-col bg-[#1E1E1E] py-2 px-4 gap-2">
+                    <div className="flex flex-col bg-[#1E1E1E] py-4 px-4 gap-2">
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
                         <SettingsItem className="text-white" label="Mostrar doble página" childrenId="doublepage">
                             <div className="flex justify-end">
-                                <Checkbox id="doublepage" onClick={setDoublePage} checked={!currentSettings.singlePageView}/>
+                                <Checkbox id="doublepage" onClick={setDoublePage} checked={!readerSettings.singlePageView}/>
                             </div>
                         </SettingsItem>
                         <SettingsItem className="text-white" label="Primera página es portada" childrenId="coverpage">
                             <div className="flex justify-end">
-                                <Checkbox id="coverpage" onClick={setCoverPage} checked={currentSettings.hasCover}/>
+                                <Checkbox id="coverpage" onClick={setCoverPage} checked={readerSettings.hasCover}/>
                             </div>
                         </SettingsItem>
                         <SettingsItem className="text-white" label="Ajustes de Zoom" childrenId="zoom">
                             <div className="flex justify-end">
-                                <Select id="zoom" value={currentSettings.defaultZoomMode} onChange={(e)=>setZoom(e)}>
+                                <Select id="zoom" value={readerSettings.defaultZoomMode} onChange={(e)=>setZoom(e)}>
                                     <MenuItem value="fit to screen">Screen</MenuItem>
                                     <MenuItem value="fit to width">Fit</MenuItem>
                                     <MenuItem value="original size">Original</MenuItem>
                                     <MenuItem value="keep zoom level">Keep</MenuItem>
                                 </Select>
+                            </div>
+                        </SettingsItem>
+                        <SettingsItem className="text-white" label="Activar Zoom&Pan" childrenId="zoompan">
+                            <div className="flex justify-end">
+                                <Checkbox id="zoompan" onClick={setZoomPan} checked={readerSettings.panAndZoom}/>
                             </div>
                         </SettingsItem>
                     </div>
