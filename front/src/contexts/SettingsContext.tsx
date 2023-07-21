@@ -19,6 +19,7 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
     const defaultSettings:ReaderConfig = {
+        fontFamily:"IPA",
         r2l:true,
         ctrlToPan:true,
         defaultZoomMode:"fit to screen",

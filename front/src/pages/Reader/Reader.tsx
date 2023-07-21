@@ -92,6 +92,21 @@ export function Reader():React.ReactElement {
     function injectCustomScript():void {
         if (!iframe || !iframe.current || !iframe.current.contentWindow) return;
 
+        const customStyles = document.createElement("style");
+
+        customStyles.innerHTML = `
+        @font-face {
+            font-family: "Zen Antique";
+            src: url("/fonts/ZenAntique.ttf") format("truetype");;
+        }
+        @font-face {
+            font-family: "IPA";
+            src: url("/fonts/ipaexg.ttf") format("truetype");;
+        }
+
+        .pageContainer * { font-family: var(--user-font); }
+        `;
+
         const customMokuro = document.createElement("script");
 
         customMokuro.innerHTML = `
@@ -244,7 +259,9 @@ export function Reader():React.ReactElement {
                 }
             })()
             `;
+
         iframe.current.contentWindow.document.head.appendChild(customMokuro);
+        iframe.current.contentWindow.document.head.appendChild(customStyles);
 
         // Muestra/oculta las barras superior/inferior haciendo doble click al documento
         iframe.current.contentWindow.document.body.addEventListener("dblclick", (e)=>{

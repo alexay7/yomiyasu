@@ -110,6 +110,14 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         });
     }
 
+    function setFont(e:SelectChangeEvent):void {
+        iframeWindow.document.body.style.setProperty("--user-font", e.target.value);
+
+        setReaderSettings((prev)=>{
+            return ({...prev, fontFamily:e.target.value});
+        });
+    }
+
     return (
         <>
             <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
@@ -125,9 +133,18 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                         </IconButton>
                         <p className="text-lg">Ajustes del Lector</p>
                     </div>
-                    <div className="flex flex-col bg-[#1E1E1E] py-4 px-4 gap-2">
+                    <div className="flex flex-col bg-[#1E1E1E] py-4 px-4 gap-2 h-[24rem] overflow-y-auto">
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
+                            <SettingsItem className="text-white" label="Tipo de fuente" childrenId="font">
+                                <div className="flex justify-end">
+                                    <Select className="w-full" variant="standard" id="font" value={readerSettings.fontFamily} onChange={(e)=>setFont(e)}>
+                                        <MenuItem value="Zen Antique">Zen Antique</MenuItem>
+                                        <MenuItem value="IPA">IPAex Gothic</MenuItem>
+                                        <MenuItem value="Noto Sans JP">Noto Sans Japanese</MenuItem>
+                                    </Select>
+                                </div>
+                            </SettingsItem>
                             <SettingsItem className="text-white" label="Leer de derecha a izquierda" childrenId="r2l">
                                 <div className="flex justify-end">
                                     <Checkbox id="r2l" onClick={setRightToLeft} checked={readerSettings.r2l}/>

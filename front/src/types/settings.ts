@@ -1,4 +1,5 @@
 export interface ReaderConfig {
+    fontFamily:string;
     r2l:boolean; // activa el modo derecha-a-izquierda
     ctrlToPan:boolean; // hace falta pulsar ctrl para hacer zoom (solo pc)
     defaultZoomMode:"fit to screen" | "fit to width" | "original size" | "keep zoom level"; // zoom que se hace al pasar de página
