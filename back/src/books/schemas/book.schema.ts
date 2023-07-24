@@ -1,6 +1,6 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes, Types } from 'mongoose';
-import { Serie } from '../../series/schemas/series.schema';
+import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
+import {Document, SchemaTypes, Types} from "mongoose";
+import {Serie} from "../../series/schemas/series.schema";
 
 export type BookDocument = Book & Document;
 
@@ -8,43 +8,43 @@ export type BookDocument = Book & Document;
 export class Book {
   _id?: Types.ObjectId;
 
-  @Prop({ type: String, required: true, unique: true })
+  @Prop({type: String, required: true, unique: true})
   path: string;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref:Serie.name, require: true })
+  @Prop({type: SchemaTypes.ObjectId, ref:Serie.name, require: true})
   serie: Types.ObjectId;
 
-  @Prop({type:String,required:true})
+  @Prop({type:String, required:true})
   seriePath:string;
 
-  @Prop({ type: Number, required: true })
+  @Prop({type: Number, required: true})
   pages: number;
 
-  @Prop({ type: String, required: true })
+  @Prop({type: String, required: true})
   visibleName: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({type: String, required: true})
   sortName: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({type: String, required: true})
   imagesFolder: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({type: String, required: true})
   thumbnailPath: string;
 
-  @Prop({ type: Date })
+  @Prop({type: Date})
   releaseDate?: Date;
 
-  @Prop({ type: Date, default: new Date() })
+  @Prop({type: Date, default: new Date()})
   createdDate: Date;
 
-  @Prop({ type: String, default: '' })
+  @Prop({type: String, default: ""})
   summary?: string;
 
-  @Prop({ type: [String], default: [] })
+  @Prop({type: [String], default: []})
   authors?: string[];
 
-  @Prop({ type: Boolean, default: false })
+  @Prop({type: Boolean, default: false})
   missing: boolean;
 }
 

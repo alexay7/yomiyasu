@@ -1,7 +1,7 @@
-import { Types } from "mongoose";
-import { Book } from "../schemas/book.schema";
+import {Types} from "mongoose";
+import {Book} from "../schemas/book.schema";
 
-export interface SearchQuery{
+export interface SearchQuery {
     name?:string;
 
     serie?:Types.ObjectId;
@@ -10,9 +10,9 @@ export interface SearchQuery{
 
     sort?:string;
 
-    status?:"unread"|"reading"|"readlist"|"completed",
+    status?:"unread" | "reading" | "readlist" | "completed",
 }
 
-export interface UserBook extends Book{
-    status:"unread"|"reading"|"readlist"|"completed"
+export interface UserBook extends Book {
+    status:"unread" | "reading" | "readlist" | "completed"
 }

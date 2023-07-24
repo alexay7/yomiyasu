@@ -1,6 +1,6 @@
-import { IsBoolean, IsDate, IsEnum, IsISO8601, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Types } from 'mongoose';
-import { ReadProgressStatus } from '../schemas/readprogress.schema';
+import {IsEnum, IsISO8601, IsNumber, IsOptional, IsString} from "class-validator";
+import {Types} from "mongoose";
+import {ReadProgressStatus} from "../schemas/readprogress.schema";
 
 /**
  * Para crear el progreso solo hace falta el libro y el usuario (dado por la request)
@@ -27,6 +27,6 @@ export class ProgressDto {
   endDate?: Date;
 
   @IsString()
-  @IsEnum(["unread","reading","completed"])
+  @IsEnum(["unread", "reading", "completed"])
   status: ReadProgressStatus;
 }

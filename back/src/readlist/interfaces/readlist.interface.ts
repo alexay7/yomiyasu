@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import {Types} from "mongoose";
 
 export interface CreateReadList {
-  book: Types.ObjectId;
+    book: Types.ObjectId;
 
-  user: Types.ObjectId;
+    user: Types.ObjectId;
 }

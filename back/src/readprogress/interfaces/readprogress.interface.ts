@@ -1,6 +1,6 @@
-import { Types } from 'mongoose';
-import { ReadProgress, ReadProgressStatus } from '../schemas/readprogress.schema';
-import { Book } from '../../books/schemas/book.schema';
+import {Types} from "mongoose";
+import {ReadProgress, ReadProgressStatus} from "../schemas/readprogress.schema";
+import {Book} from "../../books/schemas/book.schema";
 
 export class UpdateReadProgress {
   time?: number;

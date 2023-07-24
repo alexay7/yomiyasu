@@ -1,48 +1,48 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, SchemaTypes, Types } from 'mongoose';
-import { User } from '../../users/schemas/user.schema';
-import { Book } from '../../books/schemas/book.schema';
-import { Serie } from '../../series/schemas/series.schema';
+import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
+import {Document, SchemaTypes, Types} from "mongoose";
+import {User} from "../../users/schemas/user.schema";
+import {Book} from "../../books/schemas/book.schema";
+import {Serie} from "../../series/schemas/series.schema";
 
 export type ReadProgressDocument = ReadProgress & Document;
 
-export type ReadProgressStatus = "unread"|"reading"|"completed";
+export type ReadProgressStatus = "unread" | "reading" | "completed";
 
 @Schema()
 export class ReadProgress {
   _id?: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: User.name, required: true })
+  @Prop({type: SchemaTypes.ObjectId, ref: User.name, required: true})
   user: Types.ObjectId;
 
-  @Prop({ type: SchemaTypes.ObjectId, ref: Book.name, required: true })
+  @Prop({type: SchemaTypes.ObjectId, ref: Book.name, required: true})
   book: Types.ObjectId;
 
-  @Prop({type:SchemaTypes.ObjectId,ref:Serie.name,required:true})
+  @Prop({type:SchemaTypes.ObjectId, ref:Serie.name, required:true})
   serie:Types.ObjectId;
 
-  @Prop({ type: Date})
+  @Prop({type: Date})
   startDate: Date;
 
-  @Prop({ type: Date })
+  @Prop({type: Date})
   endDate: Date;
 
   // Time in seconds
-  @Prop({ type: Number, default: 0 })
+  @Prop({type: Number, default: 0})
   time: number;
 
-  @Prop({ type: Number, default: 1 })
+  @Prop({type: Number, default: 1})
   currentPage: number;
 
   @Prop({
-    type: String,
-    default: "unread",
+      type: String,
+      default: "unread"
   })
   status: ReadProgressStatus;
 
   @Prop({
-    type:Boolean,
-    default:false
+      type:Boolean,
+      default:false
   })
   completed:boolean;
 }
