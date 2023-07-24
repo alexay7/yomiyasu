@@ -1,32 +1,22 @@
-export interface BookWithProgress {
-    _id: string,
-    path: string,
-    serie: string,
-    pages: number,
-    visibleName: string,
-    sortName: string,
-    imagesFolder: string,
-    thumbnailPath: string,
-    createdDate: Date,
-    summary: string,
-    authors: string[],
-    missing: boolean,
-    progress?:
+export type ProgressStatus = "unread" | "reading" | "completed";
+
+export interface BookWithProgress extends Book {
+    lastProgress?:
     {
         startDate: Date,
         time: number,
         currentPage: number,
-        completed: boolean,
+        status: ProgressStatus,
         endDate?: Date
-    }[]
-    ,
-    status: "READING" | "NOT_READING" | "READLIST" | "COMPLETED"
+    }
+    , status: "reading" | "unread" | "readlist" | "completed"
 }
 
 export interface Book {
     _id: string,
     path: string,
     serie: string,
+    seriePath:string;
     pages: number,
     visibleName: string,
     sortName: string,
@@ -36,4 +26,13 @@ export interface Book {
     summary: string,
     authors: string[],
     missing: boolean
+}
+
+export interface BookProgress {
+    book:string,
+    time?:number,
+    currentPage:number,
+    startDate?:Date,
+    endDate?:Date,
+    status:"unread" | "reading" | "completed"
 }

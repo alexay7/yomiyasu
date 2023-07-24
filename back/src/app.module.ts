@@ -11,7 +11,7 @@ import { SeriesModule } from './series/series.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ReadprogressModule } from './readprogress/readprogress.module';
 import { ReadlistModule } from './readlist/readlist.module';
-import { SeriesprogressModule } from './seriesprogress/seriesprogress.module';
+import { WebsocketsModule } from './websockets/websockets.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { SeriesprogressModule } from './seriesprogress/seriesprogress.module';
     SeriesModule,
     ReadprogressModule,
     ReadlistModule,
-    SeriesprogressModule,
+    WebsocketsModule,
   ],
 
   controllers: [AppController],

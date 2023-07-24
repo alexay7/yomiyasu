@@ -6,10 +6,13 @@ import {CSSTransition} from "react-transition-group";
 import "./styles.css";
 import {LateralListItem} from "./components/LateralListItem";
 import {useAuth} from "../../contexts/AuthContext";
+import {useMediaQuery} from "react-responsive";
 
 export function AppLayout():React.ReactElement {
+    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
+
     const {userData, logoutUser} = useAuth();
-    const [showMenu, setShowMenu] = useState(true);
+    const [showMenu, setShowMenu] = useState(!isTabletOrMobile);
     const [searchQuery, setSearchQuery] = useState("");
 
     function toggleMenu():void {
@@ -20,7 +23,7 @@ export function AppLayout():React.ReactElement {
         <div className="h-screen">
             {/* Barra de búsqueda */}
             <CSSTransition classNames="searchbar" timeout={300} in={showMenu}>
-                <div className="bg-[#272727] h-16 left-[256px] fixed right-0 flex px-4 items-center justify-around z-10">
+                <div className={`bg-[#272727] h-16 ${isTabletOrMobile ? "left-0" : "left-[256px]"} fixed right-0 flex px-2 items-center justify-between z-10`}>
                     <IconButton onClick={toggleMenu}>
                         <Menu className="text-white p-1"/>
                     </IconButton>
@@ -76,7 +79,7 @@ export function AppLayout():React.ReactElement {
 
             {/* Contenido */}
             <CSSTransition classNames="maincontent" timeout={300} in={showMenu}>
-                <div className="h-[calc(100vh-4rem)] pt-[64px] pl-[256px] h-100">
+                <div className={`h-[calc(100vh-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[256px]"} h-100`}>
                     <Outlet/>
                 </div>
             </CSSTransition>

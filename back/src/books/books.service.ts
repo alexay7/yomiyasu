@@ -54,24 +54,21 @@ export class BooksService {
     })
     // Asignar el parámetro status según lo encontrado
     .addFields({
+      "lastProgress":{$last:"$progress"}
+    })
+    .addFields({
       "status":{"$cond":{
-        if: { $gt: [{ $size: '$progress' }, 0] },
-        then: {
-          $cond: {
-            if: { $allElementsTrue: ['$progress.completed'] },
-            then: 'COMPLETED',
-            else: 'READING'
-          }
-        },
+        if: {$ifNull:["$lastProgress",null] },
+        then: "$lastProgress.status",
         else: {
           $cond: {
             if: { $gt: [{ $size: '$readlist' }, 0] },
-            then: 'READLIST',
-            else: 'NOT_READING'
+            then: 'readlist',
+            else: 'unread'
           }
         }
       }}
-    }).project({readlist:0})
+    }).project({readlist:0}).project({progress:0})
 
     // Filtrado por estado
     if(query.status) aggregate.match({"status":query.status})
@@ -99,7 +96,8 @@ export class BooksService {
     visibleName: string;
     sortName: string;
     imagesFolder: string;
-    serie: string;
+    serie: Types.ObjectId;
+    seriePath:string;
     pages: number;
   }): Promise<Book | null> {
     const found = await this.bookModel.findOne({ path: newBook.path });

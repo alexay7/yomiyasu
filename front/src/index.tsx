@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import {ToastContainer} from "react-toastify";
 import {QueryClient, QueryClientProvider} from "react-query";
 import {SettingsProvider} from "./contexts/SettingsContext";
+import {GlobalProvider} from "./contexts/GlobalContext";
 
 const root = createRoot(
     document.getElementById("root") as HTMLElement
@@ -25,16 +26,18 @@ const queryClient = new QueryClient();
 root.render(
     <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-            <ThemeProvider theme={darkTheme}>
-                <AuthProvider>
-                    <SettingsProvider>
-                        <BrowserRouter>
-                            <ToastContainer/>
-                            <App/>
-                        </BrowserRouter>
-                    </SettingsProvider>
-                </AuthProvider>
-            </ThemeProvider>
+            <GlobalProvider>
+                <ThemeProvider theme={darkTheme}>
+                    <AuthProvider>
+                        <SettingsProvider>
+                            <BrowserRouter>
+                                <ToastContainer/>
+                                <App/>
+                            </BrowserRouter>
+                        </SettingsProvider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </GlobalProvider>
         </QueryClientProvider>
     </React.StrictMode>
 );

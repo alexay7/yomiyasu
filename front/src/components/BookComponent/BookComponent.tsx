@@ -1,43 +1,33 @@
 import React, {Fragment, useEffect, useRef, useState} from "react";
 import {BookWithProgress} from "../../types/book";
-import {MoreVert, PlayCircle, WatchLater} from "@mui/icons-material";
+import {PlayCircle, WatchLater} from "@mui/icons-material";
 import "./styles.css";
-import {Fade, IconButton, Menu, MenuItem} from "@mui/material";
-import {useAuth} from "../../contexts/AuthContext";
+import {Fade, IconButton} from "@mui/material";
+import {BookSettings} from "./components/BookSettings";
 
 interface BookComponentProps {
     bookData:BookWithProgress
 }
 
 export function BookComponent(props:BookComponentProps):React.ReactElement {
-    const {userData} = useAuth();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
     const {bookData} = props;
-    const progressRef = useRef<HTMLDivElement>(null);
+    const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
 
-    function handleClick(event: React.MouseEvent<HTMLElement>):void {
-        setAnchorEl(event.currentTarget);
-    }
-
-    function handleClose():void {
-        setAnchorEl(null);
-    }
-
     useEffect(()=>{
-        if (progressRef.current && bookData.progress && bookData.progress.length > 0) {
-            // Sets the progress bar
-            let value = bookData.progress[0].currentPage * 100 / bookData.pages;
+        if (lastProgressRef.current && bookData.lastProgress) {
+            // Sets the lastProgress bar
+            let value = bookData.lastProgress.currentPage * 100 / bookData.pages;
             value = value < 100 ? value : 100;
-            progressRef.current.style.width = `${value}%`;
+            value = value > 2 ? value : 2;
+            lastProgressRef.current.style.width = `${value}%`;
         }
     }, [bookData]);
 
     return (
         <div className="min-w-[10rem]">
             <div className="h-[13rem] bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
-                style={{backgroundImage:`url(/api/static/${bookData.serie}/${bookData.imagesFolder}/${bookData.thumbnailPath})`}}
+                style={{backgroundImage:`url(/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
                         window.location.href = `/book/${bookData._id}`;
@@ -45,12 +35,12 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
-                <div ref={progressRef} className="absolute bottom-0 bg-primary h-1"/>
-                {bookData.status === "NOT_READING" && (
+                <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
+                {bookData.status === "unread" && (
                     <div className="absolute top-0 right-0 w-0 h-0 border-solid" style={{borderWidth:"0 35px 35px 0", borderColor:"transparent var(--primary-color) transparent transparent"}}/>
                 )}
 
-                {bookData.status === "READLIST" && (
+                {bookData.status === "readlist" && (
                     <Fragment>
                         <div className="absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent border-r-blue-500" style={{borderWidth:"0 35px 35px 0"}}>
                         </div>
@@ -71,45 +61,8 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
                 <a href={`/book/${bookData._id}`} className="line-clamp-2 h-12">{bookData.visibleName}</a>
                 <div className="flex items-center justify-between">
-                    <p className="text-gray-300 text-xs">{bookData.pages} páginas</p>
-                    <IconButton className="text-center" onClick={(e)=>{
-                        handleClick(e);
-                    }}
-                    >
-                        <MoreVert className="w-6 h-6"/>
-                    </IconButton>
-                    <Menu id="long-menu" keepMounted anchorEl={anchorEl}
-                        open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
-                    >
-                        <MenuItem key="serie" onClick={handleClose}>
-                            Ir a la serie
-                        </MenuItem>
-                        {userData?.admin && (
-                            <MenuItem key="edit" onClick={handleClose}>
-                                Editar
-                            </MenuItem>
-                        )}
-                        {userData?.admin && (
-                            <MenuItem key="metadata" onClick={handleClose}>
-                                Actualizar metadatos
-                            </MenuItem>
-                        )}
-                        {(bookData.status !== "READLIST" && (!bookData.progress || bookData.progress.length === 0)) && (
-                            <MenuItem key="readlist" onClick={handleClose}>
-                                Añadir a &quot;Leer más tarde&quot;
-                            </MenuItem>
-                        )}
-                        {(!bookData.progress || bookData.progress.length === 0) && (
-                            <MenuItem key="read" onClick={handleClose}>
-                                Marcar como leído
-                            </MenuItem>
-                        )}
-                        {bookData.progress && bookData.progress.length > 0 && (
-                            <MenuItem key="unread" onClick={handleClose}>
-                                Marcar como no leído
-                            </MenuItem>
-                        )}
-                    </Menu>
+                    <p className="text-gray-300 text-sm lg:text-xs">{bookData.pages} páginas</p>
+                    <BookSettings bookData={bookData}/>
                 </div>
             </div>
         </div>

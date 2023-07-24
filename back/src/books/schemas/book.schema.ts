@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, SchemaTypes, Types } from 'mongoose';
+import { Serie } from '../../series/schemas/series.schema';
 
 export type BookDocument = Book & Document;
 
@@ -10,8 +11,11 @@ export class Book {
   @Prop({ type: String, required: true, unique: true })
   path: string;
 
-  @Prop({ type: String, require: true })
-  serie: string;
+  @Prop({ type: SchemaTypes.ObjectId, ref:Serie.name, require: true })
+  serie: Types.ObjectId;
+
+  @Prop({type:String,required:true})
+  seriePath:string;
 
   @Prop({ type: Number, required: true })
   pages: number;

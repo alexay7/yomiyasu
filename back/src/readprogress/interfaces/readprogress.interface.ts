@@ -1,21 +1,25 @@
 import { Types } from 'mongoose';
-import { ReadProgress } from '../schemas/readprogress.schema';
+import { ReadProgress, ReadProgressStatus } from '../schemas/readprogress.schema';
 import { Book } from '../../books/schemas/book.schema';
 
-export interface CreateReadProgress {
-  book: Types.ObjectId;
-
-  user: Types.ObjectId;
-}
-
 export class UpdateReadProgress {
-  time: number;
+  time?: number;
 
-  currentPage: number;
+  currentPage?: number;
+
+  startDate?: Date;
 
   endDate?: Date;
 
-  completed?: boolean;
+  status?: ReadProgressStatus;
+}
+
+export class CreateReadProgress extends UpdateReadProgress {
+  book:Types.ObjectId;
+
+  user:Types.ObjectId;
+
+  serie:Types.ObjectId;
 }
 
 export class ReadProgressWithBook extends ReadProgress {

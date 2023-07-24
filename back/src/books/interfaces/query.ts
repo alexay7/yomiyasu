@@ -4,15 +4,15 @@ import { Book } from "../schemas/book.schema";
 export interface SearchQuery{
     name?:string;
 
-    serie?:string;
+    serie?:Types.ObjectId;
 
     author?:string;
 
     sort?:string;
 
-    status?:"UNREAD"|"READING"|"TOREAD"|"COMPLETED"
+    status?:"unread"|"reading"|"readlist"|"completed",
 }
 
 export interface UserBook extends Book{
-    status:"NOT_READING"|"READING"|"TOREAD"|"COMPLETED"
+    status:"unread"|"reading"|"readlist"|"completed"
 }

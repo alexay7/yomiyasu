@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
-import {ReaderConfig} from "../types/settings";
+import {FullReaderConfig, ReaderConfig} from "../types/settings";
 import {ContextProps} from "./AuthContext";
 import {useMediaQuery} from "react-responsive";
 
@@ -14,11 +14,31 @@ export function useSettings():SettingsContextType {
     return useContext(SettingsContext);
 }
 
+export function defaultSets():unknown {
+    return {
+        page_idx: 0,
+        page2_idx: -1,
+        hasCover: false,
+        r2l: true,
+        singlePageView: false,
+        ctrlToPan: false,
+        textBoxBorders: false,
+        editableText: false,
+        displayOCR: true,
+        fontSize: "auto",
+        eInkMode: false,
+        defaultZoomMode: "fit to screen",
+        toggleOCRTextBoxes: false
+    };
+}
+
 export function SettingsProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
-    const defaultSettings:ReaderConfig = {
+    const defaultSettings:FullReaderConfig = {
+        page_idx:1,
+        page2_idx:-1,
         fontFamily:"IPA",
         r2l:true,
         ctrlToPan:true,

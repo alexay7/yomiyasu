@@ -12,6 +12,11 @@ export interface ReaderConfig {
     panAndZoom:boolean; // activa el zoom nativo de mokuro
 }
 
+export interface FullReaderConfig extends ReaderConfig {
+    page_idx:number,
+    page2_idx:number
+}
+
 export interface Settings {
     reader:ReaderConfig;
 }

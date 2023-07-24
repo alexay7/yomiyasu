@@ -14,6 +14,10 @@ export class ReadlistService {
     return this.readListModel.create(createReadList);
   }
 
+  findBookInReadlist(user:Types.ObjectId,book:Types.ObjectId){
+    return this.readListModel.findOne({user,book})
+  }
+
   getUserReadListBooks(user: Types.ObjectId) {
     return this.readListModel
       .aggregate()
@@ -28,5 +32,9 @@ export class ReadlistService {
 
   removeBookFromUserList(user: Types.ObjectId, book: Types.ObjectId) {
     return this.readListModel.deleteOne({ user, book });
+  }
+
+  removeBookWithId(id:Types.ObjectId){
+    return this.readListModel.findByIdAndDelete(id)
   }
 }

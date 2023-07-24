@@ -2,24 +2,26 @@ import {
   Controller,
   Req,
   Post,
+  Get,
   Body,
-  NotFoundException,
   UseGuards,
+  Query,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ReadprogressService } from './readprogress.service';
-import { CreateReadprogressDto } from './dto/create-readprogress.dto';
-import { UpdateReadprogressDto } from './dto/update-readprogress.dto';
+import { ProgressDto } from './dto/create-readprogress.dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/strategies/jwt.strategy';
 import { Types } from 'mongoose';
 import {
   CreateReadProgress,
-  ReadProgressWithBook,
-  UpdateReadProgress,
 } from './interfaces/readprogress.interface';
 import { ReadlistService } from '../readlist/readlist.service';
-import { SeriesprogressService } from '../seriesprogress/seriesprogress.service';
+import { ReadProgress, ReadProgressStatus } from './schemas/readprogress.schema';
+import { BooksService } from '../books/books.service';
+import { ParseObjectIdPipe } from '../../validation/objectId';
+import { UserBook } from '../books/interfaces/query';
 
 @Controller('readprogress')
 @UseGuards(JwtAuthGuard)
@@ -27,76 +29,84 @@ export class ReadprogressController {
   constructor(
     private readonly readprogressService: ReadprogressService,
     private readonly readListService: ReadlistService,
-    private readonly seriesProgressService:SeriesprogressService
+    private readonly booksService:BooksService
   ) {}
 
   @Post()
-  async create(
-    @Req() req: Request,
-    @Body() createReadprogressDto: CreateReadprogressDto,
-  ) {
+  async modifyOrCreateProgress(@Req() req:Request,@Body() progressDto:ProgressDto):Promise<ReadProgress|null>{
     if (!req.user) throw new UnauthorizedException();
 
     const { userId } = req.user as { userId: Types.ObjectId };
 
-    // Primero se comprueba si existe algún progreso que no esté finalizado
-    const foundProgress = await this.readprogressService.findNonFinished(
-      userId,
-      createReadprogressDto.book,
-    );
+    const foundProgress = await this.readprogressService.findProgressByBookAndUser(progressDto.book,userId)
 
-    if (foundProgress) {
-      // Si se encuentra se envía al frontend para que lo trate
-      return foundProgress;
+    if(progressDto.status!=="unread"){
+      // Si el progreso es avanzar la lectura, quitarlo de la lista de lectura si existe
+
+      const foundReadList = await this.readListService.findBookInReadlist(userId,progressDto.book)
+      
+      if(foundReadList){
+        await this.readListService.removeBookWithId(foundReadList._id as Types.ObjectId)
+      }
     }
 
-    // Si no se encuentra ningún progreso, se crea uno nuevo
-    const newReadProgress: CreateReadProgress = {
-      book: createReadprogressDto.book,
-      user: userId,
-    };
+    if(!foundProgress || foundProgress.status==="completed"){
+      // No se ha encontrado progreso ninguno o el ultimo proceso es de completado, se crea uno nuevo
 
-    // En caso de que el libro esté en la lista de leer, eliminarlo
-    await this.readListService.removeBookFromUserList(
-      userId,
-      createReadprogressDto.book,
-    );
+      const foundBook = await this.booksService.findById(progressDto.book)
 
-    return this.readprogressService.create(newReadProgress);
+      if(!foundBook) throw new BadRequestException()
+
+      const newProgress:CreateReadProgress = {
+        user:userId,
+        ...progressDto,
+        serie:foundBook.serie,
+        startDate:new Date()
+      }
+
+      return this.readprogressService.createReadProgress(newProgress)
+    }
+
+    // Se ha encontrado un proceso con estado de reading o unread, se actualizan los datos
+    return this.readprogressService.modifyReadProgress(foundProgress._id as Types.ObjectId,progressDto);
   }
 
-  @Post('update')
-  async update(
-    @Req() req: Request,
-    @Body() updateReadProgressDto: UpdateReadprogressDto,
-  ) {
+  @Get()
+  async getReadProgress(@Req() req:Request,@Query("book",ParseObjectIdPipe) book:Types.ObjectId,@Query("status") status?:ReadProgressStatus){
     if (!req.user) throw new UnauthorizedException();
 
     const { userId } = req.user as { userId: Types.ObjectId };
 
-    const foundProgress = (await this.readprogressService.findNonFinished(
-      userId,
-      updateReadProgressDto.book,
-      true,
-    )) as ReadProgressWithBook;
+    const found = await this.readprogressService.findProgressByBookAndUser(book,userId,status)
 
-    if (!foundProgress) throw new NotFoundException();
+    if(found) return found
 
-    const updateReadProgress: UpdateReadProgress = {
-      currentPage: updateReadProgressDto.currentPage,
-      time: foundProgress.time + updateReadProgressDto.time,
-    };
+    return {}
+  }
 
-    if (foundProgress.bookInfo.pages <= updateReadProgressDto.currentPage) {
-      updateReadProgress.completed = true;
-      updateReadProgress.endDate = new Date();
-      await this.seriesProgressService.create({user:userId,serie:updateReadProgressDto.serie})
-    }
+  @Get("tablero")
+  async getSeriesProgress(@Req() req:Request){
+    if(!req.user) throw new UnauthorizedException();
 
-    return this.readprogressService.updateProgress(
-      userId,
-      updateReadProgressDto.book,
-      updateReadProgress,
-    );
+      const {userId}=req.user as {userId:Types.ObjectId}
+
+      const series = await this.readprogressService.getSeriesProgress(userId)
+
+      let returnBooks:UserBook[]=[]
+
+      await Promise.all(series.map(async(serie)=>{
+        const allBooks = await this.booksService.filterBooks(userId,{serie,sort:"sortName"})
+        const unreadBooks = await this.booksService.filterBooks(userId,{serie,sort:"sortName",status:"unread"})
+
+        // Si existen libros leidos en la serie pero NO libros en progreso, considerar serie para tablero
+        if(unreadBooks.length>0 && (allBooks.length !== unreadBooks.length) && !allBooks.some(x=>x.status==="reading")){
+              // Se buscan todos los libros que no hayan sido leidos por el usuario y se coge el primero no leido
+
+                returnBooks = returnBooks.concat(unreadBooks[0])
+        }
+
+        }))
+
+        return returnBooks;
   }
 }

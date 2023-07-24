@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, {Fragment, useEffect, useRef, useState} from "react";
 import {useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
-import {Book} from "../../types/book";
+import {Book, BookProgress} from "../../types/book";
 import {IconButton, Slider} from "@mui/material";
 import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, MoreVert, Translate} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
-import {useSettings} from "../../contexts/SettingsContext";
+import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
+import {StopWatchMenu} from "./components/StopWatchMenu";
+import {createProgress} from "../../helpers/progress";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -19,11 +20,58 @@ export function Reader():React.ReactElement {
     const [showToolBar, setShowToolbar] = useState(true);
     const [doublePages, setDoublePages] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [timer, setTimer] = useState(0);
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
         return res;
     }, {refetchOnWindowFocus:false});
+
+    const {data:bookProgress, isLoading} = useQuery(`progress-${id}`, async()=>{
+        const res = await api.get<BookProgress>(`readprogress?book=${id}&status=reading`);
+        return res;
+    }, {refetchOnWindowFocus:false});
+
+    useEffect(()=>{
+        if (!isLoading && bookData) {
+            let page = 1;
+
+            if (bookProgress && bookProgress.currentPage) {
+                page = bookProgress.currentPage;
+            }
+
+            const initial = defaultSets() as {page_idx:number};
+
+            initial.page_idx = page;
+            window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
+
+            setCurrentPage(page);
+        }
+    }, [bookProgress, bookData, isLoading]);
+
+    useEffect(()=>{
+        if (!bookData) return;
+
+        const interval = setInterval(async()=>{
+            await createProgress(bookData, currentPage, timer);
+        }, 5 * 1000 * 60 * 60);
+        return ()=>clearInterval(interval);
+    }, [bookData, currentPage, timer]);
+
+    useEffect(() => {
+        const handleBeforeUnload = async():Promise<void> => {
+            // Save before leaving the page
+            if (!bookData) return;
+
+            await createProgress(bookData, currentPage, timer);
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    });
 
     useEffect(()=>{
         /**
@@ -31,7 +79,7 @@ export function Reader():React.ReactElement {
          * la configuración anterior del volumen
          */
         if (bookData) {
-            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.serie)}/${encodeURI(bookData.path)}.html`) as string;
+            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string;
             if (rawProgress) {
                 const progress = JSON.parse(rawProgress) as {"page_idx":number, "singlePageView":boolean};
                 setDoublePages(!progress.singlePageView);
@@ -83,6 +131,10 @@ export function Reader():React.ReactElement {
     // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {
         iframe.current?.contentWindow?.postMessage({action:"setPage", page:newPage});
+    }
+
+    function closeSettingsMenu():void {
+        setShowSettings(false);
     }
 
     /**
@@ -264,13 +316,13 @@ export function Reader():React.ReactElement {
         iframe.current.contentWindow.document.head.appendChild(customStyles);
 
         // Muestra/oculta las barras superior/inferior haciendo doble click al documento
-        iframe.current.contentWindow.document.body.addEventListener("dblclick", (e)=>{
+        iframe.current.contentWindow.document.body.addEventListener("dblclick", ()=>{
             setShowToolbar((prev)=>!prev);
         });
 
         // Establece los ajustes del usuario
         if (!bookData) return;
-        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.serie)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
+        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
 
         if (readerSettings.r2l !== currentSettings.r2l) {
             iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
@@ -297,10 +349,6 @@ export function Reader():React.ReactElement {
         }
     }
 
-    function closeSettingsMenu():void {
-        setShowSettings(false);
-    }
-
     return (
         <div className="text-black relative overflow-hidden h-100vh flex flex-col">
             {iframe && iframe.current && iframe.current.contentWindow && (
@@ -319,6 +367,7 @@ export function Reader():React.ReactElement {
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
+                                <StopWatchMenu timer={timer} setTimer={setTimer}/>
                                 <IconButton>
                                     <Translate/>
                                 </IconButton>
@@ -333,7 +382,7 @@ export function Reader():React.ReactElement {
                     )}
                     <iframe
                         ref={iframe}
-                        src={`/api/static/${bookData?.serie}/${bookData?.path}.html`}
+                        src={`/api/static/${bookData?.seriePath}/${bookData?.path}.html`}
                         className="w-full measure"
                         onLoad={injectCustomScript}
                     />

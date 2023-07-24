@@ -5,17 +5,18 @@ import { join, extname } from 'path';
 import * as fs from 'fs';
 import { BooksService } from './books/books.service';
 import { extractUrlFromHtml } from './books/helpers/helpers';
+import { WebsocketsGateway } from './websockets/websockets.gateway';
 
 @Injectable()
 export class AppService {
   constructor(
     private readonly seriesService: SeriesService,
     private readonly booksService: BooksService,
+    private readonly websocketsGateway:WebsocketsGateway
   ) {}
   private readonly logger = new Logger(AppService.name);
 
   getHello(): string {
-    console.log('llegó');
     return 'Hello World!';
   }
 
@@ -45,6 +46,7 @@ export class AppService {
       bookPath?: string;
     }[] = [];
     const mainFolderPath = join(process.cwd(), '..', 'exterior');
+    let areChanges = false;
 
     const items = fs.readdirSync(mainFolderPath);
 
@@ -89,6 +91,7 @@ export class AppService {
     // Añade las series nuevas a la base de datos
     if (foldersToAddInDb.length > 0) {
       this.logger.log('\x1b[34mEncontradas series nuevas');
+      areChanges=true;
       foldersToAddInDb.forEach(async (elem) => {
         const newSeries = {
           path: elem,
@@ -102,6 +105,7 @@ export class AppService {
     // Marca las series no encontradas como desaparecidas
     if (foldersToMarkAsDeleted.length > 0) {
       this.logger.log('\x1b[34mEncontradas series desaparecidas');
+      areChanges=true
       foldersToMarkAsDeleted.forEach(async (elem) => {
         await this.seriesService.markAsMissing(elem);
       });
@@ -134,18 +138,22 @@ export class AppService {
     // Añade los libros nuevos a la base de datos
     if (booksToAddInDb.length > 0) {
       this.logger.log('\x1b[34mEncontrados libros nuevos');
+      areChanges=true
 
       booksToAddInDb.forEach(async (elem) => {
         if (elem.bookPath) {
           const imagesFolder = extractUrlFromHtml(elem.bookPath);
 
           if (imagesFolder) {
+            const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath);
+
             const newBook = {
               path: elem.bookName,
               visibleName: elem.bookName,
               sortName: elem.bookName,
               imagesFolder: imagesFolder.folderName,
-              serie: elem.seriePath,
+              serie: foundSerie,
+              seriePath:elem.seriePath,
               thumbnailPath: imagesFolder.thumbnailPath,
               pages: imagesFolder.totalImages,
             };
@@ -158,10 +166,16 @@ export class AppService {
     // Marca los libros no encontrados como desaparecidos
     if (booksToMarkAsDeleted.length > 0) {
       this.logger.log('\x1b[34mEncontrados libros desaparecidos');
+      areChanges=true
       booksToMarkAsDeleted.forEach(async (elem) => {
         await this.booksService.markAsMissing(elem.bookName);
       });
     }
     // FIN PROCESO DE LIBROS
+    
+    if(areChanges){
+      // Avisar al frontend si hay cambios
+    this.websocketsGateway.sendNotificationToClient({action:"LIBRARY_UPDATE"})
+    }
   }
 }

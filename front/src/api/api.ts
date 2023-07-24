@@ -13,6 +13,6 @@ export const api = {
     get: <TResponse>(url: string):Promise<TResponse> =>
         request<TResponse>(url, {method:"GET"}),
 
-    post: <TBody, TResponse>(url: string, body: TBody):Promise<TResponse> =>
-        request<TResponse>(url, {method: "POST", body:JSON.stringify(body), headers:{"Content-Type":"application/json"}})
+    post: <TBody, TResponse>(url: string, body: TBody, keepAlive?:boolean):Promise<TResponse> =>
+        request<TResponse>(url, {method: "POST", body:JSON.stringify(body), headers:{"Content-Type":"application/json"}, keepalive:keepAlive})
 };
