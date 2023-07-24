@@ -1,5 +1,5 @@
 import {io} from "socket.io-client";
 
-const socket = io("/api/events", {path:"/api/events/socket.io", transports:["polling"]});
+const socket = io("/ws");
 
 export default socket;

@@ -1,7 +1,7 @@
 import {WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
 import {Server} from "socket.io";
 
-@WebSocketGateway({path:"/api/events/socket.io", namespace:"/api/events"})
+@WebSocketGateway(3002, {namespace:"ws"})
 export class WebsocketsGateway {
   @WebSocketServer()
   server: Server;
