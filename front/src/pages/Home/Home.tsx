@@ -37,7 +37,7 @@ export function Home():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden">
-            <div className="min-h-screen text-white px-8 py-4 flex flex-col gap-4">
+            <div className="text-white px-8 py-4 flex flex-col gap-4">
                 {progresoData && progresoData.length > 0 && (
                     <Fragment>
                         <h2>En Progreso</h2>

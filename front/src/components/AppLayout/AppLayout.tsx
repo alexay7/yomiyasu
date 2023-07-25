@@ -1,6 +1,6 @@
 import {Menu, Home, Book, AccountCircle, Settings, Logout, AdminPanelSettings} from "@mui/icons-material";
 import {Divider, IconButton} from "@mui/material";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Outlet} from "react-router-dom";
 import {CSSTransition} from "react-transition-group";
 import "./styles.css";
@@ -15,6 +15,10 @@ export function AppLayout():React.ReactElement {
     const {userData, logoutUser} = useAuth();
     const [showMenu, setShowMenu] = useState(!isTabletOrMobile);
 
+    useEffect(()=>{
+        setShowMenu(!isTabletOrMobile);
+    }, [isTabletOrMobile, setShowMenu]);
+
     function toggleMenu():void {
         setShowMenu((prev)=>!prev);
     }
@@ -27,7 +31,7 @@ export function AppLayout():React.ReactElement {
                     <IconButton onClick={toggleMenu}>
                         <Menu className="text-white p-1"/>
                     </IconButton>
-                    <div className="bg-[#1E1E1E] w-11/12 px-4 py-2 rounded-md shadow-gray-900 shadow-sm">
+                    <div className="bg-[#1E1E1E] w-[95%] px-4 py-2 rounded-md shadow-gray-900 shadow-sm">
                         <SearchAutocomplete/>
                     </div>
                 </div>
@@ -56,7 +60,7 @@ export function AppLayout():React.ReactElement {
 
             {/* Contenido */}
             <CSSTransition classNames="maincontent" timeout={300} in={showMenu}>
-                <div className={`h-[calc(100vh-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[256px]"} h-100`}>
+                <div className={`h-[calc(100vh-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[256px]"} bg-[#121212]`}>
                     <Outlet/>
                 </div>
             </CSSTransition>

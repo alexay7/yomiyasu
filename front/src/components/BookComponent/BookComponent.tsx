@@ -1,6 +1,6 @@
-import React, {Fragment, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {BookWithProgress} from "../../types/book";
-import {PlayCircle, WatchLater} from "@mui/icons-material";
+import {PlayCircle} from "@mui/icons-material";
 import "./styles.css";
 import {Fade, IconButton} from "@mui/material";
 import {BookSettings} from "./components/BookSettings";
@@ -25,7 +25,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     }, [bookData]);
 
     return (
-        <div className="min-w-[10rem]">
+        <div className="w-[10rem]">
             <div className="h-[13rem] bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
                 style={{backgroundImage:`url(/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath})`}}
                 onClick={(e)=>{
@@ -40,20 +40,11 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                     <div className="absolute top-0 right-0 w-0 h-0 border-solid" style={{borderWidth:"0 35px 35px 0", borderColor:"transparent var(--primary-color) transparent transparent"}}/>
                 )}
 
-                {bookData.status === "readlist" && (
-                    <Fragment>
-                        <div className="absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent border-r-blue-500" style={{borderWidth:"0 35px 35px 0"}}>
-                        </div>
-                        <WatchLater className="absolute top-[2px] right-[2px]" sx={{width:15, height:15}}/>
-                    </Fragment>
-                )}
-
                 <Fade in={onItem}>
                     <div>
                         <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>window.location.href = `/book/${bookData._id}`}>
                             <PlayCircle className="w-16 h-16"/>
                         </IconButton>
-
                     </div>
                 </Fade>
             </div>

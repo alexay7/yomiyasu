@@ -75,11 +75,6 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Actualizar metadatos
                     </MenuItem>
                 )}
-                {(bookData.status !== "readlist" && bookData.status !== "completed") && (
-                    <MenuItem key="readlist" onClick={handleClose}>
-                        Añadir a &quot;Leer más tarde&quot;
-                    </MenuItem>
-                )}
                 {bookData.status !== "completed" && (
                     <MenuItem key="read" onClick={async()=>{
                         await markAsRead();

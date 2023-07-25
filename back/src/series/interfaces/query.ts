@@ -6,4 +6,5 @@ export interface SeriesSearch {
     status?:"PUBLISHING" | "ENDED";
     limit:number;
     page:number;
+    firstLetter?:string;
 }

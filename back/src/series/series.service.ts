@@ -60,6 +60,10 @@ export class SeriesService {
           result.where({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
 
+      if (query.firstLetter) {
+          result.where({"sortName": {$regex: "^" + query.firstLetter, $options: "i"}});
+      }
+
       if (query.status) {
           result.where({status:query.status});
       }

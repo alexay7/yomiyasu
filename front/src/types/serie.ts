@@ -23,3 +23,8 @@ export interface SeriesFilter {
     data:SerieWithProgress[],
     pages:number
 }
+
+export interface Alphabet {
+    group:string;
+    count:number;
+}

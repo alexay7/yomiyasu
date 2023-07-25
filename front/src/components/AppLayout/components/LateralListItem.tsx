@@ -12,8 +12,15 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
 
     const navigate = useNavigate();
 
+    let backColor = "hover:bg-[#444444]";
+
+    let active = false;
+    if (window.location.pathname === link) active = true;
+
+    if (active) backColor = "bg-[#666666] hover:bg-[#666666]";
+
     return (
-        <li className="hover:bg-[#666666] list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer"
+        <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer`}
             onClick={()=>{
                 if (link)navigate(link);
             }}
