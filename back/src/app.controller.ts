@@ -43,6 +43,10 @@ export class AppController {
             decodeURIComponent(req.path.replace("/api/static", "")),
             {
                 root: "./../exterior"
+            }, function(err) {
+                if (err) {
+                    res.sendStatus(404);
+                }
             }
         );
     }

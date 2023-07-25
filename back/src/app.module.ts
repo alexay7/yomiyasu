@@ -12,10 +12,12 @@ import {ScheduleModule} from "@nestjs/schedule";
 import {ReadprogressModule} from "./readprogress/readprogress.module";
 import {ReadlistModule} from "./readlist/readlist.module";
 import {WebsocketsModule} from "./websockets/websockets.module";
+import {CacheModule} from "@nestjs/cache-manager";
 
 @Module({
     imports: [
         ConfigModule.forRoot({isGlobal: true, envFilePath: ".env"}),
+        CacheModule.register({isGlobal:true}),
         AuthModule,
         UsersModule,
         ScheduleModule.forRoot(),
