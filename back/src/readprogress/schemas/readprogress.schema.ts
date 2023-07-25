@@ -24,6 +24,9 @@ export class ReadProgress {
   @Prop({type: Date})
   startDate: Date;
 
+  @Prop({type:Date, default:new Date()})
+  lastUpdateDate:Date;
+
   @Prop({type: Date})
   endDate: Date;
 
@@ -39,12 +42,6 @@ export class ReadProgress {
       default: "unread"
   })
   status: ReadProgressStatus;
-
-  @Prop({
-      type:Boolean,
-      default:false
-  })
-  completed:boolean;
 }
 
 export const ReadProgressSchema = SchemaFactory.createForClass(ReadProgress);

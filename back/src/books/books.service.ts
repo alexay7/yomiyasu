@@ -12,12 +12,13 @@ export class BooksService {
   private readonly logger = new Logger(BooksService.name);
 
   async filterBooks(user:Types.ObjectId, query:SearchQuery):Promise<UserBook[]> {
+
       const aggregate = this.bookModel.aggregate()
           .match({missing:false});
 
       // Filtrado por nombre
       if (query.name) { 
-          const regex = new RegExp(query.name);
+          const regex = new RegExp(query.name, "i");
           aggregate.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
 
@@ -81,6 +82,12 @@ export class BooksService {
               aggregate.sort({[query.sort]:"asc"});
           }
       }
+
+      if (query.limit && query.page) {
+          aggregate.skip((query.page - 1) * query.limit).limit(parseInt(`${query.limit}`));
+      }
+
+      aggregate.addFields({"type":"book"});
 
       const books = await aggregate as UserBook[];
 

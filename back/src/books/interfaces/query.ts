@@ -10,7 +10,11 @@ export interface SearchQuery {
 
     sort?:string;
 
-    status?:"unread" | "reading" | "readlist" | "completed",
+    status?:"unread" | "reading" | "readlist" | "completed";
+
+    limit?:number;
+
+    page?:number;
 }
 
 export interface UserBook extends Book {

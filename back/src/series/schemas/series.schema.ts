@@ -32,6 +32,9 @@ export class Serie {
   @Prop({type: String, default: ""})
   summary?: string;
 
+  @Prop({type:[String], default:[]})
+  authors:string[];
+
   @Prop({type: [String], default: []})
   genres: string[];
 

@@ -6,6 +6,7 @@ import {useAuth} from "./contexts/AuthContext";
 import {AppLayout} from "./components/AppLayout/AppLayout";
 import {Home} from "./pages/Home/Home";
 import {Reader} from "./pages/Reader/Reader";
+import {Library} from "./pages/Library/Library";
 
 export function App():React.ReactElement {
     const {loading} = useAuth();
@@ -19,6 +20,7 @@ export function App():React.ReactElement {
             <Route path="/login" element={<Login/>}/>
             <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
                 <Route index element={<Home/>}/>
+                <Route path="library" element={<Library/>}/>
                 <Route path="*" element={<Navigate to="/app"/>}/>
             </Route>
             <Route path="book/:id" element={<Reader/>}/>

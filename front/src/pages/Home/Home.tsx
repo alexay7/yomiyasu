@@ -49,7 +49,7 @@ export function Home():React.ReactElement {
                     </Fragment>
                 )}
                 {tableroData && tableroData.length > 0 && (
-                    <Fragment>
+                    <Fragment >
                         <h2>Tablero</h2>
                         <ul className="lg:px-4 flex gap-8">
                             {tableroData?.map((book)=>(

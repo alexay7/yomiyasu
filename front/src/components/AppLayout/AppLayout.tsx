@@ -1,5 +1,5 @@
-import {Search, Menu, Home, Book, AccountCircle, Settings, Logout, AdminPanelSettings} from "@mui/icons-material";
-import {Autocomplete, Box, TextField, Divider, IconButton} from "@mui/material";
+import {Menu, Home, Book, AccountCircle, Settings, Logout, AdminPanelSettings} from "@mui/icons-material";
+import {Divider, IconButton} from "@mui/material";
 import React, {useState} from "react";
 import {Outlet} from "react-router-dom";
 import {CSSTransition} from "react-transition-group";
@@ -7,13 +7,13 @@ import "./styles.css";
 import {LateralListItem} from "./components/LateralListItem";
 import {useAuth} from "../../contexts/AuthContext";
 import {useMediaQuery} from "react-responsive";
+import {SearchAutocomplete} from "./components/SearchAutocomplete";
 
 export function AppLayout():React.ReactElement {
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
     const {userData, logoutUser} = useAuth();
     const [showMenu, setShowMenu] = useState(!isTabletOrMobile);
-    const [searchQuery, setSearchQuery] = useState("");
 
     function toggleMenu():void {
         setShowMenu((prev)=>!prev);
@@ -28,30 +28,7 @@ export function AppLayout():React.ReactElement {
                         <Menu className="text-white p-1"/>
                     </IconButton>
                     <div className="bg-[#1E1E1E] w-11/12 px-4 py-2 rounded-md shadow-gray-900 shadow-sm">
-                        <Autocomplete options={[{title:"Test"}, {title:"Tests"}, {title:"Tests"}, {title:"Tests"}, {title:"Tests"}, {title:"Tests"}]}
-                            renderOption={(props, option)=>(
-                                <Box component="li" sx={{"& > img": {mr: 2, flexShrink: 0}}} {...props}>
-                                    <img width="50" src={"/api/static/yotsubato/Yotsuba-to--14/001.jpg"} alt="" />
-                                    <p className="w-2/3 flex-grow">{option.title}</p>
-                                </Box>
-                            )}
-                            renderInput={(params) => (
-                                <div className="flex items-center gap-4">
-                                    <Search className="text-white"/>
-                                    <TextField {...params} placeholder="Buscar" variant="standard"
-                                        InputProps={{...params.InputProps, disableUnderline:true}}
-                                        value={searchQuery}
-                                    />
-                                </div>
-                            )}
-                            onInputChange={(e, v)=>setSearchQuery(v)}
-                            isOptionEqualToValue={(option, value)=>option.title === value.title}
-                            getOptionLabel={(option)=>option.title}
-                            onChange={(e, v)=>{
-                                // Redirigir a la página de la serie
-                                console.log(v);
-                            }}
-                        />
+                        <SearchAutocomplete/>
                     </div>
                 </div>
             </CSSTransition>
@@ -65,12 +42,12 @@ export function AppLayout():React.ReactElement {
                     <Divider/>
                     <ul className="mt-4 select-none">
                         <LateralListItem text="Inicio" link="/app" Icon={Home}/>
-                        <LateralListItem text="Biblioteca" link="/library" Icon={Book}/>
+                        <LateralListItem text="Biblioteca" link="/app/library" Icon={Book}/>
                         <Divider className="my-4"/>
-                        <LateralListItem text="Ajustes de Cuenta" link="/account" Icon={AccountCircle}/>
-                        <LateralListItem text="Ajustes" link="/settings" Icon={Settings}/>
+                        <LateralListItem text="Ajustes de Cuenta" link="/app/account" Icon={AccountCircle}/>
+                        <LateralListItem text="Ajustes" link="/app/settings" Icon={Settings}/>
                         {userData?.admin && (
-                            <LateralListItem text="Configuración" link="/config" Icon={AdminPanelSettings}/>
+                            <LateralListItem text="Configuración" link="/app/config" Icon={AdminPanelSettings}/>
                         )}
                         <LateralListItem text="Cerrar Sesión" Icon={Logout} onClick={()=>logoutUser()}/>
                     </ul>

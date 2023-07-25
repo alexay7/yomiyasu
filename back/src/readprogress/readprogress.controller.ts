@@ -65,14 +65,15 @@ export class ReadprogressController {
                 user:userId,
                 ...progressDto,
                 serie:foundBook.serie,
-                startDate:new Date()
+                startDate:new Date(),
+                lastUpdateDate:new Date()
             };
 
             return this.readprogressService.createReadProgress(newProgress);
         }
 
         // Se ha encontrado un proceso con estado de reading o unread, se actualizan los datos
-        return this.readprogressService.modifyReadProgress(foundProgress._id as Types.ObjectId, progressDto);
+        return this.readprogressService.modifyReadProgress(foundProgress._id as Types.ObjectId, {...progressDto, lastUpdateDate:new Date()});
     }
 
     @Get()

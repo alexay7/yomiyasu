@@ -9,7 +9,8 @@ export interface BookWithProgress extends Book {
         status: ProgressStatus,
         endDate?: Date
     }
-    , status: "reading" | "unread" | "readlist" | "completed"
+    , status: "reading" | "unread" | "readlist" | "completed",
+    type:"book"
 }
 
 export interface Book {
@@ -35,4 +36,9 @@ export interface BookProgress {
     startDate?:Date,
     endDate?:Date,
     status:"unread" | "reading" | "completed"
+}
+
+export interface BooksFilter {
+    data:BookWithProgress[],
+    pages:number
 }

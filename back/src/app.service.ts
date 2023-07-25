@@ -146,6 +146,7 @@ export class AppService {
 
                   if (imagesFolder) {
                       const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath);
+                      await this.seriesService.increaseBookCount(foundSerie._id);
 
                       const newBook = {
                           path: elem.bookName,

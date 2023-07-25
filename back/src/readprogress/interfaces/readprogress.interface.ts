@@ -9,6 +9,8 @@ export class UpdateReadProgress {
 
   startDate?: Date;
 
+  lastUpdateDate:Date;
+
   endDate?: Date;
 
   status?: ReadProgressStatus;
