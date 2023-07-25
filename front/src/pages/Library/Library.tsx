@@ -7,13 +7,16 @@ import {IconButton, Pagination} from "@mui/material";
 
 export function Library():React.ReactElement {
     const [selectedLetter, setSelectedLetter] = useState("ALL");
+    const [currentPage, setCurrentPage] = useState(1);
 
     const {data:series = {pages:1, data:[]}} = useQuery(["seriesData", selectedLetter], async()=>{
-        let link = "series";
+        let link = "series?";
 
         if (selectedLetter !== "ALL") {
-            link += `?firstLetter=${selectedLetter}`;
+            link += `firstLetter=${selectedLetter}&`;
         }
+
+        link += `page=${currentPage}&limit=25`;
 
         return api.get<SeriesFilter>(link);
     });
@@ -46,39 +49,17 @@ export function Library():React.ReactElement {
             </div>
 
             <div className="flex justify-center">
-                <Pagination color="primary" count={series.pages}/>
+                <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={series.pages}/>
             </div>
 
             <ul className="flex flex-wrap p-8 gap-4">
                 {series && series.data.map((serie)=>(
                     <SerieComponent key={serie._id} serieData={serie}/>
                 ))}
-                {series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}
-                {series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}
-                {series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}
-                {series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}{series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}{series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}{series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}{series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}{series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}
             </ul>
 
             <div className="flex justify-center">
-                <Pagination color="primary" count={(series || {pages:1}).pages}/>
+                <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={(series || {pages:1}).pages}/>
             </div>
         </div>
     );
