@@ -48,9 +48,11 @@ export function Library():React.ReactElement {
                 })}
             </div>
 
-            <div className="flex justify-center">
-                <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={series.pages}/>
-            </div>
+            {series.pages > 1 && (
+                <div className="flex justify-center">
+                    <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={series.pages}/>
+                </div>
+            )}
 
             <ul className="flex flex-wrap p-8 gap-4">
                 {series && series.data.map((serie)=>(
@@ -58,9 +60,11 @@ export function Library():React.ReactElement {
                 ))}
             </ul>
 
-            <div className="flex justify-center">
-                <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={(series || {pages:1}).pages}/>
-            </div>
+            {series.pages > 1 && (
+                <div className="flex justify-center">
+                    <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={(series || {pages:1}).pages}/>
+                </div>
+            )}
         </div>
     );
 }
