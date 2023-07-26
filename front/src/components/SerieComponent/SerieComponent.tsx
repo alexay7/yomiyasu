@@ -17,10 +17,12 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
 
     const navigate = useNavigate();
 
+    const thumbnail = `/api/static/${serieData.thumbnailPath}`;
+
     return (
-        <div className="w-[10rem]">
+        <div className="w-[10rem] flex-shrink-0">
             <div className="h-[13rem] bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
-                style={{backgroundImage:`url(/api/static/${serieData.thumbnailPath})`}}
+                style={{backgroundImage:`url(${encodeURI(thumbnail)})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
                         goTo(navigate, `/app/series/${serieData._id}`);

@@ -32,6 +32,12 @@ export class BooksController {
         return this.booksService.filterBooks(userId, query);
     }
 
+    @Get("genresAndArtists")
+    @ApiOkResponse({status:HttpStatus.OK})
+    async getGenresAndArtists() {
+        return this.booksService.getArtistsAndGenres();
+    }
+
     @Get(":id")
     @ApiOkResponse({status:HttpStatus.OK})
     async getBook(@Param("id") book:Types.ObjectId) {

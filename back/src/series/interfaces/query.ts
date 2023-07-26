@@ -1,3 +1,5 @@
+import {UpdateSeriesDto} from "../dto/update-series.dto";
+
 export interface SeriesSearch {
     genre?:string;
     author?:string;
@@ -7,4 +9,8 @@ export interface SeriesSearch {
     limit:number;
     page:number;
     firstLetter?:string;
+}
+
+export interface UpdateSerie extends UpdateSeriesDto {
+    lastModifiedDate:Date
 }

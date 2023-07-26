@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, UnauthorizedException, ForbiddenException} from "@nestjs/common";
 import {User, UserDocument} from "./schemas/user.schema";
 import {InjectModel} from "@nestjs/mongoose";
 import {Model, Types} from "mongoose";
@@ -12,6 +12,16 @@ export class UsersService {
 
     async create(createUserDto: CreateUserDto): Promise<UserDocument> {
         return this.userModel.create(createUserDto);
+    }
+
+    async isAdmin(id:Types.ObjectId):Promise<boolean> {
+        const foundUser = await this.userModel.findById(id, {admin:1});
+
+        if (!foundUser) throw new UnauthorizedException();
+
+        if (!foundUser.admin) throw new ForbiddenException();
+        
+        return foundUser.admin;
     }
 
     async findAll(): Promise<UserDocument[]> {

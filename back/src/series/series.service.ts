@@ -2,7 +2,7 @@ import {Injectable, Logger} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {Model, Types} from "mongoose";
 import {Serie, SerieDocument} from "./schemas/series.schema";
-import {SeriesSearch} from "./interfaces/query";
+import {SeriesSearch, UpdateSerie} from "./interfaces/query";
 import {BooksService} from "../books/books.service";
 
 @Injectable()
@@ -44,6 +44,10 @@ export class SeriesService {
       return this.seriesModel.create(newSerie);
   }
 
+  async editSerie(id:Types.ObjectId, updateSerie:UpdateSerie) {
+      return this.seriesModel.findByIdAndUpdate(id, updateSerie);
+  }
+
   async increaseBookCount(id:Types.ObjectId) {
       return this.seriesModel.findByIdAndUpdate(id, {$inc:{bookCount:1}});
   }
@@ -65,19 +69,15 @@ export class SeriesService {
       }
 
       if (query.firstLetter) {
-          result.where({"sortName": {$regex: "^" + query.firstLetter, $options: "i"}});
+          if (query.firstLetter === "SPECIAL") {
+              result.where({"sortName":{$regex:"^[^a-zA-Z]", $options:"i"}});
+          } else {
+              result.where({"sortName": {$regex: "^" + query.firstLetter, $options: "i"}});
+          }
       }
 
       if (query.status) {
           result.where({status:query.status});
-      }
-
-      if (query.sort) {
-          if (query.sort.includes("!")) {
-              result.sort({[query.sort.replace("!", "")]:"desc"});
-          } else {
-              result.sort({[query.sort]:"asc"});
-          }
       }
 
       const countQuery = await this.seriesModel.find().merge(result).count();
@@ -85,6 +85,18 @@ export class SeriesService {
       const results = await result.skip((query.page - 1) * query.limit).limit(query.limit);
 
       return {data:results, pages: Math.ceil(countQuery / query.limit)};
+  }
+
+  async getArtistsAndGenres() {
+      const pipe = await this.seriesModel.aggregate()
+          .unwind({path:"$genres", preserveNullAndEmptyArrays:true})
+          .unwind({path:"$authors", preserveNullAndEmptyArrays:true})
+          .group({
+              _id:null,
+              genres:{$addToSet:"$genres"},
+              authors:{$addToSet:"$authors"}
+          }).project({_id:0});
+      return pipe[0];
   }
 
   getAlphabetCount(query?:SeriesSearch) {

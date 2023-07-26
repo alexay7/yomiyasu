@@ -37,7 +37,7 @@ export class AppService {
    * mismo nombre para que se le quite la propiedad "missing"
    */
   @Cron("0 0 3 * * *")
-  async testing() {
+  async rescanLibrary() {
       this.logger.log("\x1b[34mEscaneando biblioteca...");
       const existingFolders: string[] = [];
       const existingBooks: {
@@ -99,6 +99,9 @@ export class AppService {
                   sortName: elem
               };
               await this.seriesService.updateOrCreate(newSeries);
+              setTimeout(()=>{
+                  // Esperando a que se cree la serie
+              }, 1000);
           });
       }
 

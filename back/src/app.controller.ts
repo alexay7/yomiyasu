@@ -1,37 +1,47 @@
 import {
-    Body,
     Controller,
     Get,
-    Post,
     Req,
     Res,
     UseGuards,
-    HttpStatus
+    HttpStatus,
+    UnauthorizedException
 } from "@nestjs/common";
 import {AppService} from "./app.service";
 import {Request, Response} from "express";
 import {JwtAuthGuard} from "./auth/strategies/jwt.strategy";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
+import {Types} from "mongoose";
+import {UsersService} from "./users/users.service";
 
 @Controller()
+@UseGuards(JwtAuthGuard)
 @ApiTags("Global")
 export class AppController {
-    constructor(private readonly appService: AppService) {}
+    constructor(
+        private readonly appService: AppService,
+        private readonly usersService:UsersService) {}
 
-    @UseGuards(JwtAuthGuard)
     @ApiOkResponse({status:HttpStatus.OK})
     @Get()
     getHello(): string {
         return this.appService.getHello();
     }
 
-    @Post()
+    @Get("rescan")
     @ApiOkResponse({status:HttpStatus.OK})
-    testing(@Body() body: {page: number}) {
-        console.log(body);
+    async rescanLibrary(@Req() req:Request) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        await this.appService.rescanLibrary();
+
+        return {status:"OK"};
     }
 
-    @UseGuards(JwtAuthGuard)
     @ApiOkResponse({status:HttpStatus.OK})
     @Get("static/*")
     serveFiles(@Req() req: Request, @Res() res: Response) {

@@ -61,7 +61,7 @@ export function Home():React.ReactElement {
                 {recentBooks && recentBooks.length > 0 && (
                     <Fragment>
                         <h2>Libros Añadidos Recientemente</h2>
-                        <ul className="lg:px-4 flex gap-8">
+                        <ul className="lg:px-4 flex gap-8 overflow-hidden">
                             {recentBooks?.map((book)=>(
                                 <BookComponent key={book._id} bookData={book}/>
                             ))}

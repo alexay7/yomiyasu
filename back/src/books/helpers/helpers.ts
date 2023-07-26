@@ -21,11 +21,16 @@ export function extractUrlFromHtml(
     bookPath: string
 ): {folderName: string; thumbnailPath: string; totalImages: number} | null {
     const htmlContent = fs.readFileSync(bookPath, "utf8");
-    const urlRegex = /url\("([^/]+)\/[^/]+\.[a-z]+\"\)/i;
-    const match = htmlContent.match(urlRegex);
+    const urlRegex = /url\(&quot;(.*?)&quot;\)/i;
+    let match = htmlContent.match(urlRegex);
 
+    if (!match) {
+        const urlRegexDecoded = /url\("(.*?)"\)/i;
+        match = htmlContent.match(urlRegexDecoded);
+    }
+    
     if (match && match[1]) {
-        const imagesName = match[1];
+        const imagesName = decodeURI(match[1].split("/")[0]);
         const imagesPath = join(dirname(bookPath), imagesName);
         const firstImage = extractFirstFileNameFromFolder(imagesPath);
         const totalImages = countFilesInFolder(imagesPath);

@@ -18,6 +18,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     const [onItem, setOnItem] = useState(false);
 
     const navigate = useNavigate();
+    const thumbnailUrl = `/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}`;
 
     useEffect(()=>{
         if (lastProgressRef.current && bookData.lastProgress) {
@@ -30,9 +31,9 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     }, [bookData]);
 
     return (
-        <div className="w-[10rem]">
+        <div className="w-[10rem] flex-shrink-0">
             <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
-                style={{backgroundImage:`url(/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath})`}}
+                style={{backgroundImage:`url(${encodeURI(thumbnailUrl)})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
                         goTo(navigate, `/reader/${bookData._id}`);

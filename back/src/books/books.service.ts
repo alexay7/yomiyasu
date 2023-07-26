@@ -166,4 +166,13 @@ export class BooksService {
           {new: true}
       );
   }
+
+  getArtistsAndGenres() {
+      return this.bookModel.aggregate()
+          .group({
+              _id:null,
+              genres:{$addToSet:"$genres"},
+              authors:{$addToSet:"$authors"}
+          });
+  }
 }

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Alphabet, SeriesFilter} from "../../types/serie";
@@ -7,21 +7,26 @@ import {IconButton, Pagination} from "@mui/material";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {ArrowBack, Sort} from "@mui/icons-material";
 import {goBack} from "../../helpers/helpers";
+import {useGlobal} from "../../contexts/GlobalContext";
+import {LibrarySettings} from "./LibrarySettings/LibrarySettings";
+import {useAuth} from "../../contexts/AuthContext";
 
 export function Library():React.ReactElement {
     const [searchParams] = useSearchParams();
+    const {reloaded} = useGlobal();
+    const {userData} = useAuth();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
 
     const navigate = useNavigate();
 
-    const {data:series = {pages:1, data:[]}} = useQuery(["seriesData", selectedLetter], async()=>{
+    const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter], async()=>{
         const genre = searchParams.get("genre");
         const author = searchParams.get("author");
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
-            link += `firstLetter=${selectedLetter}&`;
+            link += `firstLetter=${selectedLetter.replace("#", "SPECIAL")}&`;
         }
 
         if (genre) {
@@ -32,14 +37,25 @@ export function Library():React.ReactElement {
             link += `author=${author}&`;
         }
 
-        link += `page=${currentPage}&limit=25`;
+        link += `page=${currentPage}&limit=25&sort=sortName`;
 
         return api.get<SeriesFilter>(link);
     });
 
-    const {data:alphabet} = useQuery("alphabet", async()=>{
+    const {data:alphabet, refetch:refetchAlphabet} = useQuery("alphabet", async()=>{
         return api.get<Alphabet[]>("series/alphabet");
     });
+
+    useEffect(()=>{
+        async function refetchBooks():Promise<void> {
+            await refetchAlphabet();
+            await refetchSeries();
+        }
+
+        if (reloaded) {
+            void refetchBooks();
+        }
+    }, [refetchAlphabet, refetchSeries, reloaded]);
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
@@ -48,6 +64,9 @@ export function Library():React.ReactElement {
                     <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>
                     </IconButton>
+                    {userData?.admin && (
+                        <LibrarySettings/>
+                    )}
                 </div>
                 <div className="flex items-center mx-4">
                     <IconButton>

@@ -1,13 +1,16 @@
-import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException} from "@nestjs/common";
+import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body} from "@nestjs/common";
 import {SeriesService} from "./series.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
-import {SeriesSearch} from "./interfaces/query";
+import {SeriesSearch, UpdateSerie} from "./interfaces/query";
 import {BooksService} from "../books/books.service";
 import {Request} from "express";
 import {Types} from "mongoose";
 import {SerieWithProgress} from "./interfaces/serieWithProgress";
 import {ParseObjectIdPipe} from "../validation/objectId";
+import {UpdateSeriesDto} from "./dto/update-series.dto";
+import {WebsocketsGateway} from "../websockets/websockets.gateway";
+import {UsersService} from "../users/users.service";
 
 @Controller("series")
 @UseGuards(JwtAuthGuard)
@@ -15,7 +18,9 @@ import {ParseObjectIdPipe} from "../validation/objectId";
 export class SeriesController {
     constructor(
         private readonly seriesService: SeriesService,
-        private readonly booksService:BooksService
+        private readonly booksService:BooksService,
+        private readonly websocketsGateway:WebsocketsGateway,
+        private readonly usersService:UsersService
     ) {}
 
     @Get()
@@ -24,6 +29,13 @@ export class SeriesController {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
+
+        let sort = query.sort || "sortName";
+        let reversed = false;
+        if (sort.includes("!")) {
+            reversed = true;
+            sort = sort.replace("!", "") as "createdDate" | "bookCount" | "lastModifiedDate" | "sortName";
+        }
 
         if (!query.page || query.page < 1) {
             query.page = 1;
@@ -45,12 +57,45 @@ export class SeriesController {
                         ...serieElem.toObject(),
                         ...serieData
                     };
-                
+                    
                     seriesWithProgress.push(serieWithProgress);
                 }
             }));
 
-        return {data:seriesWithProgress, pages:foundSeries.pages};
+        return {data:seriesWithProgress.sort((x, y)=> {
+            if (x[sort] < y[sort]) {
+                return reversed ? 1 : -1;
+            }
+            if (x[sort] > y[sort]) {
+                return reversed ? -1 : 1;
+            }
+            return 0;
+        }), pages:foundSeries.pages};
+    }
+
+    @Patch(":id")
+    @ApiOkResponse({status:HttpStatus.OK})
+    async updateSerie(@Req() req:Request, @Param("id", ParseObjectIdPipe) serie:Types.ObjectId, @Body() updateSerieDto:UpdateSeriesDto) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        this.websocketsGateway.sendNotificationToClient({action:"LIBRARY_UPDATE"});
+
+        const updateSerie:UpdateSerie = {
+            ...updateSerieDto,
+            lastModifiedDate:new Date()
+        };
+
+        return this.seriesService.editSerie(serie, updateSerie);
+    }
+
+    @Get("genresAndArtists")
+    @ApiOkResponse({status:HttpStatus.OK})
+    getGenresAndArtists() {
+        return this.seriesService.getArtistsAndGenres();
     }
 
     @Get("alphabet")

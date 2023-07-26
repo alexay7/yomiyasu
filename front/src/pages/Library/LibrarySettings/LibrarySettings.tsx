@@ -1,16 +1,11 @@
-import {MoreVert} from "@mui/icons-material";
-import {IconButton, Menu, MenuItem} from "@mui/material";
 import React, {useState} from "react";
 import {useAuth} from "../../../contexts/AuthContext";
-import {SerieWithProgress} from "../../../types/serie";
-import {EditSerie} from "../../../pages/Serie/components/EditSerie";
+import {IconButton, Menu, MenuItem} from "@mui/material";
+import {MoreVert} from "@mui/icons-material";
+import {api} from "../../../api/api";
+import {toast} from "react-toastify";
 
-interface SerieSettingsProps {
-    serieData:SerieWithProgress;
-}
-
-export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
-    const {serieData} = props;
+export function LibrarySettings():React.ReactElement {
     const {userData} = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -20,6 +15,12 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
 
     function handleClose():void {
         setAnchorEl(null);
+    }
+
+    async function rescanLibrary():Promise<void> {
+        toast.info("Reescaneando la biblioteca...");
+        await api.get<{status:string}>("rescan");
+        toast.success("Reescaneo terminado");
     }
 
     return (
@@ -34,11 +35,12 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
                 {userData?.admin && (
-                    <EditSerie serieData={serieData} title={`Editar ${serieData?.visibleName}`} handleClose={handleClose}/>
-                )}
-                {(serieData.status !== "readlist" && serieData.status !== "completed") && (
-                    <MenuItem key="readlist" onClick={handleClose}>
-                        Añadir a &quot;Leer más tarde&quot;
+                    <MenuItem key="readlist" onClick={()=>{
+                        void rescanLibrary();
+                        handleClose();
+                    }}
+                    >
+                        Reescanear biblioteca
                     </MenuItem>
                 )}
             </Menu>
