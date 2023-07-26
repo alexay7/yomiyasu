@@ -5,6 +5,7 @@ import {api} from "../../../api/api";
 import {SerieWithProgress, SeriesFilter} from "../../../types/serie";
 import {BookWithProgress} from "../../../types/book";
 import {useNavigate} from "react-router-dom";
+import {goTo} from "../../../helpers/helpers";
 
 export function SearchAutocomplete():React.ReactElement {
     const [searchQuery, setSearchQuery] = useState("");
@@ -72,9 +73,9 @@ export function SearchAutocomplete():React.ReactElement {
                 // Redirigir a la página de la serie
                 if (v) {
                     if (v.type === "book") {
-                        navigate(`/reader/${v._id}`);
+                        goTo(navigate, `/reader/${v._id}`);
                     } else {
-                        navigate(`/app/series/${v._id}`);
+                        goTo(navigate, `/app/series/${v._id}`);
                     }
                 }
             }}

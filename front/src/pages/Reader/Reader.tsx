@@ -1,5 +1,5 @@
 import React, {Fragment, useEffect, useRef, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
@@ -10,6 +10,7 @@ import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
 import {StopWatchMenu} from "./components/StopWatchMenu";
 import {createProgress} from "../../helpers/progress";
+import {goBack} from "../../helpers/helpers";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -21,6 +22,8 @@ export function Reader():React.ReactElement {
     const [doublePages, setDoublePages] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [timer, setTimer] = useState(0);
+
+    const navigate = useNavigate();
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -361,7 +364,7 @@ export function Reader():React.ReactElement {
                     {showToolBar && (
                         <div className="bg-[#272727] w-full h-[5vh] text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
                             <div className="w-1/2 flex items-center gap-2 px-2">
-                                <IconButton onClick={()=>window.location.href = "/app"}>
+                                <IconButton onClick={()=>goBack(navigate)}>
                                     <ArrowBack/>
                                 </IconButton>
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>

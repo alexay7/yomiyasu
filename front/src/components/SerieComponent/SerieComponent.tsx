@@ -4,6 +4,7 @@ import {Fade, IconButton} from "@mui/material";
 import {Book} from "@mui/icons-material";
 import {SerieSettings} from "./components/SerieSettings";
 import {useNavigate} from "react-router-dom";
+import {goTo} from "../../helpers/helpers";
 
 interface SerieComponentProps {
     serieData:SerieWithProgress
@@ -22,7 +23,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 style={{backgroundImage:`url(/api/static/${serieData.thumbnailPath})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
-                        navigate(`/app/series/${serieData._id}`);
+                        goTo(navigate, `/app/series/${serieData._id}`);
                     }
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
@@ -36,7 +37,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
 
                 <Fade in={onItem}>
                     <div>
-                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>navigate(`/app/series/${serieData._id}`)}>
+                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>goTo(navigate, `/app/series/${serieData._id}`)}>
                             <Book className="w-12 h-12"/>
                         </IconButton>
                     </div>

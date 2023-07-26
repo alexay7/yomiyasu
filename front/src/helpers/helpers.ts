@@ -1,3 +1,4 @@
+import {NavigateFunction} from "react-router-dom";
 import {api} from "../api/api";
 import {RefreshResponse} from "../types/responses";
 
@@ -21,4 +22,17 @@ export async function checkRefreshToken():Promise<RefreshResponse> {
     const uuid = window.localStorage.getItem("uuid");
     const response = await api.post<{uuid: string}, RefreshResponse>("auth/refresh", {uuid:uuid || ""});
     return response;
+}
+
+export function goTo(navigate:NavigateFunction, link:string):void {
+    window.localStorage.setItem("origin", window.location.pathname);
+    navigate(link);
+}
+
+export function goBack(navigate:NavigateFunction):void {
+    let origin = window.localStorage.getItem("origin") || "/";
+    if (origin === window.location.pathname) {
+        origin = "/";
+    }
+    navigate(origin);
 }

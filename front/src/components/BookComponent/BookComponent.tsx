@@ -5,6 +5,7 @@ import "./styles.css";
 import {Fade, IconButton} from "@mui/material";
 import {BookSettings} from "./components/BookSettings";
 import {useNavigate} from "react-router-dom";
+import {goTo} from "../../helpers/helpers";
 
 interface BookComponentProps {
     bookData:BookWithProgress,
@@ -34,7 +35,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 style={{backgroundImage:`url(/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
-                        navigate(`/reader/${bookData._id}`);
+                        goTo(navigate, `/reader/${bookData._id}`);
                     }
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
@@ -46,7 +47,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
                 <Fade in={onItem}>
                     <div>
-                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>navigate(`/reader/${bookData._id}`)}>
+                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>goTo(navigate, `/reader/${bookData._id}`)}>
                             <PlayCircle className="w-16 h-16"/>
                         </IconButton>
                     </div>

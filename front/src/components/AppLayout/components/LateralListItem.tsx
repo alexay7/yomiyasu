@@ -1,5 +1,6 @@
 import React, {LiHTMLAttributes} from "react";
 import {useNavigate} from "react-router-dom";
+import {goTo} from "../../../helpers/helpers";
 
 interface LateralListItemProps extends LiHTMLAttributes<HTMLLIElement> {
     text:string;
@@ -22,7 +23,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
     return (
         <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer`}
             onClick={()=>{
-                if (link)navigate(link);
+                if (link) goTo(navigate, link);
             }}
             {...moreProps}
         >

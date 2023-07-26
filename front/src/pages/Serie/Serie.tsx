@@ -9,6 +9,7 @@ import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {ArrowBack, ArrowDropDown, ArrowDropUp, Edit} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
+import {goBack, goTo} from "../../helpers/helpers";
 
 export function Serie():React.ReactElement {
     const {id} = useParams();
@@ -50,7 +51,7 @@ export function Serie():React.ReactElement {
         <div className="bg-[#121212] overflow-x-hidden pb-4">
             <div className="fixed z-20 w-full bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4">
-                    <IconButton onClick={()=>navigate("/app")}>
+                    <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>
                     </IconButton>
                     {serieData && (
@@ -83,7 +84,7 @@ export function Serie():React.ReactElement {
                             <p className="text py-4 text-sm">{serieData.bookCount} libros</p>
                             {serieBooks && serieBooks.length > 0 && (
                                 <Button color="inherit" variant="contained" className="w-fit my-4 py-1 px-2" onClick={()=>{
-                                    navigate(`/reader/${serieBooks[0]._id}`);
+                                    goTo(navigate, `/reader/${serieBooks[0]._id}`);
                                 }}
                                 >{getReadButtonText(serieData)}
                                 </Button>
@@ -99,7 +100,7 @@ export function Serie():React.ReactElement {
                             <p className="w-[14rem] text-sm">GÉNEROS</p>
                             <ul className="list-none flex gap-2 text-xs">
                                 {serieData.genres.map((genre)=>(
-                                    <Button onClick={()=>navigate(`/app/library?genre=${genre}`)} className="px-2 py-0 text-white normal-case border border-solid border-gray-700 rounded-md" key={genre}>{genre}</Button>
+                                    <Button onClick={()=>goTo(navigate, `/app/library?genre=${genre}`)} className="px-2 py-0 text-white normal-case border border-solid border-gray-700 rounded-md" key={genre}>{genre}</Button>
                                 ))}
                             </ul>
                         </div>
@@ -107,7 +108,7 @@ export function Serie():React.ReactElement {
                             <p className="w-[14rem] text-sm">AUTORES</p>
                             <ul className="list-none flex gap-2 text-xs">
                                 {serieData.authors.map((author)=>(
-                                    <Button onClick={()=>navigate(`/app/library?author=${author}`)} className="px-2 py-0 text-white normal-case border border-solid border-gray-700 rounded-md" key={author}>{author}</Button>
+                                    <Button onClick={()=>goTo(navigate, `/app/library?author=${author}`)} className="px-2 py-0 text-white normal-case border border-solid border-gray-700 rounded-md" key={author}>{author}</Button>
                                 ))}
                             </ul>
                         </div>

@@ -6,6 +6,7 @@ import {Button, Divider} from "@mui/material";
 import {useAuth} from "../../contexts/AuthContext";
 import {useNavigate} from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
+import {goTo} from "../../helpers/helpers";
 
 function Login():React.ReactElement {
     const {loginUser, loading, loggedIn} = useAuth();
@@ -16,7 +17,7 @@ function Login():React.ReactElement {
 
     useEffect(()=>{
         if (loggedIn) {
-            navigate("/");
+            goTo(navigate, "/");
         }
     }, [loading, loggedIn, navigate]);
 
@@ -27,7 +28,7 @@ function Login():React.ReactElement {
 
         const response = await loginUser(emailUser, password);
         if (response && response.status === "ok") {
-            navigate("/");
+            goTo(navigate, "/");
         }
     }
 

@@ -6,6 +6,7 @@ import {Book, BookProgress, BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {useNavigate} from "react-router-dom";
+import {goTo} from "../../../helpers/helpers";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -68,7 +69,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             >
                 {!insideSerie && (
                     <MenuItem key="serie" onClick={()=>{
-                        navigate(`/app/series/${bookData.serie}`);
+                        goTo(navigate, `/app/series/${bookData.serie}`);
                         handleClose();
                     }}
                     >
