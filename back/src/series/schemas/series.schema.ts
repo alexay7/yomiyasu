@@ -17,7 +17,7 @@ export class Serie {
   @Prop({type: String, required: true})
   sortName: string;
 
-  @Prop({type: Number, default: 1})
+  @Prop({type: Number, default: 0})
   bookCount: number;
 
   @Prop({type: Date, default: new Date()})

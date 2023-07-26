@@ -70,8 +70,12 @@ export function SearchAutocomplete():React.ReactElement {
             filterOptions={createFilterOptions({matchFrom:"any", stringify:(option)=>option.visibleName + option.sortName})}
             onChange={(e, v)=>{
                 // Redirigir a la página de la serie
-                if (v && v.type === "book") {
-                    navigate(`/reader/${v._id}`);
+                if (v) {
+                    if (v.type === "book") {
+                        navigate(`/reader/${v._id}`);
+                    } else {
+                        navigate(`/app/series/${v._id}`);
+                    }
                 }
             }}
             noOptionsText="Busca series o libros de la biblioteca aquí"
