@@ -49,7 +49,7 @@ export function Serie():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
-            <div className="fixed z-20 w-full bg-[#212121] py-1 flex items-center justify-between h-12">
+            <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4">
                     <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>

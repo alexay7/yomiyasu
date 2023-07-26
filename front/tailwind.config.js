@@ -11,6 +11,9 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
+      width: {
+        "fill": "-webkit-fill-available"
+      }
     },
   },
   plugins: [],

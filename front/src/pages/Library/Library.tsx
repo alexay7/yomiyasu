@@ -4,12 +4,16 @@ import {api} from "../../api/api";
 import {Alphabet, SeriesFilter} from "../../types/serie";
 import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
 import {IconButton, Pagination} from "@mui/material";
-import {useSearchParams} from "react-router-dom";
+import {useNavigate, useSearchParams} from "react-router-dom";
+import {ArrowBack, Sort} from "@mui/icons-material";
+import {goBack} from "../../helpers/helpers";
 
 export function Library():React.ReactElement {
     const [searchParams] = useSearchParams();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
+
+    const navigate = useNavigate();
 
     const {data:series = {pages:1, data:[]}} = useQuery(["seriesData", selectedLetter], async()=>{
         const genre = searchParams.get("genre");
@@ -39,8 +43,20 @@ export function Library():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
+            <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
+                <div className="flex items-center mx-4">
+                    <IconButton onClick={()=>goBack(navigate)}>
+                        <ArrowBack/>
+                    </IconButton>
+                </div>
+                <div className="flex items-center mx-4">
+                    <IconButton>
+                        <Sort/>
+                    </IconButton>
+                </div>
+            </div>
             {/* Elegir alfabeto */}
-            <div className="flex w-full justify-center py-4 gap-1 flex-wrap">
+            <div className="flex w-full justify-center gap-1 flex-wrap pt-16">
                 {alphabet?.map((letter)=>{
                     let textColor = "text-white";
                     let disabled = false;
@@ -61,12 +77,12 @@ export function Library():React.ReactElement {
             </div>
 
             {series.pages > 1 && (
-                <div className="flex justify-center">
+                <div className="flex justify-center py-4">
                     <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={series.pages}/>
                 </div>
             )}
 
-            <ul className="flex flex-wrap p-8 gap-4">
+            <ul className="flex flex-wrap p-8 py-4 gap-4">
                 {series && series.data.map((serie)=>(
                     <SerieComponent key={serie._id} serieData={serie}/>
                 ))}
