@@ -8,12 +8,13 @@ import {Home} from "./pages/Home/Home";
 import {Reader} from "./pages/Reader/Reader";
 import {Library} from "./pages/Library/Library";
 import {Serie} from "./pages/Serie/Serie";
+import {Loading} from "./pages/Loading/Loading";
 
 export function App():React.ReactElement {
     const {loading} = useAuth();
 
     if (loading) {
-        return <p>Cargando</p>;
+        return <Loading/>;
     }
 
     return (
