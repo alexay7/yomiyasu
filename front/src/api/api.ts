@@ -1,9 +1,22 @@
+import {checkRefreshToken} from "../helpers/helpers";
 import {HttpError} from "../types/error";
 
 async function request<TResponse>(url:string, config:RequestInit):Promise<TResponse> {
     const response = await fetch(`/api/${url}`, config);
+
     if (response.status > 399) {
         const errorData = await response.json() as {status:"ACCESS" | "REFRESH" | "NONE"};
+        if (response.status === 401 && !url.includes("auth")) {
+            try {
+                await checkRefreshToken();
+                const responseSecondTry = await fetch(`/api/${url}`, config);
+                if (responseSecondTry) {
+                    return responseSecondTry.json() as TResponse;
+                }
+            } catch {
+                window.location.href = "/";
+            }
+        }
         throw new HttpError(response.statusText, response.status, errorData.status);
     }
     return response.json() as TResponse;

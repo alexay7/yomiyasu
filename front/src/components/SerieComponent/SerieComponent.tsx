@@ -1,8 +1,9 @@
 import React, {useRef, useState} from "react";
 import {SerieWithProgress} from "../../types/serie";
 import {Fade, IconButton} from "@mui/material";
-import {PlayCircle} from "@mui/icons-material";
+import {Book} from "@mui/icons-material";
 import {SerieSettings} from "./components/SerieSettings";
+import {useNavigate} from "react-router-dom";
 
 interface SerieComponentProps {
     serieData:SerieWithProgress
@@ -13,13 +14,15 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
 
+    const navigate = useNavigate();
+
     return (
         <div className="w-[10rem]">
             <div className="h-[13rem] bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
                 style={{backgroundImage:`url(/api/static/${serieData.thumbnailPath})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
-                        window.location.href = `/book/${serieData._id}`;
+                        navigate(`/app/series/${serieData._id}`);
                     }
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
@@ -33,15 +36,15 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
 
                 <Fade in={onItem}>
                     <div>
-                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>window.location.href = `/book/${serieData._id}`}>
-                            <PlayCircle className="w-16 h-16"/>
+                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>navigate(`/app/series/${serieData._id}`)}>
+                            <Book className="w-12 h-12"/>
                         </IconButton>
                     </div>
                 </Fade>
             </div>
 
             <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
-                <a href={`/book/${serieData._id}`} className="line-clamp-2 h-12">{serieData.visibleName}</a>
+                <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12">{serieData.visibleName}</a>
                 <div className="flex items-center justify-between">
                     <p className="text-gray-300 text-sm lg:text-xs">{serieData.bookCount} libros</p>
                     <SerieSettings serieData={serieData}/>

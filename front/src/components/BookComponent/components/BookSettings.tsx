@@ -5,16 +5,20 @@ import {useAuth} from "../../../contexts/AuthContext";
 import {Book, BookProgress, BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {useGlobal} from "../../../contexts/GlobalContext";
+import {useNavigate} from "react-router-dom";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
+    insideSerie?:boolean;
 }
 
 export function BookSettings(props:BookSettingsProps):React.ReactElement {
-    const {bookData} = props;
+    const {bookData, insideSerie} = props;
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const navigate = useNavigate();
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
@@ -62,9 +66,15 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             <Menu id="long-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
-                <MenuItem key="serie" onClick={handleClose}>
-                    Ir a la serie
-                </MenuItem>
+                {!insideSerie && (
+                    <MenuItem key="serie" onClick={()=>{
+                        navigate(`/app/series/${bookData.serie}`);
+                        handleClose();
+                    }}
+                    >
+                        Ir a la serie
+                    </MenuItem>
+                )}
                 {userData?.admin && (
                     <MenuItem key="edit" onClick={handleClose}>
                         Editar

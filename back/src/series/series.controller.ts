@@ -1,4 +1,4 @@
-import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException} from "@nestjs/common";
+import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException} from "@nestjs/common";
 import {SeriesService} from "./series.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
@@ -7,6 +7,7 @@ import {BooksService} from "../books/books.service";
 import {Request} from "express";
 import {Types} from "mongoose";
 import {SerieWithProgress} from "./interfaces/serieWithProgress";
+import {ParseObjectIdPipe} from "../validation/objectId";
 
 @Controller("series")
 @UseGuards(JwtAuthGuard)
@@ -37,24 +38,12 @@ export class SeriesController {
 
         await Promise.all(
             foundSeries.data.map(async(serieElem)=>{
-                const unreadBooks = await this.booksService.filterBooks(userId, {serie:serieElem._id, sort:"sortName", status:"unread"});
-                let thumbnail:string | undefined;
+                const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
 
-                if (unreadBooks.length === 0) {
-                    const firstBook = await this.booksService.filterBooks(userId, {serie:serieElem._id, sort:"sortName"});
-                    if (firstBook.length > 0) {
-                        thumbnail = `${firstBook[0].seriePath}/${firstBook[0].path}/${firstBook[0].thumbnailPath}`;   
-                    }
-                } else {
-                    thumbnail = `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}`;  
-                }
-
-                if (thumbnail) {
+                if (serieData) {
                     const serieWithProgress:SerieWithProgress = {
                         ...serieElem.toObject(),
-                        unreadBooks:unreadBooks.length,
-                        thumbnailPath:thumbnail,
-                        type:"serie"
+                        ...serieData
                     };
                 
                     seriesWithProgress.push(serieWithProgress);
@@ -89,5 +78,27 @@ export class SeriesController {
         }
 
         return alphabet;
+    }
+
+    @Get(":id")
+    @ApiOkResponse({status:HttpStatus.OK})
+    async getSerie(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const foundSerie = await this.seriesService.findById(id);
+
+        if (!foundSerie) throw new NotFoundException();
+
+        const serieData = await this.booksService.getSerieStats(userId, foundSerie._id);
+
+        if (serieData) {
+            const serieWithProgress:SerieWithProgress = {
+                ...foundSerie.toObject(),
+                ...serieData
+            };
+            return serieWithProgress;
+        }
     }
 }

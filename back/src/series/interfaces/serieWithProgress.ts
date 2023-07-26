@@ -4,5 +4,5 @@ export interface SerieWithProgress extends Serie {
     unreadBooks:number;
     readlist?:boolean;
     thumbnailPath:string;
-    type?:"serie"
+    type?:string
 }

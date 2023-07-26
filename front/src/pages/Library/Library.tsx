@@ -4,16 +4,28 @@ import {api} from "../../api/api";
 import {Alphabet, SeriesFilter} from "../../types/serie";
 import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
 import {IconButton, Pagination} from "@mui/material";
+import {useSearchParams} from "react-router-dom";
 
 export function Library():React.ReactElement {
+    const [searchParams] = useSearchParams();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(1);
 
     const {data:series = {pages:1, data:[]}} = useQuery(["seriesData", selectedLetter], async()=>{
+        const genre = searchParams.get("genre");
+        const author = searchParams.get("author");
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
             link += `firstLetter=${selectedLetter}&`;
+        }
+
+        if (genre) {
+            link += `genre=${genre}&`;
+        }
+
+        if (author) {
+            link += `author=${author}&`;
         }
 
         link += `page=${currentPage}&limit=25`;

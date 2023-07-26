@@ -13,6 +13,10 @@ export class SeriesService {
     ) {}
   private readonly logger = new Logger(SeriesService.name);
 
+  async findById(id:Types.ObjectId) {
+      return this.seriesModel.findById(id);
+  }
+
   async updateOrCreate(newSerie: {
       path: string;
       visibleName: string;

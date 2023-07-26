@@ -26,7 +26,7 @@ export class BooksService {
       if (query.author) aggregate.match({"authors":{$in:[query.author]}});
 
       // Filtrado por serie (path, no _id)
-      if (query.serie) aggregate.match({"serie":query.serie});
+      if (query.serie) aggregate.match({"serie":new Types.ObjectId(query.serie)});
 
       /**
      * OBTENER EL ESTADO DE LECTURA DEL USUARIO
@@ -96,6 +96,28 @@ export class BooksService {
 
   async findById(id: Types.ObjectId): Promise<Book | null> {
       return this.bookModel.findById(id);
+  }
+
+  async getSerieStats(userId:Types.ObjectId, serie:Types.ObjectId) {
+      const unreadBooks = await this.filterBooks(userId, {serie:serie._id, sort:"sortName", status:"unread"});
+      let thumbnail:string | undefined;
+
+      if (unreadBooks.length === 0) {
+          const firstBook = await this.filterBooks(userId, {serie:serie._id, sort:"sortName"});
+          if (firstBook.length > 0) {
+              thumbnail = `${firstBook[0].seriePath}/${firstBook[0].path}/${firstBook[0].thumbnailPath}`;   
+          }
+      } else {
+          thumbnail = `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}`;  
+      }
+
+      if (thumbnail) {
+          return {unreadBooks:unreadBooks.length,
+              thumbnailPath:thumbnail,
+              type:"serie"};
+      }
+
+      return null;
   }
 
   async updateOrCreate(newBook: {

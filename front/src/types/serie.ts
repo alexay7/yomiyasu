@@ -1,3 +1,5 @@
+import {BookWithProgress} from "./book";
+
 export interface Serie {
     _id: string;
     path: string;
@@ -27,4 +29,8 @@ export interface SeriesFilter {
 export interface Alphabet {
     group:string;
     count:number;
+}
+
+export interface FullSerie extends SerieWithProgress {
+    books:BookWithProgress[]
 }

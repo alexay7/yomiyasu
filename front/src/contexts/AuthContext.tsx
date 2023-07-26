@@ -1,9 +1,10 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {LoggedUser, LoginUser, RegisterUser} from "./../types/user";
 import {api} from "../api/api";
-import {AuthResponse, RefreshResponse} from "../types/responses";
+import {AuthResponse} from "../types/responses";
 import {HttpError} from "../types/error";
 import {toast} from "react-toastify";
+import {checkRefreshToken} from "../helpers/helpers";
 
 export interface ContextProps {
     children:React.ReactNode
@@ -85,13 +86,13 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
             return response;
         }
 
-        async function checkRefreshToken():Promise<RefreshResponse> {
-            const uuid = window.localStorage.getItem("uuid");
-            const response = await api.post<{uuid: string}, RefreshResponse>("auth/refresh", {uuid:uuid || ""});
-            return response;
-        }
-
         async function checkAuth():Promise<void> {
+            if (window.location.pathname === "/login") {
+                setLoggedIn(false);
+                setLoading(false);
+                return;
+            }
+
             try {
                 const myData = await checkAccessToken();
 

@@ -71,7 +71,7 @@ export function SearchAutocomplete():React.ReactElement {
             onChange={(e, v)=>{
                 // Redirigir a la página de la serie
                 if (v && v.type === "book") {
-                    navigate(`/book/${v._id}`);
+                    navigate(`/reader/${v._id}`);
                 }
             }}
             noOptionsText="Busca series o libros de la biblioteca aquí"
