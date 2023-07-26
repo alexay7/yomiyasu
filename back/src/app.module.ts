@@ -13,6 +13,7 @@ import {ReadprogressModule} from "./readprogress/readprogress.module";
 import {ReadlistModule} from "./readlist/readlist.module";
 import {WebsocketsModule} from "./websockets/websockets.module";
 import {CacheModule} from "@nestjs/cache-manager";
+import { DictionaryModule } from './dictionary/dictionary.module';
 
 @Module({
     imports: [
@@ -32,7 +33,8 @@ import {CacheModule} from "@nestjs/cache-manager";
         SeriesModule,
         ReadprogressModule,
         ReadlistModule,
-        WebsocketsModule
+        WebsocketsModule,
+        DictionaryModule
     ],
 
     controllers: [AppController],

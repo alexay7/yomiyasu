@@ -5,7 +5,8 @@ import {
     Res,
     UseGuards,
     HttpStatus,
-    UnauthorizedException
+    UnauthorizedException,
+    Param
 } from "@nestjs/common";
 import {AppService} from "./app.service";
 import {Request, Response} from "express";
@@ -13,6 +14,8 @@ import {JwtAuthGuard} from "./auth/strategies/jwt.strategy";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {Types} from "mongoose";
 import {UsersService} from "./users/users.service";
+import { kanjiAnywhere, kanjiBeginning, readingAnywhere, readingBeginning, setup } from "jmdict-simplified-node";
+import { join } from "path";
 
 @Controller()
 @UseGuards(JwtAuthGuard)

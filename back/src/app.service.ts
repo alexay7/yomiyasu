@@ -6,6 +6,7 @@ import * as fs from "fs";
 import {BooksService} from "./books/books.service";
 import {extractUrlFromHtml} from "./books/helpers/helpers";
 import {WebsocketsGateway} from "./websockets/websockets.gateway";
+import {setup as setupJmdict,readingBeginning} from 'jmdict-simplified-node'
 
 @Injectable()
 export class AppService {
