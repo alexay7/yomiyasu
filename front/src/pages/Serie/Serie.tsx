@@ -2,12 +2,12 @@ import React, {useEffect, useState} from "react";
 import {useQuery} from "react-query";
 import {useNavigate, useParams} from "react-router-dom";
 import {api} from "../../api/api";
-import {FullSerie} from "../../types/serie";
+import {FullSerie, SerieWithProgress} from "../../types/serie";
 import {Button, Divider, IconButton} from "@mui/material";
 import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {ArrowDropDown, ArrowDropUp, ArrowLeft, Edit} from "@mui/icons-material";
+import {ArrowBack, ArrowDropDown, ArrowDropUp, Edit} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
 
 export function Serie():React.ReactElement {
@@ -15,7 +15,7 @@ export function Serie():React.ReactElement {
     const {reloaded} = useGlobal();
     const [readMore, setReadMore] = useState(false);
 
-    const {data:serieData} = useQuery(`serie-${id}`, async()=>{
+    const {data:serieData, refetch:serieRefetch} = useQuery(`serie-${id}`, async()=>{
         const response = await api.get<FullSerie>(`series/${id}`);
         return response;
     }, {refetchOnWindowFocus:false});
@@ -30,19 +30,28 @@ export function Serie():React.ReactElement {
     useEffect(()=>{
         async function refetchBooks():Promise<void> {
             await booksRefetch();
+            await serieRefetch();
         }
 
         if (reloaded) {
             void refetchBooks();
         }
-    }, [booksRefetch, reloaded]);
+    }, [booksRefetch, serieRefetch, reloaded]);
+
+    function getReadButtonText(auxData:SerieWithProgress):string {
+        if (auxData.unreadBooks === 0) return "Leer de nuevo";
+
+        if (auxData.unreadBooks === auxData.bookCount) return "Empezar a leer";
+
+        return "Seguir leyendo";
+    }
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
-            <div className="w-full bg-[#212121] h-12 py-1 flex items-center justify-between">
+            <div className="fixed z-20 w-full bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4">
                     <IconButton onClick={()=>navigate("/app")}>
-                        <ArrowLeft/>
+                        <ArrowBack/>
                     </IconButton>
                     {serieData && (
                         <div className="flex gap-4 items-center">
@@ -59,7 +68,7 @@ export function Serie():React.ReactElement {
                 </div>
             </div>
             {serieData && (
-                <div className="p-8">
+                <div className="p-8 my-12">
                     <div className="flex w-full gap-8">
                         <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
                             {serieData.unreadBooks > 0 && (
@@ -72,8 +81,15 @@ export function Serie():React.ReactElement {
                         <div className="flex w-4/6 flex-col text-white">
                             <p className="text-3xl">{serieData.visibleName}</p>
                             <p className="text py-4 text-sm">{serieData.bookCount} libros</p>
+                            {serieBooks && serieBooks.length > 0 && (
+                                <Button color="inherit" variant="contained" className="w-fit my-4 py-1 px-2" onClick={()=>{
+                                    navigate(`/reader/${serieBooks[0]._id}`);
+                                }}
+                                >{getReadButtonText(serieData)}
+                                </Button>
+                            )}
                             <div className="text-sm">
-                                <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "13rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
+                                <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "10rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
                                 <Button className="text-gray-600" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
                             </div>
                         </div>

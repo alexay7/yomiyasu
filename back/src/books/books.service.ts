@@ -105,7 +105,7 @@ export class BooksService {
       if (unreadBooks.length === 0) {
           const firstBook = await this.filterBooks(userId, {serie:serie._id, sort:"sortName"});
           if (firstBook.length > 0) {
-              thumbnail = `${firstBook[0].seriePath}/${firstBook[0].path}/${firstBook[0].thumbnailPath}`;   
+              thumbnail = `${firstBook[0].seriePath}/${firstBook[0].imagesFolder}/${firstBook[0].thumbnailPath}`;   
           }
       } else {
           thumbnail = `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}`;  
