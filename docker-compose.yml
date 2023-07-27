@@ -12,6 +12,9 @@ services:
       - type: bind
         source: ./exterior
         target: /usr/src/exterior
+      - type: bind
+        source: ./dicts
+        target: /usr/src/dicts
   client:
     build:
       context: ./front
