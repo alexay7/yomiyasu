@@ -83,7 +83,8 @@ export function History():React.ReactElement {
         {
             field: "time",
             headerName: "Tiempo",
-            width: 120
+            width: 120,
+            valueFormatter:(params)=>formatTime(params.value)
         }
     ];
 
