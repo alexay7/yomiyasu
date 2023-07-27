@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
-import {kanjiBeginning, setup as setupJmdict} from "jmdict-simplified-node";
+import {kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
 import levelup from "levelup";
 import {join} from "path";
 
@@ -30,7 +30,12 @@ export class DictionaryService {
   async searchByKanji(word:string) {
       const db = await this.getDb();
     
-      const result = await kanjiBeginning(db, word, 3);
+      let result = await kanjiBeginning(db, word, 3);
+
+      if (result.length === 0) {
+          result = await readingBeginning(db, word, 3);
+      }
+
       return result;
   }
 }

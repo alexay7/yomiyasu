@@ -33,6 +33,29 @@ export function Reader():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     useEffect(()=>{
+        function replaceWindowSelection():Selection | null {
+            if (iframe.current && iframe.current.contentWindow) {
+
+                const realSelection = iframe.current.contentWindow.getSelection();
+                return realSelection;
+            }
+
+            return null;
+        }
+
+        function replaceDocumentSelection():Selection | null {
+            if (iframe.current && iframe.current.contentDocument) {
+
+                const realSelection = iframe.current.contentDocument.getSelection();
+                return realSelection;
+            }
+
+            return null;
+        }
+
+        window.getSelection = replaceWindowSelection;
+        window.document.getSelection = replaceDocumentSelection;
+
         if (!isLoading && bookData) {
             let page = 1;
 
