@@ -17,6 +17,6 @@ export interface FullReaderConfig extends ReaderConfig {
     page2_idx:number
 }
 
-export interface Settings {
-    reader:ReaderConfig;
+export interface SiteConfig {
+    openHTML:boolean;
 }

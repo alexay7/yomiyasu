@@ -90,6 +90,16 @@ export class ReadprogressController {
         return {};
     }
 
+    @Get("all")
+    @ApiOkResponse({status:HttpStatus.OK})
+    async getAllReadProgress(@Req() req:Request) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        return this.readprogressService.findUserProgresses(userId);
+    }
+
     @Get("tablero")
     @ApiOkResponse({status:HttpStatus.OK})
     async getSeriesProgress(@Req() req:Request) {

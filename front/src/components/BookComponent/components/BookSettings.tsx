@@ -81,11 +81,6 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Editar
                     </MenuItem>
                 )}
-                {userData?.admin && (
-                    <MenuItem key="metadata" onClick={handleClose}>
-                        Actualizar metadatos
-                    </MenuItem>
-                )}
                 {bookData.status !== "completed" && (
                     <MenuItem key="read" onClick={async()=>{
                         await markAsRead();

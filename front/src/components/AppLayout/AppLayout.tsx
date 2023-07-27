@@ -1,4 +1,4 @@
-import {Menu, Home, Book, AccountCircle, Settings, Logout, AdminPanelSettings} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History} from "@mui/icons-material";
 import {Divider, IconButton} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
@@ -8,6 +8,8 @@ import {LateralListItem} from "./components/LateralListItem";
 import {useAuth} from "../../contexts/AuthContext";
 import {useMediaQuery} from "react-responsive";
 import {SearchAutocomplete} from "./components/SearchAutocomplete";
+import {Settings} from "./components/Settings";
+import {AccountSettings} from "./components/AccountSettings";
 
 export function AppLayout():React.ReactElement {
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
@@ -50,8 +52,9 @@ export function AppLayout():React.ReactElement {
                         <LateralListItem text="Inicio" link="/app" Icon={Home}/>
                         <LateralListItem text="Biblioteca" link="/app/library" Icon={Book}/>
                         <Divider className="my-4"/>
-                        <LateralListItem text="Ajustes de Cuenta" link="/app/account" Icon={AccountCircle}/>
-                        <LateralListItem text="Ajustes" link="/app/settings" Icon={Settings}/>
+                        <LateralListItem text="Historial" link="/app/history" Icon={History}/>
+                        <AccountSettings/>
+                        <Settings/>
                         {userData?.admin && (
                             <LateralListItem text="Configuración" link="/app/config" Icon={AdminPanelSettings}/>
                         )}

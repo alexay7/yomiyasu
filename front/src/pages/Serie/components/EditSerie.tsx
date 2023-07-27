@@ -50,11 +50,15 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
             authors
         };
 
-        const response = await api.patch<Partial<Serie>, Serie>(`series/${serieData._id}`, body);
-        if (response) {
-            toast.success(`Datos de ${name} actualizados con éxito`);
-            closePopup();
-            forceReload();
+        try {
+            const response = await api.patch<Partial<Serie>, Serie>(`series/${serieData._id}`, body);
+            if (response) {
+                toast.success(`Datos de ${name} actualizados con éxito`);
+                closePopup();
+                forceReload();
+            }
+        } catch {
+            toast.error("No tienes permisos para realizar esa acción");
         }
     }
 

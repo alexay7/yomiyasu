@@ -6,8 +6,10 @@ import {SerieWithProgress, SeriesFilter} from "../../../types/serie";
 import {BookWithProgress} from "../../../types/book";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
+import {useSettings} from "../../../contexts/SettingsContext";
 
 export function SearchAutocomplete():React.ReactElement {
+    const {siteSettings} = useSettings();
     const [searchQuery, setSearchQuery] = useState("");
     const [foundSeries, setFoundSeries] = useState<SerieWithProgress[]>([]);
     const [foundBooks, setFoundBooks] = useState<BookWithProgress[]>([]);
@@ -73,6 +75,10 @@ export function SearchAutocomplete():React.ReactElement {
                 // Redirigir a la página de la serie
                 if (v) {
                     if (v.type === "book") {
+                        if (siteSettings.openHTML) {
+                            window.location.href = `/api/static/${v.seriePath}/${v.path}.html`;
+                            return;
+                        }
                         goTo(navigate, `/reader/${v._id}`);
                     } else {
                         goTo(navigate, `/app/series/${v._id}`);

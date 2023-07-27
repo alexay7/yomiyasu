@@ -19,7 +19,11 @@ export function LibrarySettings():React.ReactElement {
 
     async function rescanLibrary():Promise<void> {
         toast.info("Reescaneando la biblioteca...");
-        await api.get<{status:string}>("rescan");
+        try {
+            await api.get<{status:string}>("rescan");
+        } catch {
+            toast.error("No tienes permisos para realizar esa acción");
+        }
         toast.success("Reescaneo terminado");
     }
 

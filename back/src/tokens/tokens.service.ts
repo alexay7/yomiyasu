@@ -37,4 +37,8 @@ export class TokensService {
     ): Promise<UserTokenDocument | null> {
         return this.userTokenModel.findOne({uuid, user});
     }
+
+    async revokeAllUserTokens(user:Types.ObjectId) {
+        await this.userTokenModel.deleteMany({user});
+    }
 }

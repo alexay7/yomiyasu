@@ -9,6 +9,7 @@ import {Reader} from "./pages/Reader/Reader";
 import {Library} from "./pages/Library/Library";
 import {Serie} from "./pages/Serie/Serie";
 import {Loading} from "./pages/Loading/Loading";
+import {History} from "./pages/History/History";
 
 export function App():React.ReactElement {
     const {loading} = useAuth();
@@ -24,6 +25,7 @@ export function App():React.ReactElement {
                 <Route index element={<Home/>}/>
                 <Route path="library" element={<Library/>}/>
                 <Route path="series/:id" element={<Serie/>}/>
+                <Route path="history" element={<History/>}/>
                 <Route path="*" element={<Navigate to="/app"/>}/>
             </Route>
             <Route path="reader/:id" element={<Reader/>}/>

@@ -85,7 +85,7 @@ export function Serie():React.ReactElement {
                         <div className="flex w-4/6 flex-col text-white">
                             <p className="text-3xl">{serieData.visibleName}</p>
                             {serieData.status && (
-                                <Button variant="outlined" className="w-fit py-0 my-4">{serieData.status}</Button>
+                                <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>
                             )}
                             <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
                             {serieBooks && serieBooks.length > 0 && (
@@ -97,8 +97,8 @@ export function Serie():React.ReactElement {
                             )}
                             {serieData.summary && (
                                 <div className="text-sm mt-4">
-                                    <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "8rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
-                                    <Button className="text-gray-600" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
+                                    <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
+                                    <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
                                 </div>
                             )}
                         </div>

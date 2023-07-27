@@ -9,7 +9,6 @@ module.exports = {
   plugins: ['@typescript-eslint/eslint-plugin'],
   extends: [
     'plugin:@typescript-eslint/recommended',
-    "plugin:@darraghor/nestjs-typed/recommended"
   ],
   root: true,
   env: {
@@ -150,6 +149,5 @@ module.exports = {
     "@darraghor/nestjs-typed/injectable-should-be-provided": "off",
 
     "@darraghor/nestjs-typed/validated-non-primitive-property-needs-type-decorator": "off"
-  },
-  plugins: ["@darraghor/nestjs-typed"]
+  }
 };

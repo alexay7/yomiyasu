@@ -1,12 +1,12 @@
-import { Controller, Get,Param } from '@nestjs/common';
-import { DictionaryService } from './dictionary.service';
+import {Controller, Get, Param} from "@nestjs/common";
+import {DictionaryService} from "./dictionary.service";
 
-@Controller('dictionary')
+@Controller("dictionary")
 export class DictionaryController {
-  constructor(private readonly dictionaryService: DictionaryService) {}
+    constructor(private readonly dictionaryService: DictionaryService) {}
 
-  @Get(":word")
-  searchWord(@Param("word") word:string){
-    return this.dictionaryService.searchByKanji(word)
-  }
+    @Get(":word")
+    searchWord(@Param("word") word:string) {
+        return this.dictionaryService.searchByKanji(word);
+    }
 }

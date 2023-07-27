@@ -25,7 +25,7 @@ export async function checkRefreshToken():Promise<RefreshResponse> {
 }
 
 export function goTo(navigate:NavigateFunction, link:string):void {
-    window.localStorage.setItem("origin", window.location.pathname);
+    window.localStorage.setItem("origin", window.location.pathname.replace("login", ""));
     navigate(link);
 }
 

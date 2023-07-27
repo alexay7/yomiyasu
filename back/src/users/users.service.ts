@@ -1,10 +1,11 @@
 import {Injectable, UnauthorizedException, ForbiddenException} from "@nestjs/common";
 import {User, UserDocument} from "./schemas/user.schema";
 import {InjectModel} from "@nestjs/mongoose";
-import {Model, Types} from "mongoose";
+import {Model, Types, UpdateQuery} from "mongoose";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {isEmail} from "class-validator";
+import {checkPasswords, hashData} from "../auth/helpers/helper";
 
 @Injectable()
 export class UsersService {
@@ -24,10 +25,6 @@ export class UsersService {
         return foundUser.admin;
     }
 
-    async findAll(): Promise<UserDocument[]> {
-        return this.userModel.find();
-    }
-
     async findById(id: Types.ObjectId): Promise<User | null> {
         return this.userModel.findById(id);
     }
@@ -40,13 +37,28 @@ export class UsersService {
     }
 
     async update(
-        id: string,
+        id: Types.ObjectId,
         updateUserDto: UpdateUserDto
-    ): Promise<UserDocument | null> {
-        return this.userModel.findByIdAndUpdate(id, updateUserDto, {new: true});
-    }
+    ): Promise<User | null> {
+        const foundUser = await this.userModel.findById(id);
 
-    async remove(user: string): Promise<void | null> {
-        return this.userModel.findByIdAndDelete(user);
+        if (!foundUser) throw new ForbiddenException();
+
+        const query:UpdateQuery<User> = {};
+
+        if (updateUserDto.newPassword && updateUserDto.oldPassword) {
+            const passwordMatches = await checkPasswords(foundUser.password, updateUserDto.oldPassword);
+
+            if (!passwordMatches) throw new ForbiddenException();
+
+            const newPass = await hashData(updateUserDto.newPassword);
+            query.password = newPass;
+        }
+
+        if (updateUserDto.newUsername) {
+            query.username = updateUserDto.newUsername;
+        }
+
+        return this.userModel.findByIdAndUpdate(id, query, {new: true});
     }
 }

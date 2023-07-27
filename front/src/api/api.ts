@@ -1,4 +1,3 @@
-import {toast} from "react-toastify";
 import {checkRefreshToken} from "../helpers/helpers";
 import {HttpError} from "../types/error";
 
@@ -7,10 +6,6 @@ async function request<TResponse>(url:string, config:RequestInit):Promise<TRespo
 
     if (response.status > 399) {
         const errorData = await response.json() as {status:"ACCESS" | "REFRESH" | "NONE"};
-        if (response.status === 403) {
-            toast.error("No tienes permisos para realizar esa acción");
-        }
-
         if (response.status === 401 && !url.includes("auth")) {
             try {
                 await checkRefreshToken();

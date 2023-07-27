@@ -24,6 +24,15 @@ export class ReadprogressService {
         return query;
     }
 
+    findUserProgresses(user:Types.ObjectId) {
+        return this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user), status:{$ne:"unread"}})
+            .lookup({from:"books", localField:"book", foreignField:"_id", as:"bookInfo"})
+            .unwind({path:"$bookInfo"})
+            .lookup({from:"series", localField:"serie", foreignField:"_id", as:"serieInfo"})
+            .unwind({path:"$serieInfo"});
+    }
+
     createReadProgress(createReadProgress:CreateReadProgress):Promise<ReadProgress> {
         return this.readProgressModel.create(createReadProgress);
     }

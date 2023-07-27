@@ -1,11 +1,13 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
-import {FullReaderConfig, ReaderConfig} from "../types/settings";
+import {FullReaderConfig, ReaderConfig, SiteConfig} from "../types/settings";
 import {ContextProps} from "./AuthContext";
 import {useMediaQuery} from "react-responsive";
 
 type SettingsContextType = {
     readerSettings:ReaderConfig;
-    setReaderSettings:(v:React.SetStateAction<ReaderConfig>)=>void
+    setReaderSettings:(v:React.SetStateAction<ReaderConfig>)=>void;
+    siteSettings:SiteConfig;
+    setSiteSettings:(v:React.SetStateAction<SiteConfig>)=>void;
 };
 
 export const SettingsContext = createContext<SettingsContextType>({} as SettingsContextType);
@@ -28,7 +30,8 @@ export function defaultSets():unknown {
         fontSize: "auto",
         eInkMode: false,
         defaultZoomMode: "fit to screen",
-        toggleOCRTextBoxes: false
+        toggleOCRTextBoxes: false,
+        openHTML:false
     };
 }
 
@@ -36,7 +39,7 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
-    const defaultSettings:FullReaderConfig = {
+    const defaultReaderSettings:FullReaderConfig = {
         page_idx:1,
         page2_idx:-1,
         fontFamily:"IPA",
@@ -53,21 +56,40 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     };
 
     const rawUserSettings = window.localStorage.getItem("reader");
+
     let userSettings:null | ReaderConfig = null;
     if (rawUserSettings) {
         userSettings = JSON.parse(rawUserSettings) as ReaderConfig;
     }
 
-    const [readerSettings, setReaderSettings] = useState<ReaderConfig>(userSettings || defaultSettings);
+    const defaultSiteSettings:SiteConfig = {
+        openHTML:false
+    };
+
+    const rawSiteSettings = window.localStorage.getItem("site");
+    let auxSiteSettings:null | SiteConfig = null;
+    if (rawSiteSettings) {
+        auxSiteSettings = JSON.parse(rawSiteSettings) as SiteConfig;
+    }
+
+    const [readerSettings, setReaderSettings] = useState<ReaderConfig>(userSettings || defaultReaderSettings);
+    const [siteSettings, setSiteSettings] = useState<SiteConfig>(auxSiteSettings || defaultSiteSettings);
 
     useEffect(()=>{
         window.localStorage.setItem("reader", JSON.stringify(readerSettings));
     }, [readerSettings]);
 
+    useEffect(()=>{
+        window.localStorage.setItem("site", JSON.stringify(siteSettings));
+    }, [siteSettings]);
+
     return (
         <SettingsContext.Provider value={{
             readerSettings:readerSettings,
-            setReaderSettings:setReaderSettings}}
+            setReaderSettings:setReaderSettings,
+            siteSettings:siteSettings,
+            setSiteSettings:setSiteSettings
+        }}
         >
             {children}
         </SettingsContext.Provider>

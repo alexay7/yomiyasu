@@ -7,7 +7,7 @@ interface PopupWindowProps {
     open:boolean;
     closePopup:()=>void;
     children:React.JSX.Element;
-    onSubmit:(e:React.FormEvent<HTMLFormElement>)=>void
+    onSubmit?:(e:React.FormEvent<HTMLFormElement>)=>void
 }
 
 const Transition = forwardRef((
@@ -31,8 +31,10 @@ export function PopupWindow(props:PopupWindowProps):React.ReactElement {
                     {children}
                 </DialogContent>
                 <DialogActions>
-                    <Button color="inherit" onClick={closePopup}>Cancelar</Button>
-                    <Button type="submit">Guardar cambios</Button>
+                    <Button color="inherit" onClick={closePopup}>Cerrar</Button>
+                    {onSubmit && (
+                        <Button type="submit">Guardar cambios</Button>
+                    )}
                 </DialogActions>
             </form>
         </Dialog>
