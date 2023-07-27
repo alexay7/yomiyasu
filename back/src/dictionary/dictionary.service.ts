@@ -1,3 +1,4 @@
+import {tokenize} from "@enjoyjs/node-mecab";
 import {Injectable} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
 import {kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
@@ -29,11 +30,17 @@ export class DictionaryService {
   
   async searchByKanji(word:string) {
       const db = await this.getDb();
+      let query = word;
+      const parsedWord = await tokenize(word);
+      
+      if (parsedWord[1].feature.pos === "動詞" || parsedWord[1].feature.pos === "形容詞") {
+          query = parsedWord[1].feature.basicForm || query;
+      }
     
-      let result = await kanjiBeginning(db, word, 3);
+      let result = await kanjiBeginning(db, query, 3);
 
       if (result.length === 0) {
-          result = await readingBeginning(db, word, 3);
+          result = await readingBeginning(db, query, 3);
       }
 
       return result;

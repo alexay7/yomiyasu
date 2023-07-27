@@ -4,6 +4,9 @@ FROM node:18
 # Create app directory
 WORKDIR /usr/src/app
 
+# Install mecab dictionary
+RUN apt-get update && apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
+
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 
