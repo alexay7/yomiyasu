@@ -23,6 +23,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
     return (
         <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer`}
             onClick={()=>{
+                if (link && window.location.pathname === link) window.location.href = link;
                 if (link) goTo(navigate, link);
             }}
             {...moreProps}

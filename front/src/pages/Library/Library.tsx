@@ -5,14 +5,15 @@ import {Alphabet, SeriesFilter} from "../../types/serie";
 import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
 import {IconButton, Pagination} from "@mui/material";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {ArrowBack, Sort} from "@mui/icons-material";
+import {ArrowBack} from "@mui/icons-material";
 import {goBack} from "../../helpers/helpers";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {LibrarySettings} from "./LibrarySettings/LibrarySettings";
+import {LibrarySettings} from "./components/LibrarySettings";
 import {useAuth} from "../../contexts/AuthContext";
+import {LibraryFilter} from "./components/LibraryFilter";
 
 export function Library():React.ReactElement {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const {reloaded} = useGlobal();
     const {userData} = useAuth();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
@@ -23,6 +24,7 @@ export function Library():React.ReactElement {
     const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter], async()=>{
         const genre = searchParams.get("genre");
         const author = searchParams.get("author");
+        const sortby = searchParams.get("sortby");
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
@@ -37,14 +39,32 @@ export function Library():React.ReactElement {
             link += `author=${author}&`;
         }
 
-        link += `page=${currentPage}&limit=25&sort=sortName`;
+        if (sortby) {
+            link += `sort=${sortby}&`;
+        } else {
+            link += "sort=sortName&";
+        }
+
+        link += `page=${currentPage}&limit=25`;
 
         return api.get<SeriesFilter>(link);
-    });
+    }, {refetchOnWindowFocus:false});
 
     const {data:alphabet, refetch:refetchAlphabet} = useQuery("alphabet", async()=>{
-        return api.get<Alphabet[]>("series/alphabet");
-    });
+        const genre = searchParams.get("genre");
+        const author = searchParams.get("author");
+        let link = "series/alphabet?";
+
+        if (genre) {
+            link += `genre=${genre}&`;
+        }
+
+        if (author) {
+            link += `author=${author}&`;
+        }
+
+        return api.get<Alphabet[]>(link);
+    }, {refetchOnWindowFocus:false});
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {
@@ -52,10 +72,8 @@ export function Library():React.ReactElement {
             await refetchSeries();
         }
 
-        if (reloaded) {
-            void refetchBooks();
-        }
-    }, [refetchAlphabet, refetchSeries, reloaded]);
+        void refetchBooks();
+    }, [refetchAlphabet, refetchSeries, reloaded, searchParams]);
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
@@ -69,9 +87,7 @@ export function Library():React.ReactElement {
                     )}
                 </div>
                 <div className="flex items-center mx-4">
-                    <IconButton>
-                        <Sort/>
-                    </IconButton>
+                    <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
                 </div>
             </div>
             {/* Elegir alfabeto */}
