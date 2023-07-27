@@ -1,9 +1,9 @@
-import React, {Fragment, useEffect} from "react";
+import React, {useEffect} from "react";
 import {api} from "../../api/api";
 import {useQuery} from "react-query";
 import {BookWithProgress} from "../../types/book";
-import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {useGlobal} from "../../contexts/GlobalContext";
+import {ComponentScroller} from "../../components/ComponentScroller/ComponentScroller";
 
 export function Home():React.ReactElement {
     const {reloaded} = useGlobal();
@@ -39,34 +39,13 @@ export function Home():React.ReactElement {
         <div className="bg-[#121212] overflow-x-hidden">
             <div className="text-white px-8 py-4 flex flex-col gap-4">
                 {progresoData && progresoData.length > 0 && (
-                    <Fragment>
-                        <h2>En Progreso</h2>
-                        <ul className="lg:px-4 flex gap-8">
-                            {progresoData?.map((book)=>(
-                                <BookComponent key={book._id} bookData={book}/>
-                            ))}
-                        </ul>
-                    </Fragment>
+                    <ComponentScroller title="En progreso" components={progresoData}/>
                 )}
                 {tableroData && tableroData.length > 0 && (
-                    <Fragment >
-                        <h2>Tablero</h2>
-                        <ul className="lg:px-4 flex gap-8">
-                            {tableroData?.map((book)=>(
-                                <BookComponent key={book._id} bookData={book}/>
-                            ))}
-                        </ul>
-                    </Fragment>
+                    <ComponentScroller title="Tablero" components={tableroData}/>
                 )}
                 {recentBooks && recentBooks.length > 0 && (
-                    <Fragment>
-                        <h2>Libros Añadidos Recientemente</h2>
-                        <ul className="lg:px-4 flex gap-8 overflow-hidden">
-                            {recentBooks?.map((book)=>(
-                                <BookComponent key={book._id} bookData={book}/>
-                            ))}
-                        </ul>
-                    </Fragment>
+                    <ComponentScroller title="Añadidos recientemente" components={recentBooks}/>
                 )}
             </div>
         </div>
