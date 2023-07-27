@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
@@ -5,62 +6,92 @@ import {UserProgress} from "../../types/user";
 import {Table, TableBody, TableCell, TableHead, TableRow} from "@mui/material";
 import {formatTime, goTo} from "../../helpers/helpers";
 import {useNavigate} from "react-router-dom";
+import {DataGrid, GridColDef, GridToolbar, GridValueGetterParams} from "@mui/x-data-grid";
 
 export function History():React.ReactElement {
     const {data:progressData = []} = useQuery("progresses", async()=>{
         const res = await api.get<UserProgress[]>("readprogress/all");
-        return res;
+
+        const rows:{id:number, image:string, book:string, serie:string, status:string,
+            pages:number, start:Date, end:Date | undefined, time:number}[] = [];
+
+        res.forEach((progress, i)=>{
+            rows.push({
+                id:i,
+                image:`/api/static/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`,
+                book:progress.bookInfo.visibleName,
+                serie:progress.serieInfo.visibleName,
+                status:progress.status,
+                pages:progress.currentPage,
+                start:progress.startDate,
+                end:progress.endDate,
+                time:progress.time
+            });
+        });
+
+        return rows;
     }, {refetchOnWindowFocus:false});
 
     const navigate = useNavigate();
 
+    const columns: GridColDef[] = [
+        {
+            field: "id",
+            headerName: "ID",
+            width: 50,
+            sortable:false,
+            filterable:false},
+        {
+            field: "image",
+            headerName: "",
+            renderCell:(params)=><img src={params.value as string} alt="" />,
+            sortable:false,
+            filterable:false
+        },
+        {
+            field: "book",
+            headerName: "Libro",
+            width: 300
+        },
+        {
+            field: "serie",
+            headerName: "Serie",
+            width: 300
+        },
+        {
+            field: "status",
+            headerName: "Estado",
+            width: 110
+        },
+        {
+            field: "pages",
+            headerName: "Páginas leídas",
+            width: 120
+        },
+        {
+            field: "start",
+            headerName: "Fecha de comienzo",
+            width: 160,
+            valueFormatter:(params)=>new Date(params.value).toLocaleString()
+        },
+        {
+            field: "end",
+            headerName: "Fecha de finalización",
+            width: 170,
+            valueFormatter:(params)=>params.value ? new Date(params.value).toLocaleString() : ""
+        },
+        {
+            field: "time",
+            headerName: "Tiempo",
+            width: 120
+        }
+    ];
+
     return (
         <div className="bg-[#121212] overflow-x-hidden p-4 pb-4">
-            <h1 className="text-white px-4 pb-8 text-2xl">Historial de Lectura</h1>
-            <div className="bg-[#1E1E1E] mx-4 flex justify-center rounded-lg overflow-hidden shadow-lg shadow-[#1E1E1E]">
-                <Table stickyHeader>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell></TableCell>
-                            <TableCell>Libro</TableCell>
-                            <TableCell>Serie</TableCell>
-                            <TableCell>Estado</TableCell>
-                            <TableCell>Páginas leídas</TableCell>
-                            <TableCell>Inicio</TableCell>
-                            <TableCell>Fin</TableCell>
-                            <TableCell>Tiempo</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {progressData.map((progress)=>(
-                            <TableRow key={progress._id} className="hover:bg-[#303030]">
-                                <TableCell className="cursor-pointer" onClick={()=>{
-                                    goTo(navigate, `/app/series/${progress.serieInfo._id}`);
-                                }}
-                                >
-                                    <div className="w-12">
-                                        <img src={`/api/static/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`} alt="" />
-                                    </div>
-                                </TableCell>
-                                <TableCell className="cursor-pointer" onClick={()=>{
-                                    goTo(navigate, `/app/series/${progress.serieInfo._id}`);
-                                }}
-                                >{progress.bookInfo.visibleName}
-                                </TableCell>
-                                <TableCell className="cursor-pointer" onClick={()=>{
-                                    goTo(navigate, `/app/series/${progress.serieInfo._id}`);
-                                }}
-                                >{progress.serieInfo.visibleName}
-                                </TableCell>
-                                <TableCell>{progress.status === "completed" ? "Completado" : "Leyendo"}</TableCell>
-                                <TableCell>{progress.currentPage}</TableCell>
-                                <TableCell>{new Date(progress.startDate).toLocaleString()}</TableCell>
-                                <TableCell>{progress.endDate ? new Date(progress.endDate).toLocaleString() : ""}</TableCell>
-                                <TableCell>{formatTime(progress.time)}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+            <h1 className="text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
+            <div className="bg-[#1E1E1E] mx-4 flex justify-center shadow-lg shadow-[#1E1E1E]">
+                <DataGrid rows={progressData} columns={columns} slots={{toolbar:GridToolbar}}/>
             </div>
         </div>
     );
