@@ -4,6 +4,9 @@ import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
 import {kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
 import levelup from "levelup";
 import {join} from "path";
+import {WordWithDisplay} from "./interfaces/word";
+
+
 
 @Injectable()
 export class DictionaryService {
@@ -30,19 +33,35 @@ export class DictionaryService {
   
   async searchByKanji(word:string) {
       const db = await this.getDb();
-      let query = word;
-      const parsedWord = await tokenize(word);
+
+      const analisis = await tokenize(word);
+
+      const queries = analisis.filter(x=>x.surface !== "BOS" && x.surface !== "EOS");
+
+      const results:WordWithDisplay[] = [];
+
+      await Promise.all(queries.map(async(currentWord, i)=>{
+          let query = currentWord.feature.basicForm || "";
       
-      if (parsedWord[1].feature.pos === "動詞" || parsedWord[1].feature.pos === "形容詞") {
-          query = parsedWord[1].feature.basicForm || query;
-      }
+          if (currentWord.feature.pos === "動詞" || currentWord.feature.pos === "形容詞") {
+              query = currentWord.feature.basicForm || query;
+          }
     
-      let result = await kanjiBeginning(db, query, 3);
+          const result:WordWithDisplay = {display:currentWord.surface, words:[]};
 
-      if (result.length === 0) {
-          result = await readingBeginning(db, query, 3);
-      }
+          result.words = await readingBeginning(db, query, 1);
 
-      return result;
+          if (result.words.length === 0) {
+              result.words = await kanjiBeginning(db, query, 3);
+          }
+
+          if (currentWord.feature.pos === "助動詞" || currentWord.feature.pos === "助詞") {
+              result.words = [];
+          }
+
+          results[i] = result;
+      }));
+      
+      return results;
   }
 }

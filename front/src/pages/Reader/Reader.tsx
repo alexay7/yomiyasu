@@ -11,6 +11,7 @@ import {ReaderConfig} from "../../types/settings";
 import {StopWatchMenu} from "./components/StopWatchMenu";
 import {createProgress} from "../../helpers/progress";
 import {PageText} from "./components/PageText";
+import {Dictionary} from "./components/Dictionary";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -24,6 +25,7 @@ export function Reader():React.ReactElement {
     const [pageText, setPageText] = useState<string[][][]>([]);
     const [timer, setTimer] = useState(0);
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
+    const [searchWord, setSearchWord] = useState("");
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -37,6 +39,10 @@ export function Reader():React.ReactElement {
 
     useEffect(()=>{
         function replaceWindowSelection():Selection | null {
+            if (window.document.getSelection()) {
+                return window.document.getSelection();
+            }
+
             if (iframe.current && iframe.current.contentWindow) {
 
                 const realSelection = iframe.current.contentWindow.getSelection();
@@ -46,18 +52,7 @@ export function Reader():React.ReactElement {
             return null;
         }
 
-        function replaceDocumentSelection():Selection | null {
-            if (iframe.current && iframe.current.contentDocument) {
-
-                const realSelection = iframe.current.contentDocument.getSelection();
-                return realSelection;
-            }
-
-            return null;
-        }
-
         window.getSelection = replaceWindowSelection;
-        window.document.getSelection = replaceDocumentSelection;
 
         if (!isLoading && bookData) {
             let page = 1;
@@ -114,6 +109,14 @@ export function Reader():React.ReactElement {
     }, [bookData]);
 
     useEffect(()=>{
+        function getselectedText(text:string):void {
+            document.body.style.cursor = "wait";
+            setTimeout(()=>{
+                setSearchWord(text.split(" ")[0]);
+                document.body.style.cursor = "default";
+            }, 250);
+        }
+
         // Recibe mensajes del iframe
         addEventListener("message", (e)=>{
             switch (e.data.action as string) {
@@ -127,7 +130,29 @@ export function Reader():React.ReactElement {
                 case "text":{
                     const {value} = e.data as {value:string[][][]};
                     setPageText(value);
+                    break;
                 }
+                case "selection":{
+                    const {value} = e.data as {value:string};
+                    getselectedText(value);
+                    break;
+                }
+            }
+        });
+
+        addEventListener("mouseup", ()=>{
+            const selection = window.getSelection();
+            if (selection && selection.toString()) {
+                getselectedText(selection.toString());
+                selection.removeAllRanges();
+            }
+        });
+
+        addEventListener("touchend", (e)=>{
+            e.stopImmediatePropagation();
+            const selection = window.getSelection();
+            if (selection && selection.toString()) {
+                getselectedText(selection.toString());
             }
         });
 
@@ -295,8 +320,30 @@ export function Reader():React.ReactElement {
                     e.stopImmediatePropagation();
                 });
 
+                document.body.addEventListener("mouseup",(e)=>{
+                    if(window.getSelection().toString()){
+                        window.parent.postMessage({action:"selection",value:window.getSelection().toString()},"*")
+                    }
+                })
+
                 // Desactiva el menú de mokuro si así lo pone en ajustes
                 ${readerSettings.panAndZoom ? "" : "pz.pause();zoomEnabled=false;"}
+
+                function addClickHandlersToParagraphs() {
+                    const paragraphs = document.querySelectorAll('p');
+                    // Add event listener to each <p> element
+                    paragraphs.forEach(paragraph => {
+                        paragraph.addEventListener('touchstart', () => {
+                            // Retrieve the text content of the clicked <p> element
+                            const textContent = paragraph.textContent;
+        
+                            // Display the text (you can customize this part)
+                            window.parent.postMessage({ action: "selection", value: textContent });
+                        });
+                    });
+                }
+        
+                addClickHandlersToParagraphs();
 
                 // Oculta el menú de mokuro
                 document.getElementById('topMenu').style.display="none";
@@ -315,6 +362,15 @@ export function Reader():React.ReactElement {
                     if(zoomEnabled && e.targetTouches.length<2)return;
                     touchEnd = e.targetTouches[0].clientX;
                 });
+                addEventListener("touchend", ()=>{
+                    const selection = window.getSelection();
+                    if (selection && selection.toString()) {
+                        setTimeout(()=>{
+                            window.parent.postMessage({action:"selection",value:selection.toString()},"*")
+                            window.getSelection()?.empty();
+                        }, 750);
+                    }
+                });
                 document.body.addEventListener("touchend",(e)=>{
                     if (!touchStart || !touchEnd) return;
                     const distance = touchStart - touchEnd;
@@ -326,6 +382,8 @@ export function Reader():React.ReactElement {
                         inputLeft();
                     }
                 });
+
+                document.onsel
 
                 /**
                  * Reemplaza la función de pasar de página por una que, además de
@@ -411,13 +469,14 @@ export function Reader():React.ReactElement {
     }
 
     return (
-        <div className="text-black relative overflow-hidden h-100vh flex flex-col">
+        <div className="text-black relative overflow-hidden h-screen flex flex-col">
             {iframe && iframe.current && iframe.current.contentWindow && (
                 <ReaderSettings showMenu={showSettings} closeSettings={closeSettingsMenu}
                     iframeWindow={iframe.current.contentWindow}
                 />
             )}
             <PageText lines={pageText} open={openTextSidebar} setOpen={setOpenTextSidebar}/>
+            <Dictionary searchWord={searchWord} setSearchWord={setSearchWord}/>
             {bookData && (
                 <Fragment>
                     {showToolBar && (

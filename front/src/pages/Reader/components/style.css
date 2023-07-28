@@ -25,7 +25,37 @@
     bottom:-100vh!important;
 }
 
-/* Left Bar */
+/* Left Bar mobile*/
+@media only screen and (max-width: 1024px) {
+    .textbox-enter {
+        bottom: -500px;
+    }
+      
+    .textbox-enter-active {
+        bottom:0;
+        transition: bottom 300ms ease;
+    }
+    
+    .textbox-enter-done {
+        bottom: 0;
+    }
+      
+    .textbox-exit {
+        bottom:0;
+    }
+      
+    .textbox-exit-active {
+        bottom:-500px;
+        transition: bottom 300ms ease;
+    }
+    
+    .textbox-exit-done {
+        bottom:-500px;
+    }
+}
+
+@media only screen and (min-width: 1024px) {
+/* Left Bar desktop*/
 .textbox-enter {
     left: -500px;
 }
@@ -50,4 +80,5 @@
 
 .textbox-exit-done {
     left:-500px;
+}
 }
