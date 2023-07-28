@@ -4,12 +4,13 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {IconButton, Slider} from "@mui/material";
-import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, MoreVert, Translate} from "@mui/icons-material";
+import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, Translate, ViewSidebar} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
 import {StopWatchMenu} from "./components/StopWatchMenu";
 import {createProgress} from "../../helpers/progress";
+import {PageText} from "./components/PageText";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -20,7 +21,9 @@ export function Reader():React.ReactElement {
     const [showToolBar, setShowToolbar] = useState(true);
     const [doublePages, setDoublePages] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [pageText, setPageText] = useState<string[][][]>([]);
     const [timer, setTimer] = useState(0);
+    const [openTextSidebar, setOpenTextSidebar] = useState(false);
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -120,6 +123,10 @@ export function Reader():React.ReactElement {
                         setCurrentPage(value + 1);
                     }
                     break;
+                }
+                case "text":{
+                    const {value} = e.data as {value:string[][][]};
+                    setPageText(value);
                 }
             }
         });
@@ -327,8 +334,36 @@ export function Reader():React.ReactElement {
                  */
                 let oldUpdate = window.updatePage;
 
+                function getText(){
+                    const pageBoxes = document.querySelectorAll('.page');
+                    const inlineBlockTextBoxContents = [];
+
+                    pageBoxes.forEach((textBox) => {
+                        const boxContent = [];
+                        if (textBox.style.display === "inline-block") {
+                            const divs = textBox.querySelectorAll('.textBox');
+                            const divBoxes = []
+                            divs.forEach((div) => {
+                                const paragraphs = div.querySelectorAll('p');
+                                const paragraphContent = [];
+                                paragraphs.forEach((paragraph) => {
+                                    paragraphContent.push(paragraph.textContent);
+                                })
+                                divBoxes.push(paragraphContent);
+                            })
+                            boxContent.push(divBoxes);
+                        }
+                        if (boxContent.length > 0) {
+                            inlineBlockTextBoxContents.push(boxContent);
+                        }
+                    })
+
+                    window.parent.postMessage({action:"text",value:inlineBlockTextBoxContents},"*");
+                }
+
                 window.updatePage = function(new_page_idx){
                     oldUpdate(new_page_idx);
+                    getText()
                     window.parent.postMessage({action:"newPage",value:new_page_idx},"*");
                 }
             })()
@@ -371,6 +406,10 @@ export function Reader():React.ReactElement {
         }
     }
 
+    function toggleSidebar():void {
+        setOpenTextSidebar((prev)=>!prev);
+    }
+
     return (
         <div className="text-black relative overflow-hidden h-100vh flex flex-col">
             {iframe && iframe.current && iframe.current.contentWindow && (
@@ -378,6 +417,7 @@ export function Reader():React.ReactElement {
                     iframeWindow={iframe.current.contentWindow}
                 />
             )}
+            <PageText lines={pageText} open={openTextSidebar} setOpen={setOpenTextSidebar}/>
             {bookData && (
                 <Fragment>
                     {showToolBar && (
@@ -396,8 +436,8 @@ export function Reader():React.ReactElement {
                                 <IconButton onClick={()=>setShowSettings(true)}>
                                     <Settings/>
                                 </IconButton>
-                                <IconButton>
-                                    <MoreVert/>
+                                <IconButton onClick={toggleSidebar}>
+                                    <ViewSidebar/>
                                 </IconButton>
                             </div>
                         </div>

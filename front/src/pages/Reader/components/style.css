@@ -24,3 +24,30 @@
 .readerconf-exit-done {
     bottom:-100vh!important;
 }
+
+/* Left Bar */
+.textbox-enter {
+    left: -500px;
+}
+  
+.textbox-enter-active {
+    left:0;
+    transition: left 300ms ease;
+}
+
+.textbox-enter-done {
+    left: 0;
+}
+  
+.textbox-exit {
+    left:0;
+}
+  
+.textbox-exit-active {
+    left:-500px;
+    transition: left 300ms ease;
+}
+
+.textbox-exit-done {
+    left:-500px;
+}

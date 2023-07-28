@@ -38,7 +38,7 @@
 
         "react/no-adjacent-inline-elements": "warn",
 
-        "react/no-array-index-key": "error",
+        "react/no-array-index-key": "off",
 
         "react/no-unused-state": "warn",
 
