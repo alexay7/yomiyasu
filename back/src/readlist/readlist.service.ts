@@ -14,27 +14,31 @@ export class ReadlistService {
         return this.readListModel.create(createReadList);
     }
 
-    findBookInReadlist(user:Types.ObjectId, book:Types.ObjectId) {
-        return this.readListModel.findOne({user, book});
+    findSerieInReadList(user:Types.ObjectId, serie:Types.ObjectId) {
+        return this.readListModel.findOne({user, serie});
     }
 
-    getUserReadListBooks(user: Types.ObjectId) {
+    async isInReadlist(user:Types.ObjectId, serie:Types.ObjectId) {
+        return (await this.readListModel.count({user, serie})) > 0;
+    }
+
+    getUserReadListSeries(user: Types.ObjectId) {
         return this.readListModel
             .aggregate()
             .match({user: new Types.ObjectId(user)})
             .lookup({
-                from: "books",
-                localField: "book",
+                from: "series",
+                localField: "serie",
                 foreignField: "_id",
-                as: "bookInfo"
+                as: "serieInfo"
             });
     }
 
-    removeBookFromUserList(user: Types.ObjectId, book: Types.ObjectId) {
-        return this.readListModel.deleteOne({user, book});
+    removeSerieFromUserList(user: Types.ObjectId, serie: Types.ObjectId) {
+        return this.readListModel.deleteOne({user, serie});
     }
 
-    removeBookWithId(id:Types.ObjectId) {
+    removeSerieWithId(id:Types.ObjectId) {
         return this.readListModel.findByIdAndDelete(id);
     }
 }

@@ -11,6 +11,7 @@ import {ParseObjectIdPipe} from "../validation/objectId";
 import {UpdateSeriesDto} from "./dto/update-series.dto";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UsersService} from "../users/users.service";
+import {ReadlistService} from "../readlist/readlist.service";
 
 @Controller("series")
 @UseGuards(JwtAuthGuard)
@@ -20,7 +21,8 @@ export class SeriesController {
         private readonly seriesService: SeriesService,
         private readonly booksService:BooksService,
         private readonly websocketsGateway:WebsocketsGateway,
-        private readonly usersService:UsersService
+        private readonly usersService:UsersService,
+        private readonly readListsService:ReadlistService
     ) {}
 
     @Get()
@@ -51,10 +53,12 @@ export class SeriesController {
         await Promise.all(
             foundSeries.data.map(async(serieElem)=>{
                 const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
+                const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
 
                 if (serieData) {
                     const serieWithProgress:SerieWithProgress = {
                         ...serieElem.toObject(),
+                        readlist,
                         ...serieData
                     };
                     
@@ -137,10 +141,12 @@ export class SeriesController {
         if (!foundSerie) throw new NotFoundException();
 
         const serieData = await this.booksService.getSerieStats(userId, foundSerie._id);
+        const readlist = await this.readListsService.isInReadlist(userId, foundSerie._id);
 
         if (serieData) {
             const serieWithProgress:SerieWithProgress = {
                 ...foundSerie,
+                readlist,
                 ...serieData
             };
             return serieWithProgress;

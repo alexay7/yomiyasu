@@ -44,22 +44,22 @@ export class ReadprogressController {
 
         const foundProgress = await this.readprogressService.findProgressByBookAndUser(progressDto.book, userId);
 
+        const foundBook = await this.booksService.findById(progressDto.book);
+
+        if (!foundBook) throw new BadRequestException();
+
         if (progressDto.status !== "unread") {
             // Si el progreso es avanzar la lectura, quitarlo de la lista de lectura si existe
 
-            const foundReadList = await this.readListService.findBookInReadlist(userId, progressDto.book);
+            const foundReadList = await this.readListService.findSerieInReadList(userId, foundBook?.serie);
       
             if (foundReadList) {
-                await this.readListService.removeBookWithId(foundReadList._id );
+                await this.readListService.removeSerieWithId(foundReadList._id);
             }
         }
 
         if (!foundProgress || foundProgress.status === "completed") {
             // No se ha encontrado progreso ninguno o el ultimo proceso es de completado, se crea uno nuevo
-
-            const foundBook = await this.booksService.findById(progressDto.book);
-
-            if (!foundBook) throw new BadRequestException();
 
             const newProgress:CreateReadProgress = {
                 user:userId,

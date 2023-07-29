@@ -1,7 +1,7 @@
 import {Types} from "mongoose";
 
 export interface CreateReadList {
-    book: Types.ObjectId;
+    serie: Types.ObjectId;
 
     user: Types.ObjectId;
 }

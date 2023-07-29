@@ -3,9 +3,9 @@ import {Serie} from "../schemas/series.schema";
 
 export interface SerieWithProgress extends Serie {
     unreadBooks:number;
-    readlist?:boolean;
+    readlist:boolean;
     thumbnailPath:string;
-    type?:string
+    type?:string;
 }
 
 export interface SerieWithReviews extends Serie {
