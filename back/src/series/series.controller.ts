@@ -34,7 +34,7 @@ export class SeriesController {
         let reversed = false;
         if (sort.includes("!")) {
             reversed = true;
-            sort = sort.replace("!", "") as "createdDate" | "bookCount" | "lastModifiedDate" | "sortName";
+            sort = sort.replace("!", "") as "createdDate" | "bookCount" | "lastModifiedDate" | "sortName" | "difficulty";
         }
 
         if (!query.page || query.page < 1) {
@@ -140,7 +140,7 @@ export class SeriesController {
 
         if (serieData) {
             const serieWithProgress:SerieWithProgress = {
-                ...foundSerie.toObject(),
+                ...foundSerie,
                 ...serieData
             };
             return serieWithProgress;

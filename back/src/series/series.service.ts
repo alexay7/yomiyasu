@@ -1,20 +1,51 @@
-import {Injectable, Logger} from "@nestjs/common";
+import {Injectable, Logger, NotFoundException} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {Model, Types} from "mongoose";
 import {Serie, SerieDocument} from "./schemas/series.schema";
 import {SeriesSearch, UpdateSerie} from "./interfaces/query";
-import {BooksService} from "../books/books.service";
+import {UsersService} from "../users/users.service";
+import {SerieWithReviews} from "./interfaces/serieWithProgress";
+import {ParsedReview} from "../reviews/interfaces/review";
 
 @Injectable()
 export class SeriesService {
     constructor(
         @InjectModel(Serie.name) private readonly seriesModel: Model<SerieDocument>,
-        private readonly booksService:BooksService
+        private readonly usersService:UsersService
     ) {}
   private readonly logger = new Logger(SeriesService.name);
 
   async findById(id:Types.ObjectId) {
-      return this.seriesModel.findById(id);
+      const pipe = await this.seriesModel.aggregate()
+          .match({_id:new Types.ObjectId(id)})
+          .lookup({
+              from:"reviews",
+              localField:"_id",
+              foreignField:"serie",
+              as:"reviews"
+          });
+
+      const reviews:ParsedReview[] = [];
+      if (pipe.length > 0) {
+          const serie = pipe[0] as SerieWithReviews;
+
+          if (serie.reviews) {
+              await Promise.all(
+                  serie.reviews.map(async(review)=>{
+                      const foundUser = await this.usersService.findById(review.user);
+                      const newReview:ParsedReview = {
+                          ...review,
+                          name:foundUser?.username || ""
+                      };
+                      reviews.push(newReview);
+                  })
+              );
+
+              serie.reviews = reviews;
+          }
+          return serie;
+      }
+      throw new NotFoundException();
   }
 
   async updateOrCreate(newSerie: {
@@ -66,6 +97,16 @@ export class SeriesService {
       if (query.name) {
           const regex = new RegExp(query.name);
           result.where({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
+      }
+
+      if ((query.min && query.min !== "0") || query.sort?.includes("difficulty")) {
+          const min = query.min || "0";
+          result.where({difficulty:{$gt:parseInt(min) - 1}});
+      }
+
+      if (query.max && query.max !== "10" || query.sort?.includes("difficulty")) {
+          const max = query.max || "0";
+          result.where({difficulty:{$lt:parseInt(max) + 1}});
       }
 
       if (query.firstLetter) {

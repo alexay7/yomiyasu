@@ -1,5 +1,5 @@
 import {Serie} from "../schemas/series.schema";
-import {IsArray, IsOptional, IsString} from "class-validator";
+import {IsArray, IsNumber, IsOptional, IsString} from "class-validator";
 
 export class UpdateSeriesDto implements Partial<Serie> {
     @IsString()
@@ -17,6 +17,10 @@ export class UpdateSeriesDto implements Partial<Serie> {
     @IsString()
     @IsOptional()
     summary?: string;
+
+    @IsNumber()
+    @IsOptional()
+    difficulty?:number;
 
     @IsArray()
     @IsOptional()

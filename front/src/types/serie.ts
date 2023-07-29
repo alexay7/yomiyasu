@@ -8,6 +8,7 @@ export interface Serie {
     bookCount: number;
     lastModifiedDate: Date;
     createdDate: Date;
+    difficulty:number;
     summary?: string;
     genres: string[];
     authors:string[];
@@ -31,6 +32,16 @@ export interface Alphabet {
     count:number;
 }
 
+interface Review {
+    _id?:string;
+    difficulty:number;
+    name:string;
+    valoration?:number;
+    comment?:string;
+    userLevel:string;
+}
+
 export interface FullSerie extends SerieWithProgress {
-    books:BookWithProgress[]
+    books:BookWithProgress[],
+    reviews:Review[]
 }

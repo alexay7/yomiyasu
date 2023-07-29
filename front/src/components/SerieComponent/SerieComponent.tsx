@@ -36,6 +36,11 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                         <p className="bg-primary p-1">{serieData.unreadBooks}</p>
                     </div>
                 )}
+                {serieData.difficulty > 0 && (
+                    <div className="absolute top-0 left-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
+                        <p className="border-2 border-primary border-solid rounded-md m-1 px-3 text-sm bg-white text-primary">{Math.round(serieData.difficulty)}</p>
+                    </div>
+                )}
 
                 <Fade in={onItem}>
                     <div>

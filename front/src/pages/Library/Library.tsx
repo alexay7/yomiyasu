@@ -24,7 +24,9 @@ export function Library():React.ReactElement {
     const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter], async()=>{
         const genre = searchParams.get("genre");
         const author = searchParams.get("author");
-        const sortby = searchParams.get("sortby");
+        const sortby = searchParams.get("sortBy");
+        const min = searchParams.get("min");
+        const max = searchParams.get("max");
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
@@ -43,6 +45,14 @@ export function Library():React.ReactElement {
             link += `sort=${sortby}&`;
         } else {
             link += "sort=sortName&";
+        }
+
+        if (min) {
+            link += `min=${min}&`;
+        }
+
+        if (max) {
+            link += `max=${max}&`;
         }
 
         link += `page=${currentPage}&limit=25`;

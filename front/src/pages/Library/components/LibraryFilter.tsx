@@ -1,5 +1,5 @@
-import {Sort} from "@mui/icons-material";
-import {Autocomplete, Divider, IconButton, MenuItem, Select, TextField} from "@mui/material";
+import {RestartAlt, Sort} from "@mui/icons-material";
+import {Autocomplete, Divider, IconButton, MenuItem, Select, Slider, TextField} from "@mui/material";
 import React, {Fragment, useState} from "react";
 import {PopupWindow} from "../../../components/PopupWindow/PopupWindow";
 import {SetURLSearchParams} from "react-router-dom";
@@ -14,13 +14,38 @@ interface LibraryFilterProps {
 export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
     const {searchParams, setSearchParams} = props;
     const [open, setOpen] = useState(false);
+    const [sort, setSort] = useState(searchParams.get("sortBy") || "sortName");
+    const [difficulty, setDifficulty] = useState<number[]>([parseInt(searchParams.get("min") || "0"), parseInt(searchParams.get("max") || "10")]);
+    const [genre, setGenre] = useState(searchParams.get("genre") || null);
+    const [author, setAuthor] = useState(searchParams.get("author") || null);
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
         return api.get<{genres:string[], authors:string[]}>("series/genresAndArtists");
     }, {refetchOnWindowFocus:false});
 
+
     function closePopup():void {
         setOpen(false);
+    }
+
+    function filterSeries(e:React.FormEvent<HTMLFormElement>):void {
+        e.preventDefault();
+
+        const filter:Record<string, string> = {
+            sortBy:sort,
+            min:`${difficulty[0]}`,
+            max:`${difficulty[1]}`
+        };
+
+        if (genre) {
+            filter.genre = genre;
+        }
+
+        if (author) {
+            filter.author = author;
+        }
+        setSearchParams(filter);
+        closePopup();
     }
 
     return (
@@ -28,17 +53,14 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
             <IconButton onClick={()=>setOpen(true)}>
                 <Sort/>
             </IconButton>
-            <PopupWindow open={open} title="Filtrar y Ordenar" closePopup={closePopup}>
+            <PopupWindow open={open} title="Filtrar y Ordenar" closePopup={closePopup} onSubmit={filterSeries}>
                 <div className="flex flex-col gap-4">
                     <p>Ordenar por...</p>
                     <Select
                         fullWidth
-                        value={searchParams.get("sortby") || "sortName"}
+                        value={sort}
                         onChange={(e)=>{
-                            setSearchParams((prev)=>{
-                                return {...prev, sortby:e.target.value};
-                            });
-                            closePopup();
+                            setSort(e.target.value);
                         }}
                         label="Ordenar"
                     >
@@ -48,53 +70,59 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
                         <MenuItem value="bookCount">Menos volúmenes</MenuItem>
                         <MenuItem value="lastModifiedDate">Más recientes</MenuItem>
                         <MenuItem value="!lastModifiedDate">Más antiguos</MenuItem>
+                        <MenuItem value="difficulty">Más fáciles</MenuItem>
+                        <MenuItem value="!difficulty">Más difíciles</MenuItem>
                     </Select>
                     <Divider/>
                     <p>Filtrar por...</p>
-                    <Autocomplete
-                        fullWidth
-                        value={searchParams.get("genre")}
-                        onChange={(e, v)=>{
-                            if (v) {
-                                setSearchParams((prev)=>{
-                                    return {...prev, genre:v};
-                                });
-                            } else {
-                                setSearchParams({});
-                            }
-                            closePopup();
-                        }}
-                        renderInput={(params)=>(
-                            <TextField
-                                {...params}
-                                variant="standard"
-                                label="Géneros"
-                            />
-                        )}
-                        options={genresAndArtists.genres}
-                    />
-                    <Autocomplete
-                        fullWidth
-                        value={searchParams.get("author")}
-                        onChange={(e, v)=>{
-                            if (v) {
-                                setSearchParams((prev)=>{
-                                    return {...prev, author:v};
-                                });
-                            } else {
-                                setSearchParams({});
-                            }
-                            closePopup();
-                        }}
-                        renderInput={(params)=>(
-                            <TextField
-                                {...params}
-                                variant="standard"
-                                label="Autores"
-                            />
-                        )}
-                        options={genresAndArtists.authors}
-                    />
+                    <div className="ml-4">
+                        <div className="flex flex-col gap-2">
+                            <p className="text-gray-300">Dificultad</p>
+                            <div className="flex gap-4 items-center">
+                                <Slider onChange={(e, v)=>{
+                                    setDifficulty(v as number[]);
+                                }} value={difficulty} max={10} min={0} step={1}
+                                marks valueLabelDisplay="auto"
+                                />
+                                <IconButton onClick={()=>{
+                                    setDifficulty([0, 10]);
+                                }}
+                                >
+                                    <RestartAlt/>
+                                </IconButton>
+                            </div>
+                        </div>
+                        <Autocomplete
+                            fullWidth
+                            value={genre}
+                            onChange={(e, v)=>{
+                                setGenre(v);
+                            }}
+                            renderInput={(params)=>(
+                                <TextField
+                                    {...params}
+                                    variant="standard"
+                                    label="Géneros"
+                                />
+                            )}
+                            options={genresAndArtists.genres}
+                        />
+                        <Autocomplete
+                            fullWidth
+                            value={author}
+                            onChange={(e, v)=>{
+                                setAuthor(v);
+                            }}
+                            renderInput={(params)=>(
+                                <TextField
+                                    {...params}
+                                    variant="standard"
+                                    label="Autores"
+                                />
+                            )}
+                            options={genresAndArtists.authors}
+                        />
+                    </div>
                 </div>
             </PopupWindow>
         </Fragment>

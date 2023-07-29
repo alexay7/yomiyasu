@@ -12,6 +12,7 @@ import {SerieSettings} from "../../components/SerieComponent/components/SerieSet
 import {goBack, goTo} from "../../helpers/helpers";
 import {EditSerie} from "./components/EditSerie";
 import {useAuth} from "../../contexts/AuthContext";
+import {Reviews} from "./components/Reviews";
 
 export function Serie():React.ReactElement {
     const {id} = useParams();
@@ -73,35 +74,47 @@ export function Serie():React.ReactElement {
             </div>
             {serieData && (
                 <div className="p-8 my-12">
-                    <div className="flex flex-col lg:flex-row w-full gap-8">
-                        <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
-                            {serieData.unreadBooks > 0 && (
-                                <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                                    <p className="bg-primary p-2">{serieData.unreadBooks}</p>
-                                </div>
-                            )}
-                            <img className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
+                    <div className="flex gap-8 flex-col lg:flex-row">
+                        <div className="flex flex-col items-center lg:items-start lg:flex-row w-full gap-8">
+                            <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
+                                {serieData.unreadBooks > 0 && (
+                                    <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
+                                        <p className="bg-primary p-2">{serieData.unreadBooks}</p>
+                                    </div>
+                                )}
+                                <img className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
+                                {serieData.difficulty > 0 && (
+                                    <div className="absolute top-0 left-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
+                                        <p className="border-2 border-primary border-solid rounded-md m-1 px-3 text-sm bg-white text-primary">{Math.round(serieData.difficulty)}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex w-4/6 flex-col text-white">
+                                <p className="text-3xl">{serieData.visibleName}</p>
+                                {serieData.status && (
+                                    <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>
+                                )}
+                                <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
+                                {serieBooks && serieBooks.length > 0 && (
+                                    <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={()=>{
+                                        goTo(navigate, `/reader/${serieBooks[0]._id}`);
+                                    }}
+                                    >{getReadButtonText(serieData)}
+                                    </Button>
+                                )}
+                                {serieData.summary && (
+                                    <div className="text-sm mt-4">
+                                        <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
+                                        <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex w-4/6 flex-col text-white">
-                            <p className="text-3xl">{serieData.visibleName}</p>
-                            {serieData.status && (
-                                <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>
-                            )}
-                            <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
-                            {serieBooks && serieBooks.length > 0 && (
-                                <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={()=>{
-                                    goTo(navigate, `/reader/${serieBooks[0]._id}`);
-                                }}
-                                >{getReadButtonText(serieData)}
-                                </Button>
-                            )}
-                            {serieData.summary && (
-                                <div className="text-sm mt-4">
-                                    <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
-                                    <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
-                                </div>
-                            )}
-                        </div>
+                        {serieData.reviews && serieData.reviews.length > 0 && (
+                            <div className="w-full md:w-3/4 lg:w-1/2 mx-auto">
+                                <Reviews serieData={serieData}/>
+                            </div>
+                        )}
                     </div>
                     <div className="flex flex-col gap-2 pt-8 pb-4">
                         {serieData.genres.length > 0 && (

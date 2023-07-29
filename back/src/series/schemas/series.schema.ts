@@ -23,6 +23,9 @@ export class Serie {
   @Prop({type: Date, default: new Date()})
   lastModifiedDate: Date;
 
+  @Prop({type:Number, default:0})
+  difficulty:number;
+
   @Prop({type: Date, default: new Date()})
   createdDate: Date;
 
