@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, ForbiddenException} from "@nestjs/common";
 import {Model, Types} from "mongoose";
 import {InjectModel} from "@nestjs/mongoose";
 import {Review} from "./schemas/review.schema";
@@ -52,5 +52,15 @@ export class ReviewsService {
         if (pipe.length > 0) {
             return pipe[0].averageWeightedRating;
         }
+    }
+
+    async removeReview(userId:Types.ObjectId, id:Types.ObjectId) {
+        const foundReview = await this.reviewModel.findOne({_id:id, user:userId});
+
+        if (!foundReview) {
+            throw new ForbiddenException();
+        }
+
+        return this.reviewModel.findByIdAndDelete(id);
     }
 }

@@ -31,5 +31,8 @@ export const api = {
         request<TResponse>(url, {method: "POST", body:JSON.stringify(body), headers:{"Content-Type":"application/json"}, keepalive:keepAlive}),
 
     patch: <TBody, TResponse>(url: string, body: TBody, keepAlive?:boolean):Promise<TResponse> =>
-        request<TResponse>(url, {method: "PATCH", body:JSON.stringify(body), headers:{"Content-Type":"application/json"}, keepalive:keepAlive})
+        request<TResponse>(url, {method: "PATCH", body:JSON.stringify(body), headers:{"Content-Type":"application/json"}, keepalive:keepAlive}),
+
+    delete: <TResponse>(url: string):Promise<TResponse> =>
+        request<TResponse>(url, {method:"DELETE"})
 };

@@ -13,7 +13,7 @@ export function History():React.ReactElement {
         const res = await api.get<UserProgress[]>("readprogress/all");
 
         const rows:{id:number, image:string, book:string, serie:string, status:string,
-            pages:number, start:Date, end:Date | undefined, time:number}[] = [];
+            pages:number, start:Date, end:Date | undefined, time:number, lastupdate:Date | undefined}[] = [];
 
         res.forEach((progress, i)=>{
             rows.push({
@@ -25,7 +25,8 @@ export function History():React.ReactElement {
                 pages:progress.currentPage,
                 start:progress.startDate,
                 end:progress.endDate,
-                time:progress.time
+                time:progress.time,
+                lastupdate:progress.lastUpdateDate
             });
         });
 
@@ -38,9 +39,10 @@ export function History():React.ReactElement {
         {
             field: "id",
             headerName: "ID",
-            width: 50,
+            width: 20,
             sortable:false,
-            filterable:false},
+            filterable:false
+        },
         {
             field: "image",
             headerName: "",
@@ -67,6 +69,12 @@ export function History():React.ReactElement {
             field: "pages",
             headerName: "Páginas leídas",
             width: 120
+        },
+        {
+            field: "lastupdate",
+            headerName: "Última actualización",
+            width: 160,
+            valueFormatter:(params)=>new Date(params.value).toLocaleString()
         },
         {
             field: "start",

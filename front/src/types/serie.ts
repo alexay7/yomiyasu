@@ -32,13 +32,15 @@ export interface Alphabet {
     count:number;
 }
 
-interface Review {
+export interface Review {
     _id?:string;
     difficulty:number;
-    name:string;
-    valoration?:number;
+    serie:string;
+    name?:string;
+    valoration?:number | null;
     comment?:string;
     userLevel:string;
+    user?:string;
 }
 
 export interface FullSerie extends SerieWithProgress {

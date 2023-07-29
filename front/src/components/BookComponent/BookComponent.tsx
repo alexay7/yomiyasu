@@ -41,7 +41,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     }
 
     return (
-        <div className="w-[10rem] flex-shrink-0">
+        <div className="w-[9rem] flex-shrink-0">
             <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
                 style={{backgroundImage:`url(${encodeURI(thumbnailUrl)})`}}
                 onClick={(e)=>{
