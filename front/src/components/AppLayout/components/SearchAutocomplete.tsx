@@ -53,7 +53,7 @@ export function SearchAutocomplete():React.ReactElement {
         <Autocomplete options={[...foundSeries, ...foundBooks]}
             renderOption={(props, option)=>(
                 <Box component="li" sx={{"& > img": {mr: 2, flexShrink: 0}}} {...props}>
-                    <img width="50" src={`/api/static/${getThumbnail(option)}`} alt={option.visibleName} />
+                    <img loading="lazy" width="50" src={`/api/static/${getThumbnail(option)}`} alt={option.visibleName} />
                     <p className="w-2/3 flex-grow">{option.visibleName}</p>
                 </Box>
             )}

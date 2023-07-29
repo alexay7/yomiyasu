@@ -46,7 +46,7 @@ export function History():React.ReactElement {
         {
             field: "image",
             headerName: "",
-            renderCell:(params)=><img src={params.value as string} alt="" />,
+            renderCell:(params)=><img loading="lazy" src={params.value as string} alt="" />,
             sortable:false,
             filterable:false
         },

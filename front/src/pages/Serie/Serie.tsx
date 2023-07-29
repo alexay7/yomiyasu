@@ -82,7 +82,7 @@ export function Serie():React.ReactElement {
                                         <p className="bg-primary p-2">{serieData.unreadBooks}</p>
                                     </div>
                                 )}
-                                <img className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
+                                <img loading="lazy" className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
                                 {serieData.difficulty > 0 && (
                                     <div className="absolute top-0 left-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
                                         <p className="border-2 border-primary border-solid rounded-md m-1 px-3 text-sm bg-white text-primary">{Math.round(serieData.difficulty)}</p>
