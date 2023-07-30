@@ -43,6 +43,7 @@
     "argon2": "^0.30.3",
     "bull": "^4.10.4",
     "cache-manager": "^5.2.3",
+    "cache-manager-redis-store": "^3.0.1",
     "cheerio": "^1.0.0-rc.12",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",

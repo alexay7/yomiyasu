@@ -18,6 +18,14 @@ services:
       - type: bind
         source: /config/folder/dicts
         target: /usr/src/dicts
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - cache:/data
   client:
     build:
       context: ./front
@@ -45,5 +53,8 @@ services:
         source: /config/folder/db
         target: /data/db
     restart: unless-stopped
+volumes:
+  cache:
+    driver: local
 networks:
   server-network:

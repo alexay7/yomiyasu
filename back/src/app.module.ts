@@ -15,11 +15,24 @@ import {WebsocketsModule} from "./websockets/websockets.module";
 import {CacheModule} from "@nestjs/cache-manager";
 import {DictionaryModule} from "./dictionary/dictionary.module";
 import {ReviewsModule} from "./reviews/reviews.module";
+import {BullModule} from "@nestjs/bull";
+import {ScanWorker} from "./queue/scan-library.job";
 
 @Module({
     imports: [
         ConfigModule.forRoot({isGlobal: true, envFilePath: ".env"}),
         CacheModule.register({isGlobal:true}),
+        BullModule.forRoot({
+            redis: {
+                host: "cache",
+                port: 6379
+            }
+        }),
+        BullModule.registerQueueAsync(
+            {
+                name: "rescanLibrary"
+            }
+        ),
         AuthModule,
         UsersModule,
         ScheduleModule.forRoot(),
@@ -40,6 +53,6 @@ import {ReviewsModule} from "./reviews/reviews.module";
     ],
 
     controllers: [AppController],
-    providers: [AppService]
+    providers: [AppService, ScanWorker]
 })
 export class AppModule {}

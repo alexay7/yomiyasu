@@ -6,18 +6,26 @@ import * as fs from "fs";
 import {BooksService} from "./books/books.service";
 import {extractUrlFromHtml, getCharacterCount} from "./books/helpers/helpers";
 import {WebsocketsGateway} from "./websockets/websockets.gateway";
+import {InjectQueue} from "@nestjs/bull";
+import {Queue} from "bull";
 
 @Injectable()
 export class AppService {
     constructor(
         private readonly seriesService: SeriesService,
         private readonly booksService: BooksService,
-        private readonly websocketsGateway:WebsocketsGateway
+        private readonly websocketsGateway:WebsocketsGateway,
+        @InjectQueue("rescanLibrary") private readonly rescanQueue: Queue
     ) {}
   private readonly logger = new Logger(AppService.name);
 
   getHello(): string {
       return "Hello World!";
+  }
+
+  @Cron("0 0 3 * * *")
+  async addScheduleToQueue() {
+      await this.rescanQueue.add({});
   }
 
   /**
@@ -36,7 +44,6 @@ export class AppService {
    * La otra opción que tendrá es restaurar el elemento con el
    * mismo nombre para que se le quite la propiedad "missing"
    */
-  @Cron("0 0 3 * * *")
   async rescanLibrary() {
       this.logger.log("\x1b[34mEscaneando biblioteca...");
       const existingFolders: string[] = [];

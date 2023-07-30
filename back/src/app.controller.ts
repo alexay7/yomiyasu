@@ -13,6 +13,8 @@ import {JwtAuthGuard} from "./auth/strategies/jwt.strategy";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {Types} from "mongoose";
 import {UsersService} from "./users/users.service";
+import {InjectQueue} from "@nestjs/bull";
+import {Queue} from "bull";
 
 @Controller()
 @UseGuards(JwtAuthGuard)
@@ -20,7 +22,9 @@ import {UsersService} from "./users/users.service";
 export class AppController {
     constructor(
         private readonly appService: AppService,
-        private readonly usersService:UsersService) {}
+        private readonly usersService:UsersService,
+        @InjectQueue("rescanLibrary") private readonly rescanQueue: Queue
+    ) {}
 
     @ApiOkResponse({status:HttpStatus.OK})
     @Get()
@@ -37,7 +41,7 @@ export class AppController {
 
         await this.usersService.isAdmin(userId);
 
-        await this.appService.rescanLibrary();
+        await this.rescanQueue.add({});
 
         return {status:"OK"};
     }
