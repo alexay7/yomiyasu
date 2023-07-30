@@ -22,7 +22,6 @@ import {ReadlistService} from "../readlist/readlist.service";
 import {ReadProgress, ReadProgressStatus} from "./schemas/readprogress.schema";
 import {BooksService} from "../books/books.service";
 import {ParseObjectIdPipe} from "../validation/objectId";
-import {UserBook} from "../books/interfaces/query";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 
 @Controller("readprogress")
@@ -109,9 +108,7 @@ export class ReadprogressController {
 
         const series = await this.readprogressService.getSeriesProgress(userId);
 
-        let returnBooks:UserBook[] = [];
-
-        await Promise.all(series.map(async(serie)=>{
+        const promises = series.map(async(serie)=>{
             const allBooks = await this.booksService.filterBooks(userId, {serie, sort:"sortName"});
             const unreadBooks = await this.booksService.filterBooks(userId, {serie, sort:"sortName", status:"unread"});
 
@@ -119,11 +116,14 @@ export class ReadprogressController {
             if (unreadBooks.length > 0 && (allBooks.length !== unreadBooks.length) && !allBooks.some(x=>x.status === "reading")) {
                 // Se buscan todos los libros que no hayan sido leidos por el usuario y se coge el primero no leido
 
-                returnBooks = returnBooks.concat(unreadBooks[0]);
+                return unreadBooks[0];
             }
 
-        }));
+            return null;
+        });
 
-        return returnBooks;
+        const returnBooks = await Promise.all(promises);
+
+        return returnBooks.filter((item) => item !== null);
     }
 }

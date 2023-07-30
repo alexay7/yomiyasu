@@ -30,16 +30,16 @@ export class SeriesService {
           const serie = pipe[0] as SerieWithReviews;
 
           if (serie.reviews) {
-              await Promise.all(
-                  serie.reviews.map(async(review)=>{
-                      const foundUser = await this.usersService.findById(review.user);
-                      const newReview:ParsedReview = {
-                          ...review,
-                          name:foundUser?.username || ""
-                      };
-                      reviews.push(newReview);
-                  })
-              );
+              const promises = serie.reviews.map(async(review)=>{
+                  const foundUser = await this.usersService.findById(review.user);
+                  const newReview:ParsedReview = {
+                      ...review,
+                      name:foundUser?.username || ""
+                  };
+                  return newReview;
+              });
+
+              const reviews = await Promise.all(promises);
 
               serie.reviews = reviews.sort((a, b)=>{
                   if (!a._id || !b._id) return 0;
@@ -103,12 +103,12 @@ export class SeriesService {
           result.where({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
 
-      if ((query.min && query.min !== "0") || query.sort?.includes("difficulty")) {
+      if ((query.min && query.min !== "0")) {
           const min = query.min || "0";
           result.where({difficulty:{$gt:parseInt(min) - 1}});
       }
 
-      if (query.max && query.max !== "10" || query.sort?.includes("difficulty")) {
+      if (query.max && query.max !== "10") {
           const max = query.max || "0";
           result.where({difficulty:{$lt:parseInt(max) + 1}});
       }
@@ -123,6 +123,15 @@ export class SeriesService {
 
       if (query.status) {
           result.where({status:query.status});
+      }
+
+      // Como ordenar los resultados | ! = descendente
+      if (query.sort) {
+          if (query.sort.includes("!")) {
+              result.sort({[query.sort.replace("!", "")]:"desc"});
+          } else {
+              result.sort({[query.sort]:"asc"});
+          }
       }
 
       const countQuery = await this.seriesModel.find().merge(result).count();
@@ -159,12 +168,12 @@ export class SeriesService {
               pipe.match({status:query.status});
           }
           
-          if ((query.min && query.min !== "0") || query.sort?.includes("difficulty")) {
+          if ((query.min && query.min !== "0")) {
               const min = query.min || "0";
               pipe.match({difficulty:{$gt:parseInt(min) - 1}});
           }
   
-          if (query.max && query.max !== "10" || query.sort?.includes("difficulty")) {
+          if (query.max && query.max !== "10") {
               const max = query.max || "0";
               pipe.match({difficulty:{$lt:parseInt(max) + 1}});
           }

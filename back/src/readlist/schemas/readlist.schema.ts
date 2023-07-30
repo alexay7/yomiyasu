@@ -14,6 +14,9 @@ export class ReadList {
 
   @Prop({type: SchemaTypes.ObjectId, ref: Serie.name, required: true})
   serie: Types.ObjectId;
+
+  @Prop({type:Date, default:new Date()})
+  addedDate:Date;
 }
 
 export const ReadListSchema = SchemaFactory.createForClass(ReadList);

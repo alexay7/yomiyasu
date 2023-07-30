@@ -32,13 +32,6 @@ export class SeriesController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
-        let sort = query.sort || "sortName";
-        let reversed = false;
-        if (sort.includes("!")) {
-            reversed = true;
-            sort = sort.replace("!", "") as "createdDate" | "bookCount" | "lastModifiedDate" | "sortName" | "difficulty";
-        }
-
         if (!query.page || query.page < 1) {
             query.page = 1;
         }
@@ -48,33 +41,27 @@ export class SeriesController {
         }
 
         const foundSeries = await this.seriesService.filterSeries(query);
-        const seriesWithProgress:SerieWithProgress[] = [];
 
-        await Promise.all(
-            foundSeries.data.map(async(serieElem)=>{
-                const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
-                const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
+        const promises = foundSeries.data.map(async(serieElem)=>{
+            const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
+            const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
 
-                if (serieData) {
-                    const serieWithProgress:SerieWithProgress = {
-                        ...serieElem.toObject(),
-                        readlist,
-                        ...serieData
-                    };
-                    
-                    seriesWithProgress.push(serieWithProgress);
-                }
-            }));
-
-        return {data:seriesWithProgress.sort((x, y)=> {
-            if (x[sort] < y[sort]) {
-                return reversed ? 1 : -1;
+            if (serieData) {
+                const serieWithProgress:SerieWithProgress = {
+                    ...serieElem.toObject(),
+                    readlist,
+                    ...serieData
+                };
+                
+                return serieWithProgress;
             }
-            if (x[sort] > y[sort]) {
-                return reversed ? -1 : 1;
-            }
-            return 0;
-        }), pages:foundSeries.pages};
+
+            return null;
+        });
+
+        const seriesWithProgress = await Promise.all(promises);
+
+        return {data:seriesWithProgress, pages:foundSeries.pages};
     }
 
     @Patch(":id")
@@ -137,24 +124,29 @@ export class SeriesController {
 
         const foundSeries = await this.readListsService.getUserReadListSeries(userId);
 
-        const seriesWithProgress:SerieWithProgress[] = [];
-
-        await Promise.all(
-            foundSeries.map(async(serieElem)=>{
-                const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
-                const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
-
-                if (serieData) {
-                    const serieWithProgress:SerieWithProgress = {
-                        ...serieElem,
-                        readlist,
-                        ...serieData
-                    };
-                    
-                    seriesWithProgress.push(serieWithProgress);
-                }
-            }));
-        return seriesWithProgress;
+        const promises = foundSeries.map(async(serieElem) => {
+            const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
+            const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
+        
+            if (serieData) {
+                const serieWithProgress: SerieWithProgress = {
+                    ...serieElem,
+                    readlist,
+                    ...serieData
+                };
+        
+                return serieWithProgress;
+            }
+        
+            // Si serieData no existe, devolvemos null para mantener el orden correcto en el array final.
+            return null;
+        });
+        
+        // Esperamos a que todas las promesas se resuelvan.
+        const seriesWithProgress = await Promise.all(promises);
+        
+        // Filtramos los valores nulos que se devolvieron en el caso de serieData no exista.
+        return seriesWithProgress.filter((item) => item !== null);
     }
 
     @Get(":id")

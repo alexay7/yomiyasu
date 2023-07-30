@@ -100,13 +100,17 @@ export class BooksService {
   }
 
   async getSerieStats(userId:Types.ObjectId, serie:Types.ObjectId) {
-      const unreadBooks = await this.filterBooks(userId, {serie:serie._id, sort:"sortName", status:"unread"});
+      const serieBooks = await this.filterBooks(userId, {serie:serie._id, sort:"sortName"});
+      const unreadBooks = serieBooks.filter(x=>x.status === "unread");
+      const readingBooks = serieBooks.filter(x=>x.status === "reading");
       let thumbnail:string | undefined;
 
-      if (unreadBooks.length === 0) {
-          const firstBook = await this.filterBooks(userId, {serie:serie._id, sort:"sortName"});
-          if (firstBook.length > 0) {
-              thumbnail = `${firstBook[0].seriePath}/${firstBook[0].imagesFolder}/${firstBook[0].thumbnailPath}`;   
+      if (readingBooks.length > 0) {
+          thumbnail = `${readingBooks[0].seriePath}/${readingBooks[0].imagesFolder}/${readingBooks[0].thumbnailPath}`;
+      }
+      else if (unreadBooks.length === 0) {
+          if (serieBooks.length > 0) {
+              thumbnail = `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}`;   
           }
       } else {
           thumbnail = `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}`;  
