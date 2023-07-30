@@ -97,7 +97,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         handleClose();
                     }}
                     >
-                        Marcar como no leído
+                        {bookData.status === "completed" ? "Marcar como no leído" : "Eliminar progreso actual"}
                     </MenuItem>
                 )}
                 <div>
