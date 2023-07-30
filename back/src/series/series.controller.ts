@@ -149,6 +149,23 @@ export class SeriesController {
         return seriesWithProgress.filter((item) => item !== null);
     }
 
+    @Patch(":id/defaultname")
+    async changeAllBooksName(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        const serieBooks = await this.booksService.getSerieBooks(id);
+
+        serieBooks.forEach(async(serie)=>{
+            await this.booksService.getDefaultName(serie._id, true);
+        });
+
+        return {status:"OK"};
+    }
+
     @Get(":id")
     @ApiOkResponse({status:HttpStatus.OK})
     async getSerie(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {

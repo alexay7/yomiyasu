@@ -7,6 +7,7 @@ import {EditSerie} from "../../EditSerie/EditSerie";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 import {iBook} from "../../../helpers/book";
+import {api} from "../../../api/api";
 
 interface SerieSettingsProps {
     serieData:SerieWithProgress;
@@ -24,6 +25,11 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
 
     function handleClose():void {
         setAnchorEl(null);
+    }
+
+    async function setNames():Promise<void> {
+        await api.patch<unknown, {status:string}>(`series/${serieData._id}/defaultname`, {});
+        forceReload("all");
     }
 
     return (
@@ -45,6 +51,9 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                 </MenuItem>
                 {userData?.admin && (
                     <EditSerie serieData={serieData} handleClose={handleClose}/>
+                )}
+                {userData?.admin && (
+                    <MenuItem key="automatic" onClick={setNames}>Aplicar nombres automáticos</MenuItem>
                 )}
                 {serieData.unreadBooks !== 0 && (
                     <div>

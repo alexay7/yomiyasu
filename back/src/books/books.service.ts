@@ -137,7 +137,7 @@ export class BooksService {
       return null;
   }
 
-  async getDefaultName(book:Types.ObjectId) {
+  async getDefaultName(book:Types.ObjectId, change?:boolean) {
       const pipe = await this.bookModel.aggregate()
           .match({_id:new Types.ObjectId(book)})
           .lookup({
@@ -155,7 +155,11 @@ export class BooksService {
       const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
       const volNumber = `${bookIndex + 1}`.padStart(serieBooks.length.toString().length, "0");
-      return {name:`${foundBook.serieInfo.visibleName} v${volNumber}`};
+      const newName = `${foundBook.serieInfo.visibleName} v${volNumber}`;
+      if (change) {
+          await this.bookModel.findByIdAndUpdate(book, {visibleName:newName});
+      }
+      return {name:newName};
   }
 
   async updateOrCreate(newBook: {
