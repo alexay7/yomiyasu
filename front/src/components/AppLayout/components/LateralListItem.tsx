@@ -1,6 +1,7 @@
 import React, {LiHTMLAttributes} from "react";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
+import {useMediaQuery} from "react-responsive";
 
 interface LateralListItemProps extends LiHTMLAttributes<HTMLLIElement> {
     text:string;
@@ -13,6 +14,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
     const {text, link, Icon, toggleMenu, ...moreProps} = props;
 
     const navigate = useNavigate();
+    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
     let backColor = "hover:bg-[#444444]";
 
@@ -26,7 +28,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
             onClick={()=>{
                 if (link && window.location.pathname === link) window.location.href = link;
                 if (link && toggleMenu) {
-                    toggleMenu();
+                    if (isTabletOrMobile) toggleMenu();
                     goTo(navigate, link);
                 }
             }}
