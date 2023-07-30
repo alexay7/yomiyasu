@@ -439,14 +439,42 @@ export function Reader():React.ReactElement {
                     window.parent.postMessage({action:"text",value:inlineBlockTextBoxContents},"*");
                 }
 
+                function getBackgroundImage(page) {
+                    const pageContainer = page?.querySelector('.pageContainer');
+                    return pageContainer?.style?.backgroundImage
+                      ?.slice(4, -1)
+                      .replace(/['"]/g, '');
+                  }
+
+                const preload = document.getElementById('preload-image');
+
+                function preloadImage() {
+                    let preloadContent = '';
+              
+                    for (let i = 0; i < 5; i++) {
+                      const page = getPage(state.page_idx + i);
+                      const backgroundImageUrl = getBackgroundImage(page);
+              
+                      if (backgroundImageUrl) {
+                        preloadContent += "url("+backgroundImageUrl+") ";
+                      }
+                    }
+                    preload.style.content = preloadContent;
+                  }
+
                 window.updatePage = function(new_page_idx){
                     oldUpdate(new_page_idx);
-                    getText()
+                    preloadImage();
+                    getText();
                     window.parent.postMessage({action:"newPage",value:new_page_idx},"*");
                 }
             })()
             `;
 
+        const preload = document.createElement("div");
+        preload.id = "preload-image";
+
+        iframe.current.contentWindow.document.body.appendChild(preload);
         iframe.current.contentWindow.document.head.appendChild(customMokuro);
         iframe.current.contentWindow.document.head.appendChild(customStyles);
 
