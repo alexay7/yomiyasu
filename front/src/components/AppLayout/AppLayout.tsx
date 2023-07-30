@@ -49,14 +49,14 @@ export function AppLayout():React.ReactElement {
                     </div>
                     <Divider/>
                     <ul className="mt-4 select-none">
-                        <LateralListItem text="Inicio" link="/app" Icon={Home}/>
-                        <LateralListItem text="Biblioteca" link="/app/library" Icon={Book}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Inicio" link="/app" Icon={Home}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Biblioteca" link="/app/library" Icon={Book}/>
                         <Divider className="my-4"/>
-                        <LateralListItem text="Historial" link="/app/history" Icon={History}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Historial" link="/app/history" Icon={History}/>
                         <AccountSettings/>
                         <Settings/>
                         {userData?.admin && (
-                            <LateralListItem text="Configuración" link="/app/config" Icon={AdminPanelSettings}/>
+                            <LateralListItem toggleMenu={toggleMenu} text="Configuración" link="/app/config" Icon={AdminPanelSettings}/>
                         )}
                         <LateralListItem text="Cerrar Sesión" Icon={Logout} onClick={()=>logoutUser()}/>
                     </ul>

@@ -6,10 +6,11 @@ interface LateralListItemProps extends LiHTMLAttributes<HTMLLIElement> {
     text:string;
     link?:string;
     Icon:React.ElementType;
+    toggleMenu?:()=>void;
 }
 
 export function LateralListItem(props:LateralListItemProps):React.ReactElement {
-    const {text, link, Icon, ...moreProps} = props;
+    const {text, link, Icon, toggleMenu, ...moreProps} = props;
 
     const navigate = useNavigate();
 
@@ -24,7 +25,10 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
         <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer`}
             onClick={()=>{
                 if (link && window.location.pathname === link) window.location.href = link;
-                if (link) goTo(navigate, link);
+                if (link && toggleMenu) {
+                    toggleMenu();
+                    goTo(navigate, link);
+                }
             }}
             {...moreProps}
         >
