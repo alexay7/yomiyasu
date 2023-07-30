@@ -6,6 +6,7 @@ import {SerieWithProgress} from "../../../types/serie";
 import {EditSerie} from "../../EditSerie/EditSerie";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
+import {iBook} from "../../../helpers/book";
 
 interface SerieSettingsProps {
     serieData:SerieWithProgress;
@@ -36,6 +37,12 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
             <Menu id="long-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
+                <MenuItem
+                    onClick={()=>{
+                        void iBook(serieData);
+                    }}
+                >Leer Siguiente volumen
+                </MenuItem>
                 {userData?.admin && (
                     <EditSerie serieData={serieData} handleClose={handleClose}/>
                 )}

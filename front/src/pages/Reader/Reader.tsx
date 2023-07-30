@@ -12,6 +12,7 @@ import {StopWatchMenu} from "./components/StopWatchMenu";
 import {createProgress} from "../../helpers/progress";
 import {PageText} from "./components/PageText";
 import {Dictionary} from "./components/Dictionary";
+import {nextBook, prevBook} from "../../helpers/book";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -528,7 +529,10 @@ export function Reader():React.ReactElement {
                     {showToolBar && (
                         <div className="bg-[#272727] h-[5vh] w-full text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                             <div className="justify-between flex items-center">
-                                <IconButton onClick={()=>alert("[EN PROGRESO] Esto te llevaría al vol anterior")}>
+                                <IconButton onClick={()=>{
+                                    void prevBook(bookData);
+                                }}
+                                >
                                     <ArrowLeft/>
                                 </IconButton>
                                 <IconButton onClick={()=>{
@@ -552,7 +556,10 @@ export function Reader():React.ReactElement {
                                 >
                                     <SkipNext/>
                                 </IconButton>
-                                <IconButton onClick={()=>alert("[EN PROGRESO] Esto te llevaría al vol siguiente")}>
+                                <IconButton onClick={()=>{
+                                    void nextBook(bookData);
+                                }}
+                                >
                                     <ArrowRight/>
                                 </IconButton>
                             </div>

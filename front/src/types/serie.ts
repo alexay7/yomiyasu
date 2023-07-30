@@ -15,6 +15,7 @@ export interface Serie {
     missing: false;
     status: string;
     thumbnailPath: string;
+    currentBook:string;
 }
 
 export interface SerieWithProgress extends Serie {

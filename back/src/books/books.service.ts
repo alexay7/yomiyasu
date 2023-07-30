@@ -100,27 +100,38 @@ export class BooksService {
       return this.bookModel.findByIdAndUpdate(id, updateBook, {new:true});
   }
 
+  async getSerieBooks(serie:Types.ObjectId) {
+      return this.bookModel.find({serie:new Types.ObjectId(serie)}).sort({sortName:1});
+  }
+
   async getSerieStats(userId:Types.ObjectId, serie:Types.ObjectId) {
       const serieBooks = await this.filterBooks(userId, {serie:serie._id, sort:"sortName"});
       const unreadBooks = serieBooks.filter(x=>x.status === "unread");
       const readingBooks = serieBooks.filter(x=>x.status === "reading");
+      let currentBook:Types.ObjectId | undefined = undefined;
       let thumbnail:string | undefined;
 
       if (readingBooks.length > 0) {
           thumbnail = `${readingBooks[0].seriePath}/${readingBooks[0].imagesFolder}/${readingBooks[0].thumbnailPath}`;
+          currentBook = readingBooks[0]._id;
       }
       else if (unreadBooks.length === 0) {
           if (serieBooks.length > 0) {
               thumbnail = `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}`;   
+              currentBook = serieBooks[0]._id;
           }
       } else {
           thumbnail = `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}`;  
+          currentBook = unreadBooks[0]._id;
       }
 
       if (thumbnail) {
-          return {unreadBooks:unreadBooks.length,
+          return {
+              unreadBooks:unreadBooks.length,
               thumbnailPath:thumbnail,
-              type:"serie"};
+              currentBook,
+              type:"serie"
+          };
       }
 
       return null;

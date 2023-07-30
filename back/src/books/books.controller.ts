@@ -95,4 +95,38 @@ export class BooksController {
     async getBookDefaultName(@Param("id") book:Types.ObjectId) {
         return this.booksService.getDefaultName(book);
     }
+
+    @Get(":id/next")
+    async getNextBook(@Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        const foundBook = await this.booksService.findById(id);
+
+        if (!foundBook) throw new NotFoundException();
+
+        const serieBooks = await this.booksService.getSerieBooks(foundBook.serie);
+
+        const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
+
+        if (bookIndex + 1 === serieBooks.length) {
+            return {id:"end"};
+        }
+
+        return {id:serieBooks[bookIndex + 1]._id};
+    }
+
+    @Get(":id/prev")
+    async getPrevBook(@Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        const foundBook = await this.booksService.findById(id);
+
+        if (!foundBook) throw new NotFoundException();
+
+        const serieBooks = await this.booksService.getSerieBooks(foundBook.serie);
+
+        const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
+
+        if (bookIndex === 0) {
+            return {id:"start"};
+        }
+
+        return {id:serieBooks[bookIndex - 1]._id};
+    }
 }
