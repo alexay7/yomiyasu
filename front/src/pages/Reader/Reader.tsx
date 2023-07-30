@@ -4,7 +4,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {IconButton, Slider} from "@mui/material";
-import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, Translate, ViewSidebar} from "@mui/icons-material";
+import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
@@ -507,9 +507,9 @@ export function Reader():React.ReactElement {
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
                                 <StopWatchMenu timer={timer} setTimer={setTimer}/>
-                                <IconButton>
+                                {/* <IconButton>
                                     <Translate/>
-                                </IconButton>
+                                </IconButton> */}
                                 <IconButton onClick={()=>setShowSettings(true)}>
                                     <Settings/>
                                 </IconButton>
