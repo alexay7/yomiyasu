@@ -61,7 +61,7 @@ export class SeriesController {
 
         const seriesWithProgress = await Promise.all(promises);
 
-        return {data:seriesWithProgress, pages:foundSeries.pages};
+        return {data:seriesWithProgress.filter((item) => item !== null), pages:foundSeries.pages};
     }
 
     @Patch(":id")
