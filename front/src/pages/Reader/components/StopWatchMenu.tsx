@@ -2,6 +2,7 @@ import {Timer} from "@mui/icons-material";
 import {IconButton, Menu, MenuItem} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
+import {useSettings} from "../../../contexts/SettingsContext";
 
 interface StopWatchMenuProps {
     timer:number;
@@ -10,8 +11,15 @@ interface StopWatchMenuProps {
 
 export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
     const {timer, setTimer} = props;
-    const [timerOn, setTimerOn] = useState(true);
+    const {siteSettings} = useSettings();
+    const [timerOn, setTimerOn] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    useEffect(()=>{
+        if (siteSettings.autoCrono) {
+            setTimerOn(true);
+        }
+    }, [siteSettings]);
 
     useEffect(() => {
         const timerInterval = setInterval(()=>{

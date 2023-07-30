@@ -41,6 +41,15 @@ export function Settings():React.ReactElement {
                         />
                     } label="Ver caracteres en vez de páginas en la carátula de los libros"
                     />
+                    <FormControlLabel className="select-none" control={
+                        <Checkbox checked={siteSettings.autoCrono} onChange={(e, c)=>{
+                            setSiteSettings((prev)=>{
+                                return {...prev, autoCrono:c};
+                            });
+                        }}
+                        />
+                    } label="Iniciar cronómetro automáticamente al abrir libro"
+                    />
                 </div>
             </PopupWindow>
             <Dialog open={openWarning} onClose={()=>setOpenWarning(false)}>

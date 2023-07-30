@@ -20,4 +20,5 @@ export interface FullReaderConfig extends ReaderConfig {
 export interface SiteConfig {
     openHTML:boolean;
     characters:boolean;
+    autoCrono:boolean;
 }

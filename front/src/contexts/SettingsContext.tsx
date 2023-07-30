@@ -64,7 +64,8 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
 
     const defaultSiteSettings:SiteConfig = {
         openHTML:false,
-        characters:false
+        characters:false,
+        autoCrono:true
     };
 
     const rawSiteSettings = window.localStorage.getItem("site");
