@@ -160,7 +160,7 @@ export class AppService {
                           seriePath:elem.seriePath,
                           thumbnailPath: imagesFolder.thumbnailPath,
                           pages: imagesFolder.totalImages,
-                          characters: await getCharacterCount(elem.bookPath)
+                          characters: Math.floor(await getCharacterCount(elem.bookPath))
                       };
                       await this.booksService.updateOrCreate(newBook);
                   }

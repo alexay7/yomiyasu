@@ -22,7 +22,7 @@ export function Library():React.ReactElement {
 
     const navigate = useNavigate();
 
-    const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter], async()=>{
+    const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter, currentPage], async()=>{
         const genre = searchParams.get("genre");
         const author = searchParams.get("author");
         const sortby = searchParams.get("sortBy");
@@ -31,6 +31,10 @@ export function Library():React.ReactElement {
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+                return;
+            }
             link += `firstLetter=${selectedLetter.replace("#", "SPECIAL")}&`;
         }
 

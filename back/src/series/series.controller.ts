@@ -106,7 +106,7 @@ export class SeriesController {
 
         // Populate the counts from the aggregation result
         for (const result of filledLetters) {
-            const index = alphabet.findIndex(item => item.group === result.group);
+            const index = alphabet.findIndex(item => item.group === result.group.toLowerCase());
             if (index !== -1) {
                 alphabet[0].count += result.count;
                 alphabet[index].count = result.count;
