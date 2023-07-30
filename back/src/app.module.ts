@@ -14,7 +14,7 @@ import {ReadlistModule} from "./readlist/readlist.module";
 import {WebsocketsModule} from "./websockets/websockets.module";
 import {CacheModule} from "@nestjs/cache-manager";
 import {DictionaryModule} from "./dictionary/dictionary.module";
-import { ReviewsModule } from './reviews/reviews.module';
+import {ReviewsModule} from "./reviews/reviews.module";
 
 @Module({
     imports: [
@@ -25,7 +25,7 @@ import { ReviewsModule } from './reviews/reviews.module';
         ScheduleModule.forRoot(),
         MongooseModule.forRootAsync({
             useFactory: (configService: ConfigService) => ({
-                uri: configService.get<string>("MONGOURL")
+                uri: configService.get<string>("MONGOURL") || "mongodb://mongodb:27017/yomiyasu"
             }),
             inject: [ConfigService]
         }),

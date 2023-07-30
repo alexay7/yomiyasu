@@ -13,10 +13,10 @@ services:
       - REFRESH_SECRET=valor_del_refresh_secret
     volumes:
       - type: bind
-        source: ./folder/with/book/library
+        source: /folder/with/book/library
         target: /usr/src/exterior
       - type: bind
-        source: ./dicts
+        source: /config/folder/dicts
         target: /usr/src/dicts
   client:
     build:
@@ -42,7 +42,7 @@ services:
       - "27018:27017"
     volumes:
       - type: bind
-        source: /folder/with/app/config
+        source: /config/folder/db
         target: /data/db
     restart: unless-stopped
 networks:
