@@ -3,7 +3,7 @@ import {IconButton, Menu, MenuItem} from "@mui/material";
 import React, {useState} from "react";
 import {useAuth} from "../../../contexts/AuthContext";
 import {SerieWithProgress} from "../../../types/serie";
-import {EditSerie} from "../../../pages/Serie/components/EditSerie";
+import {EditSerie} from "../../EditSerie/EditSerie";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 
@@ -37,7 +37,7 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
                 {userData?.admin && (
-                    <EditSerie serieData={serieData} title={`Editar ${serieData?.visibleName}`} handleClose={handleClose}/>
+                    <EditSerie serieData={serieData} handleClose={handleClose}/>
                 )}
                 {serieData.unreadBooks !== 0 && (
                     <div>

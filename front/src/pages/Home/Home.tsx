@@ -52,7 +52,9 @@ export function Home():React.ReactElement {
         }
 
         if (reloaded && reloaded !== "reviews") {
-            void refetchBooks();
+            setTimeout(()=>{
+                void refetchBooks();
+            }, 1000);
         }
     }, [progressRefetch, tableroRefetch, recentRefetch,
         recentSeriesRefetch, newSeriesRefetch, readlistRefetch,

@@ -25,7 +25,6 @@ export class SeriesService {
               as:"reviews"
           });
 
-      const reviews:ParsedReview[] = [];
       if (pipe.length > 0) {
           const serie = pipe[0] as SerieWithReviews;
 

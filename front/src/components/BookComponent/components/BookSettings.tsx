@@ -8,6 +8,7 @@ import {useGlobal} from "../../../contexts/GlobalContext";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
+import {EditBook} from "../../EditBook/EditBook";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -78,9 +79,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                     </MenuItem>
                 )}
                 {userData?.admin && (
-                    <MenuItem key="edit" onClick={handleClose}>
-                        Editar
-                    </MenuItem>
+                    <EditBook bookData={bookData}/>
                 )}
                 {bookData.status !== "completed" && (
                     <MenuItem key="read" onClick={async()=>{

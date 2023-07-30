@@ -1,22 +1,21 @@
 import React, {Fragment, useState} from "react";
-import {PopupWindow} from "../../../components/PopupWindow/PopupWindow";
+import {PopupWindow} from "../PopupWindow/PopupWindow";
 import {Autocomplete, FormControl, IconButton, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import {useQuery} from "react-query";
-import {api} from "../../../api/api";
-import {Serie, SerieWithProgress} from "../../../types/serie";
+import {api} from "../../api/api";
+import {Serie, SerieWithProgress} from "../../types/serie";
 import {toast} from "react-toastify";
-import {useGlobal} from "../../../contexts/GlobalContext";
+import {useGlobal} from "../../contexts/GlobalContext";
 import {Edit} from "@mui/icons-material";
 
 interface EditSerieProps {
-    title:string;
     serieData:SerieWithProgress;
     circleIcon?:boolean;
     handleClose?:()=>void
 }
 
 export function EditSerie(props:EditSerieProps):React.ReactElement {
-    const {title, serieData, circleIcon, handleClose} = props;
+    const {serieData, circleIcon, handleClose} = props;
     const {forceReload} = useGlobal();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState(serieData.visibleName);
@@ -79,7 +78,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                     Editar
                 </MenuItem>
             )}
-            <PopupWindow open={open} title={title} closePopup={closePopup} onSubmit={saveChanges}>
+            <PopupWindow open={open} title={`Editar ${serieData.visibleName}`} closePopup={closePopup} onSubmit={saveChanges}>
                 <div className="flex flex-col gap-4">
                     <TextField required onChange={(e)=>setName(e.target.value)} value={name} fullWidth variant="filled" label="Nombre"/>
                     <TextField required onChange={(e)=>setSortName(e.target.value)} value={sortName} fullWidth variant="filled" label="Nombre para ordenar"/>

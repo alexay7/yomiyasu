@@ -10,7 +10,7 @@ import {useGlobal} from "../../contexts/GlobalContext";
 import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
 import {goBack, goTo} from "../../helpers/helpers";
-import {EditSerie} from "./components/EditSerie";
+import {EditSerie} from "../../components/EditSerie/EditSerie";
 import {useAuth} from "../../contexts/AuthContext";
 import {Reviews} from "./components/Reviews";
 import {addToReadlist, removeFromReadlist} from "../../helpers/series";
@@ -89,7 +89,7 @@ export function Serie():React.ReactElement {
                             </IconButton>
                         )}
                         {userData?.admin && (
-                            <EditSerie circleIcon serieData={serieData} title={`Editar ${serieData?.visibleName}`}/>
+                            <EditSerie circleIcon serieData={serieData}/>
                         )}
                     </div>
                 )}

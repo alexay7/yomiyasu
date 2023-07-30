@@ -10,6 +10,8 @@ import {ToastContainer} from "react-toastify";
 import {QueryClient, QueryClientProvider} from "react-query";
 import {SettingsProvider} from "./contexts/SettingsContext";
 import {GlobalProvider} from "./contexts/GlobalContext";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 
 const root = createRoot(
     document.getElementById("root") as HTMLElement
@@ -28,19 +30,21 @@ const queryClient = new QueryClient();
 
 root.render(
     <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <GlobalProvider>
-                <ThemeProvider theme={darkTheme}>
-                    <AuthProvider>
-                        <SettingsProvider>
-                            <BrowserRouter>
-                                <ToastContainer/>
-                                <App/>
-                            </BrowserRouter>
-                        </SettingsProvider>
-                    </AuthProvider>
-                </ThemeProvider>
-            </GlobalProvider>
-        </QueryClientProvider>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <QueryClientProvider client={queryClient}>
+                <GlobalProvider>
+                    <ThemeProvider theme={darkTheme}>
+                        <AuthProvider>
+                            <SettingsProvider>
+                                <BrowserRouter>
+                                    <ToastContainer/>
+                                    <App/>
+                                </BrowserRouter>
+                            </SettingsProvider>
+                        </AuthProvider>
+                    </ThemeProvider>
+                </GlobalProvider>
+            </QueryClientProvider>
+        </LocalizationProvider>
     </React.StrictMode>
 );

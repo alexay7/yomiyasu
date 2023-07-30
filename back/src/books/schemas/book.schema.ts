@@ -38,11 +38,8 @@ export class Book {
   @Prop({type: Date, default: new Date()})
   createdDate: Date;
 
-  @Prop({type: String, default: ""})
-  summary?: string;
-
-  @Prop({type: [String], default: []})
-  authors?: string[];
+  @Prop({type:Date, default:new Date()})
+  lastModifiedDate:Date;
 
   @Prop({type: Boolean, default: false})
   missing: boolean;

@@ -1,8 +1,8 @@
-import {Injectable, Logger} from "@nestjs/common";
+import {Injectable, Logger, NotFoundException} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {Book, BookDocument} from "./schemas/book.schema";
 import {Model, Types} from "mongoose";
-import {SearchQuery, UserBook} from "./interfaces/query";
+import {SearchQuery, UpdateBook, UserBook} from "./interfaces/query";
 
 @Injectable()
 export class BooksService {
@@ -21,9 +21,6 @@ export class BooksService {
           const regex = new RegExp(query.name, "i");
           aggregate.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
-
-      // Filtrado por autor/es
-      if (query.author) aggregate.match({"authors":{$in:[query.author]}});
 
       // Filtrado por serie (path, no _id)
       if (query.serie) aggregate.match({"serie":new Types.ObjectId(query.serie)});
@@ -99,6 +96,10 @@ export class BooksService {
       return this.bookModel.findById(id);
   }
 
+  async editBook(id:Types.ObjectId, updateBook:UpdateBook) {
+      return this.bookModel.findByIdAndUpdate(id, updateBook);
+  }
+
   async getSerieStats(userId:Types.ObjectId, serie:Types.ObjectId) {
       const serieBooks = await this.filterBooks(userId, {serie:serie._id, sort:"sortName"});
       const unreadBooks = serieBooks.filter(x=>x.status === "unread");
@@ -123,6 +124,27 @@ export class BooksService {
       }
 
       return null;
+  }
+
+  async getDefaultName(book:Types.ObjectId) {
+      const pipe = await this.bookModel.aggregate()
+          .match({_id:new Types.ObjectId(book)})
+          .lookup({
+              from:"series",
+              localField:"serie",
+              foreignField:"_id",
+              as:"serieInfo"
+          })
+          .unwind({path:"$serieInfo"});
+
+      if (pipe.length === 0) throw new NotFoundException();
+      const foundBook = pipe[0];
+
+      const serieBooks = await this.bookModel.find({serie:foundBook.serie}).sort({sortName:1});
+      const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
+
+      const volNumber = `${bookIndex + 1}`.padStart(serieBooks.length.toString().length, "0");
+      return {name:`${foundBook.serieInfo.visibleName} v${volNumber}`};
   }
 
   async updateOrCreate(newBook: {

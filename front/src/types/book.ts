@@ -25,9 +25,9 @@ export interface Book {
     imagesFolder: string,
     thumbnailPath: string,
     createdDate: Date,
-    summary: string,
-    authors: string[],
-    missing: boolean
+    releaseDate?:Date,
+    missing: boolean,
+    lastModifiedDate:Date;
 }
 
 export interface BookProgress {
