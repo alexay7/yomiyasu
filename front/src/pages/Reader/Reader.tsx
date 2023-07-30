@@ -76,6 +76,7 @@ export function Reader():React.ReactElement {
         const interval = setInterval(async()=>{
             await createProgress(bookData, currentPage, timer);
         }, 5 * 1000 * 60 * 60);
+
         return ()=>clearInterval(interval);
     }, [bookData, currentPage, timer]);
 
@@ -109,6 +110,9 @@ export function Reader():React.ReactElement {
     }, [bookData]);
 
     useEffect(()=>{
+        // Define la altura del document según la altura de la pantalla FIX IOS
+        document.documentElement.style.setProperty("--height", `${window.innerHeight}px`);
+
         function getselectedText(text:string):void {
             document.body.style.cursor = "wait";
             setTimeout(()=>{
@@ -117,9 +121,8 @@ export function Reader():React.ReactElement {
             }, 250);
         }
 
-        // Recibe mensajes del iframe
-        addEventListener("message", (e)=>{
-            switch (e.data.action as string) {
+        function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):void {
+            switch (e.data.action) {
                 case "newPage": {
                     const {value} = e.data as {value:number};
                     if (value || value === 0) {
@@ -138,33 +141,30 @@ export function Reader():React.ReactElement {
                     break;
                 }
             }
-        });
+        }
 
-        addEventListener("mouseup", ()=>{
+        function handleMouseUp():void {
             const selection = window.getSelection();
             if (selection && selection.toString()) {
                 getselectedText(selection.toString());
                 selection.removeAllRanges();
             }
-        });
+        }
 
-        addEventListener("touchend", (e)=>{
+        function handleTouchUp(e:TouchEvent):void {
             e.stopImmediatePropagation();
             const selection = window.getSelection();
             if (selection && selection.toString()) {
                 getselectedText(selection.toString());
             }
-        });
+        }
 
-        // Define la altura del document según la altura de la pantalla FIX IOS
-        document.documentElement.style.setProperty("--height", `${window.innerHeight}px`);
-        window.addEventListener("resize", () => {
+        function handleResize():void {
             const doc = document.documentElement;
             doc.style.setProperty("--height", `${window.innerHeight}px`);
-        });
+        }
 
-        // Permite cambiar de página con keybinds
-        document.body.addEventListener("keydown", (e)=>{
+        function handleKeyDown(e:KeyboardEvent):void {
             switch (e.key) {
                 case "ArrowLeft":{
                     iframe.current?.contentWindow?.postMessage({action:"goLeft"});
@@ -179,7 +179,30 @@ export function Reader():React.ReactElement {
                     break;
                 }
             }
-        });
+        }
+
+        // Recibe mensajes del iframe
+        addEventListener("message", handleNewMessage);
+
+        // Detectar clicks en pc
+        addEventListener("mouseup", handleMouseUp);
+
+        // Detectar clicks en móviles
+        addEventListener("touchend", handleTouchUp);
+
+        // Sirve para calcular la altura en dispositivos móviles
+        addEventListener("resize", handleResize);
+
+        // Permite cambiar de página con keybinds
+        addEventListener("keydown", handleKeyDown);
+
+        return ()=>{
+            removeEventListener("message", handleNewMessage);
+            removeEventListener("mouseup", handleMouseUp);
+            removeEventListener("touchend", handleTouchUp);
+            removeEventListener("resize", handleResize);
+            removeEventListener("keydown", handleKeyDown);
+        };
     }, []);
 
     // Función que manda orden al iframe de cambiar de página
