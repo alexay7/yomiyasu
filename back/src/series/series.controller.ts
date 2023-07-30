@@ -129,6 +129,34 @@ export class SeriesController {
         return alphabet;
     }
 
+    @Get("readlist")
+    async getReadlistSeries(@Req() req:Request) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const foundSeries = await this.readListsService.getUserReadListSeries(userId);
+
+        const seriesWithProgress:SerieWithProgress[] = [];
+
+        await Promise.all(
+            foundSeries.map(async(serieElem)=>{
+                const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
+                const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
+
+                if (serieData) {
+                    const serieWithProgress:SerieWithProgress = {
+                        ...serieElem,
+                        readlist,
+                        ...serieData
+                    };
+                    
+                    seriesWithProgress.push(serieWithProgress);
+                }
+            }));
+        return seriesWithProgress;
+    }
+
     @Get(":id")
     @ApiOkResponse({status:HttpStatus.OK})
     async getSerie(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {

@@ -22,7 +22,7 @@ export function Reviews(props:ReviewProps):React.ReactElement {
 
         if (res) {
             toast.success("Valoración borrada con éxito");
-            forceReload();
+            forceReload("reviews");
         }
     }
 

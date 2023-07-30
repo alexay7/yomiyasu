@@ -33,7 +33,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {serieData.unreadBooks > 0 && (
                     <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                        <p className="bg-primary p-1">{serieData.unreadBooks}</p>
+                        <p className={`p-1 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{serieData.unreadBooks}</p>
                     </div>
                 )}
                 {serieData.difficulty > 0 && (
@@ -52,7 +52,11 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
             </div>
 
             <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
-                <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12">{serieData.visibleName}</a>
+                <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12" onClick={()=>{
+                    window.localStorage.setItem("origin", window.location.pathname);
+                }}
+                >{serieData.visibleName}
+                </a>
                 <div className="flex items-center justify-between">
                     <p className="text-gray-300 text-sm lg:text-xs">{serieData.bookCount} libros</p>
                     <SerieSettings serieData={serieData}/>

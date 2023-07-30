@@ -28,7 +28,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
         return api.get<{genres:string[], authors:string[]}>("series/genresAndArtists");
-    }, {refetchOnWindowFocus:false});
+    }, {refetchOnWindowFocus:false, enabled:open});
 
     function closePopup():void {
         setOpen(false);
@@ -55,7 +55,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
             if (response) {
                 toast.success(`Datos de ${name} actualizados con éxito`);
                 closePopup();
-                forceReload();
+                forceReload("all");
             }
         } catch {
             toast.error("No tienes permisos para realizar esa acción");

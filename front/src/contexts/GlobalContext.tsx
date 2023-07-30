@@ -3,8 +3,8 @@ import {ContextProps} from "./AuthContext";
 import socket from "../api/socket";
 
 type GlobalContexType = {
-    forceReload:()=>void,
-    reloaded:boolean
+    forceReload:(v:string)=>void,
+    reloaded:string
 };
 
 export const GlobalContext = createContext<GlobalContexType>({} as GlobalContexType);
@@ -15,12 +15,12 @@ export function useGlobal():GlobalContexType {
 
 export function GlobalProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
-    const [reload, setReload] = useState(false);
+    const [reload, setReload] = useState("");
 
-    function forceReload():void {
-        setReload(true);
+    function forceReload(key:string):void {
+        setReload(key);
         setTimeout(()=>{
-            setReload(false);
+            setReload("");
         }, 500);
     }
 
@@ -29,7 +29,7 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
             switch (data.action) {
                 case "LIBRARY_UPDATE":{
                     // Si el backend ha notificado cambios en la biblioteca, actualizar la interfaz
-                    forceReload();
+                    forceReload("all");
                 }
             }
         });

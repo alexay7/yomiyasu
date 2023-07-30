@@ -53,7 +53,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             >
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {bookData.status === "unread" && (
-                    <div className="absolute top-0 right-0 w-0 h-0 border-solid" style={{borderWidth:"0 35px 35px 0", borderColor:"transparent var(--primary-color) transparent transparent"}}/>
+                    <div className={`absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent ${bookData.readlist ? "border-r-blue-500" : "border-r-primary"}`} style={{borderWidth:"0 35px 35px 0"}}/>
                 )}
 
                 <Fade in={onItem}>
@@ -66,7 +66,12 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             </div>
 
             <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
-                <a href={siteSettings.openHTML ? `/api/static/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`} className="line-clamp-2 h-12">{bookData.visibleName}</a>
+                <a href={siteSettings.openHTML ? `/api/static/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
+                    className="line-clamp-2 h-12" onClick={()=>{
+                        window.localStorage.setItem("origin", window.location.pathname);
+                    }}
+                >{bookData.visibleName}
+                </a>
                 <div className="flex items-center justify-between">
                     <p className="text-gray-300 text-sm lg:text-xs">{bookData.pages} páginas</p>
                     <BookSettings bookData={bookData} insideSerie={insideSerie}/>

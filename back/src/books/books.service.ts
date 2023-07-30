@@ -46,10 +46,10 @@ export class BooksService {
       // JOIN a la tabla de LISTAS DE LECTURA
           .lookup({
               from:"readlists",
-              let: {book_id: "$_id"},
+              let: {serie_id: "$serie"},
               as:"readlist",
               pipeline:[
-                  {"$match":{$expr:{$eq:["$$book_id", "$book"]}}},
+                  {"$match":{$expr:{$eq:["$$serie_id", "$serie"]}}},
                   {"$match":{"user":new Types.ObjectId(user)}}
               ]
           })
@@ -58,18 +58,19 @@ export class BooksService {
               "lastProgress":{$last:"$progress"}
           })
           .addFields({
+              "readlist":{"$cond":{
+                  if: {$gt: [{$size: "$readlist"}, 0]},
+                  then: true,
+                  else: false
+              }}
+          })
+          .addFields({
               "status":{"$cond":{
                   if: {$ifNull:["$lastProgress", null]},
                   then: "$lastProgress.status",
-                  else: {
-                      $cond: {
-                          if: {$gt: [{$size: "$readlist"}, 0]},
-                          then: "readlist",
-                          else: "unread"
-                      }
-                  }
+                  else: "unread"
               }}
-          }).project({readlist:0}).project({progress:0});
+          }).project({progress:0});
 
       // Filtrado por estado
       if (query.status) aggregate.match({"status":query.status});

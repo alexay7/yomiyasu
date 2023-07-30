@@ -158,6 +158,16 @@ export class SeriesService {
           if (query.status) {
               pipe.match({status:query.status});
           }
+          
+          if ((query.min && query.min !== "0") || query.sort?.includes("difficulty")) {
+              const min = query.min || "0";
+              pipe.match({difficulty:{$gt:parseInt(min) - 1}});
+          }
+  
+          if (query.max && query.max !== "10" || query.sort?.includes("difficulty")) {
+              const max = query.max || "0";
+              pipe.match({difficulty:{$lt:parseInt(max) + 1}});
+          }
       }
       pipe.project({
           firstLetter:{$cond: {

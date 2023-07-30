@@ -3,14 +3,17 @@ import {BookComponent} from "../BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
 import {IconButton} from "@mui/material";
 import {ArrowLeft, ArrowRight} from "@mui/icons-material";
+import {SerieWithProgress} from "../../types/serie";
+import {SerieComponent} from "../SerieComponent/SerieComponent";
 
 interface ComponentScrollerProps {
     title:string;
-    components:BookWithProgress[]
+    components:BookWithProgress[] | SerieWithProgress[];
+    type:"books" | "series"
 }
 
 export function ComponentScroller(props:ComponentScrollerProps):React.ReactElement {
-    const {title, components} = props;
+    const {title, components, type} = props;
     const ulRef = useRef<HTMLUListElement>(null);
     const [left, setLeft] = useState(0);
     const [maxRight, setMaxRight] = useState(!ulRef);
@@ -66,11 +69,19 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
                     </IconButton>
                 </div>
             </div>
-            <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar">
-                {components?.map((book)=>(
-                    <BookComponent key={book._id} bookData={book}/>
-                ))}
-            </ul>
+            {type === "books" ? (
+                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar">
+                    {components?.map((book)=>(
+                        <BookComponent key={book._id} bookData={book as BookWithProgress}/>
+                    ))}
+                </ul>
+            ) : (
+                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar">
+                    {components?.map((serie)=>(
+                        <SerieComponent key={serie._id} serieData={serie as SerieWithProgress}/>
+                    ))}
+                </ul>
+            )}
         </Fragment>
     );
 }

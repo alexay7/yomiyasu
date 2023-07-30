@@ -62,7 +62,7 @@ export function ReviewForm(props:EditSerieProps):React.ReactElement {
             setComments("");
             toast.success("Valoración emitida con éxito");
             closePopup();
-            forceReload();
+            forceReload("reviews");
             return;
         }
         toast.error("Algo salió mal");

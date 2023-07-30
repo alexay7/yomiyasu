@@ -7,16 +7,17 @@ import {Button, Divider, IconButton} from "@mui/material";
 import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {ArrowBack, ArrowDropDown, ArrowDropUp} from "@mui/icons-material";
+import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
 import {goBack, goTo} from "../../helpers/helpers";
 import {EditSerie} from "./components/EditSerie";
 import {useAuth} from "../../contexts/AuthContext";
 import {Reviews} from "./components/Reviews";
+import {addToReadlist, removeFromReadlist} from "../../helpers/series";
 
 export function Serie():React.ReactElement {
     const {id} = useParams();
-    const {reloaded} = useGlobal();
+    const {reloaded, forceReload} = useGlobal();
     const {userData} = useAuth();
     const [readMore, setReadMore] = useState(false);
 
@@ -34,7 +35,9 @@ export function Serie():React.ReactElement {
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {
-            await booksRefetch();
+            if (reloaded === "all") {
+                await booksRefetch();
+            }
             await serieRefetch();
         }
 
@@ -66,20 +69,39 @@ export function Serie():React.ReactElement {
                         </div>
                     )}
                 </div>
-                {serieData && userData?.admin && (
-                    <div className="flex items-center mx-4 w-1/6 flex-shrink-0 justify-end">
-                        <EditSerie circleIcon serieData={serieData} title={`Editar ${serieData?.visibleName}`}/>
+                {serieData && (
+                    <div className="flex items-center mx-4 flex-shrink-0 justify-end">
+                        {!serieData?.readlist ? (
+                            <IconButton onClick={()=>{
+                                void addToReadlist(serieData._id, serieData.visibleName);
+                                forceReload("readlist");
+                            }}
+                            >
+                                <BookmarkAdd/>
+                            </IconButton>
+                        ) : (
+                            <IconButton onClick={()=>{
+                                void removeFromReadlist(serieData._id, serieData.visibleName);
+                                forceReload("readlist");
+                            }}
+                            >
+                                <BookmarkRemove/>
+                            </IconButton>
+                        )}
+                        {userData?.admin && (
+                            <EditSerie circleIcon serieData={serieData} title={`Editar ${serieData?.visibleName}`}/>
+                        )}
                     </div>
                 )}
             </div>
             {serieData && (
                 <div className="p-8 my-12">
                     <div className="flex gap-8 flex-col lg:flex-row">
-                        <div className="flex flex-col items-center lg:items-start lg:flex-row w-full gap-8">
+                        <div className="flex flex-col items-center sm:items-start sm:flex-row w-full gap-8">
                             <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
                                 {serieData.unreadBooks > 0 && (
                                     <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                                        <p className="bg-primary p-2">{serieData.unreadBooks}</p>
+                                        <p className={`p-2 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{serieData.unreadBooks}</p>
                                     </div>
                                 )}
                                 <img loading="lazy" className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
@@ -89,7 +111,7 @@ export function Serie():React.ReactElement {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex w-4/6 flex-col text-white">
+                            <div className="flex sm:w-4/6 flex-col text-white">
                                 <p className="text-3xl">{serieData.visibleName}</p>
                                 {serieData.status && (
                                     <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>

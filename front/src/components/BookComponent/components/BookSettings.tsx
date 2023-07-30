@@ -7,6 +7,7 @@ import {api} from "../../../api/api";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
+import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -39,7 +40,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
         );
 
         if (response) {
-            forceReload();
+            forceReload("all");
         }
     }
 
@@ -52,7 +53,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
         );
 
         if (response) {
-            forceReload();
+            forceReload("all");
         }
     }
 
@@ -99,6 +100,27 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Marcar como no leído
                     </MenuItem>
                 )}
+                <div>
+                    {bookData.readlist ? (
+                        <MenuItem key="readlist" onClick={()=>{
+                            void removeFromReadlist(bookData.serie);
+                            forceReload("readlist");
+                            handleClose();
+                        }}
+                        >
+                            Quitar serie de &quot;Leer más tarde&quot;
+                        </MenuItem>
+                    ) : (
+                        <MenuItem key="readlist" onClick={()=>{
+                            void addToReadlist(bookData.serie);
+                            forceReload("readlist");
+                            handleClose();
+                        }}
+                        >
+                            Añadir serie a &quot;Leer más tarde&quot;
+                        </MenuItem>
+                    )}
+                </div>
             </Menu>
         </div>
     );

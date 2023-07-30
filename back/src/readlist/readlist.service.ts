@@ -22,8 +22,8 @@ export class ReadlistService {
         return (await this.readListModel.count({user, serie})) > 0;
     }
 
-    getUserReadListSeries(user: Types.ObjectId) {
-        return this.readListModel
+    async getUserReadListSeries(user: Types.ObjectId) {
+        const result = await this.readListModel
             .aggregate()
             .match({user: new Types.ObjectId(user)})
             .lookup({
@@ -31,7 +31,11 @@ export class ReadlistService {
                 localField: "serie",
                 foreignField: "_id",
                 as: "serieInfo"
-            });
+            })
+            .unwind({path:"$serieInfo"});
+
+        return result.map(x=>x.serieInfo);
+        
     }
 
     removeSerieFromUserList(user: Types.ObjectId, serie: Types.ObjectId) {

@@ -78,8 +78,10 @@ export function Library():React.ReactElement {
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {
-            await refetchAlphabet();
-            await refetchSeries();
+            if (reloaded === "all") {
+                await refetchAlphabet();
+                await refetchSeries();
+            }
         }
 
         void refetchBooks();
