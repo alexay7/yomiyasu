@@ -97,7 +97,7 @@ export class BooksService {
   }
 
   async editBook(id:Types.ObjectId, updateBook:UpdateBook) {
-      return this.bookModel.findByIdAndUpdate(id, updateBook);
+      return this.bookModel.findByIdAndUpdate(id, updateBook, {new:true});
   }
 
   async getSerieStats(userId:Types.ObjectId, serie:Types.ObjectId) {
@@ -155,6 +155,7 @@ export class BooksService {
       serie: Types.ObjectId;
       seriePath:string;
       pages: number;
+      characters:number;
   }): Promise<Book | null> {
       const found = await this.bookModel.findOne({path: newBook.path});
 

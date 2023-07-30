@@ -4,7 +4,7 @@ import {Cron} from "@nestjs/schedule";
 import {join, extname} from "path";
 import * as fs from "fs";
 import {BooksService} from "./books/books.service";
-import {extractUrlFromHtml} from "./books/helpers/helpers";
+import {extractUrlFromHtml, getCharacterCount} from "./books/helpers/helpers";
 import {WebsocketsGateway} from "./websockets/websockets.gateway";
 
 @Injectable()
@@ -145,7 +145,7 @@ export class AppService {
 
           booksToAddInDb.forEach(async(elem) => {
               if (elem.bookPath) {
-                  const imagesFolder = extractUrlFromHtml(elem.bookPath);
+                  const imagesFolder = await extractUrlFromHtml(elem.bookPath);
 
                   if (imagesFolder) {
                       const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath);
@@ -159,7 +159,8 @@ export class AppService {
                           serie: foundSerie,
                           seriePath:elem.seriePath,
                           thumbnailPath: imagesFolder.thumbnailPath,
-                          pages: imagesFolder.totalImages
+                          pages: imagesFolder.totalImages,
+                          characters: await getCharacterCount(elem.bookPath)
                       };
                       await this.booksService.updateOrCreate(newBook);
                   }

@@ -9,6 +9,7 @@ import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 import {EditBook} from "../../EditBook/EditBook";
+import {BookInfo} from "../../BookInfo/BookInfo";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -120,6 +121,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         </MenuItem>
                     )}
                 </div>
+                <BookInfo bookdata={bookData}/>
             </Menu>
         </div>
     );

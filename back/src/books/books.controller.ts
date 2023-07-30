@@ -1,4 +1,4 @@
-import {Controller, Get, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body} from "@nestjs/common";
+import {Controller, Get, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException} from "@nestjs/common";
 import {BooksService} from "./books.service";
 import {Request} from "express";
 import {Types} from "mongoose";
@@ -9,6 +9,8 @@ import {ParseObjectIdPipe} from "../validation/objectId";
 import {UsersService} from "../users/users.service";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UpdateBookDto} from "./dto/update-book.dto";
+import {getCharacterCount} from "./helpers/helpers";
+import {join} from "path";
 
 @Controller("books")
 @ApiTags("Libros")
@@ -55,6 +57,25 @@ export class BooksController {
         };
 
         return this.booksService.editBook(book, updateBook);
+    }
+
+    @Patch(":id/chars")
+    async updateCharacterCount(@Req() req:Request, @Param("id", ParseObjectIdPipe) book:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        const foundBook = await this.booksService.findById(book);
+        
+        if (!foundBook) throw new NotFoundException();
+
+        const mainFolderPath = join(process.cwd(), "..", "exterior");
+
+        const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"));
+
+        return this.booksService.editBook(book, {characters});
     }
 
     @Get("genresAndArtists")

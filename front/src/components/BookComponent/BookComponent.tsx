@@ -73,7 +73,11 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 >{bookData.visibleName}
                 </a>
                 <div className="flex items-center justify-between">
-                    <p className="text-gray-300 text-sm lg:text-xs">{bookData.pages} páginas</p>
+                    {siteSettings.characters ? (
+                        <p className="text-gray-300 text-sm lg:text-xs">{bookData.characters} caracteres</p>
+                    ) : (
+                        <p className="text-gray-300 text-sm lg:text-xs">{bookData.pages} páginas</p>
+                    )}
                     <BookSettings bookData={bookData} insideSerie={insideSerie}/>
                 </div>
             </div>

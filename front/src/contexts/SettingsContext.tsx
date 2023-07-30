@@ -63,7 +63,8 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     }
 
     const defaultSiteSettings:SiteConfig = {
-        openHTML:false
+        openHTML:false,
+        characters:false
     };
 
     const rawSiteSettings = window.localStorage.getItem("site");

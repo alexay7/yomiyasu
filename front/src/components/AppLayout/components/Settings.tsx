@@ -18,19 +18,30 @@ export function Settings():React.ReactElement {
         <Fragment>
             <LateralListItem text="Ajustes de Página" Icon={SettingsIcon} onClick={()=>setOpen(true)}/>
             <PopupWindow title="Ajustes de página" open={open} closePopup={closePopup} >
-                <FormControlLabel className="select-none" control={
-                    <Checkbox checked={siteSettings.openHTML} onChange={(e, c)=>{
-                        if (c) {
-                            setOpenWarning(true);
-                        } else {
-                            setSiteSettings((prev)=>{
-                                return {...prev, openHTML:false};
-                            });
-                        }
-                    }}
+                <div className="flex flex-col gap-4">
+                    <FormControlLabel className="select-none" control={
+                        <Checkbox checked={siteSettings.openHTML} onChange={(e, c)=>{
+                            if (c) {
+                                setOpenWarning(true);
+                            } else {
+                                setSiteSettings((prev)=>{
+                                    return {...prev, openHTML:false};
+                                });
+                            }
+                        }}
+                        />
+                    } label="Abrir HTML directamente (no usar lector nativo)"
                     />
-                } label="Abrir HTML directamente (no usar lector nativo)"
-                />
+                    <FormControlLabel className="select-none" control={
+                        <Checkbox checked={siteSettings.characters} onChange={(e, c)=>{
+                            setSiteSettings((prev)=>{
+                                return {...prev, characters:c};
+                            });
+                        }}
+                        />
+                    } label="Ver caracteres en vez de páginas en la carátula de los libros"
+                    />
+                </div>
             </PopupWindow>
             <Dialog open={openWarning} onClose={()=>setOpenWarning(false)}>
                 <DialogTitle>¿Estás seguro?</DialogTitle>

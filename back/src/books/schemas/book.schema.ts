@@ -43,6 +43,9 @@ export class Book {
 
   @Prop({type: Boolean, default: false})
   missing: boolean;
+
+  @Prop({type:Number, default:0})
+  characters:number;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);
