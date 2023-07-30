@@ -12,20 +12,40 @@ interface DictionaryProps {
 export function Dictionary(props:DictionaryProps):React.ReactElement {
     const {searchWord, setSearchWord} = props;
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [canClose, setCanClose] = useState(false);
 
     const {data:wordDefinitions} = useQuery(searchWord, async()=>{
-        if (searchWord === "") return undefined;
+        if (searchWord === "" || searchWord === "\n") return undefined;
         const res = await api.get<DicionaryResult[]>(`dictionary/${searchWord}`);
         return res;
     });
 
     useEffect(()=>{
+        let timeout:NodeJS.Timeout | undefined = undefined;
+
         setSelectedIndex(0);
+        if (searchWord !== "") {
+            setCanClose(false);
+            timeout = setTimeout(()=>{
+                setCanClose(true);
+            }, 500);
+        }
+
+        return ()=>{
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+        };
     }, [searchWord]);
 
     return (
         <Fragment>
-            <Dialog className="select-none" hideBackdrop open={searchWord !== ""} onClose={()=>setSearchWord("")}>
+            <Dialog className="select-none" hideBackdrop open={searchWord !== ""} onClose={(e, r)=>{
+                if (r === "escapeKeyDown" || canClose) {
+                    setSearchWord("");
+                }
+            }}
+            >
                 <DialogTitle>Diccionario: {wordDefinitions?.map((def, i)=>(
                     <span className={`cursor-pointer hover:font-semibold border-0 ${i === selectedIndex ? "border-b-2 border-solid border-primary font-semibold" : ""}`} key={i} onClick={()=>setSelectedIndex(i)}>{def.display}</span>
                 ))}

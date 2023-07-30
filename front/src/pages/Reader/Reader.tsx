@@ -114,11 +114,11 @@ export function Reader():React.ReactElement {
         document.documentElement.style.setProperty("--height", `${window.innerHeight}px`);
 
         function getselectedText(text:string):void {
-            document.body.style.cursor = "wait";
-            setTimeout(()=>{
-                setSearchWord(text.split(" ")[0]);
+            if (text !== "" && text !== "\n") {
+                document.body.style.cursor = "wait";
+                setSearchWord(text);
                 document.body.style.cursor = "default";
-            }, 250);
+            }
         }
 
         function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):void {
@@ -155,7 +155,11 @@ export function Reader():React.ReactElement {
             e.stopImmediatePropagation();
             const selection = window.getSelection();
             if (selection && selection.toString()) {
-                getselectedText(selection.toString());
+                // Dar tiempo a quitar el dedo
+                setTimeout(()=>{
+                    getselectedText(selection.toString());
+                    selection.removeAllRanges();
+                }, 200);
             }
         }
 
@@ -343,7 +347,7 @@ export function Reader():React.ReactElement {
                     e.stopImmediatePropagation();
                 });
 
-                document.body.addEventListener("mouseup",(e)=>{
+                document.body.addEventListener("click",(e)=>{
                     if(window.getSelection().toString()){
                         window.parent.postMessage({action:"selection",value:window.getSelection().toString()},"*")
                     }
@@ -381,19 +385,12 @@ export function Reader():React.ReactElement {
                     touchEnd = null;
                     touchStart = e.targetTouches[0].clientX;
                 });
+
                 document.body.addEventListener("touchmove",(e)=>{
                     if(zoomEnabled && e.targetTouches.length<2)return;
                     touchEnd = e.targetTouches[0].clientX;
                 });
-                addEventListener("touchend", ()=>{
-                    const selection = window.getSelection();
-                    if (selection && selection.toString()) {
-                        setTimeout(()=>{
-                            window.parent.postMessage({action:"selection",value:selection.toString()},"*")
-                            window.getSelection()?.empty();
-                        }, 750);
-                    }
-                });
+
                 document.body.addEventListener("touchend",(e)=>{
                     if (!touchStart || !touchEnd) return;
                     const distance = touchStart - touchEnd;
@@ -405,8 +402,6 @@ export function Reader():React.ReactElement {
                         inputLeft();
                     }
                 });
-
-                document.onsel
 
                 /**
                  * Reemplaza la función de pasar de página por una que, además de
