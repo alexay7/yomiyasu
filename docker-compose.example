@@ -8,9 +8,12 @@ services:
     image: tfg-api
     depends_on:
       - "mongodb"
+    environment:
+      - ACCESS_SECRET=valor_del_access_secret
+      - REFRESH_SECRET=valor_del_refresh_secret
     volumes:
       - type: bind
-        source: ./exterior
+        source: ./folder/with/book/library
         target: /usr/src/exterior
       - type: bind
         source: ./dicts
@@ -25,7 +28,7 @@ services:
       - server-network
     image: tfg-frontend
     ports:
-      - "1423:80"
+      - "PORT:80"
   mongodb:
     image: mongo:4.4.22
     networks:
@@ -39,7 +42,7 @@ services:
       - "27018:27017"
     volumes:
       - type: bind
-        source: /srv/dev-disk-by-id-ata-WDC_WD40EFRX-68N32N0_WD-WCC7K5SPE0EN-part4/Appdata/tfg
+        source: /folder/with/app/config
         target: /data/db
     restart: unless-stopped
 networks:
