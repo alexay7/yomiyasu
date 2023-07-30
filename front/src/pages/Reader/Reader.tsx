@@ -13,6 +13,7 @@ import {createProgress} from "../../helpers/progress";
 import {PageText} from "./components/PageText";
 import {Dictionary} from "./components/Dictionary";
 import {nextBook, prevBook} from "../../helpers/book";
+import {Helmet} from "react-helmet";
 
 export function Reader():React.ReactElement {
     const {id} = useParams();
@@ -489,6 +490,9 @@ export function Reader():React.ReactElement {
 
     return (
         <div className="text-black relative overflow-hidden h-screen flex flex-col">
+            <Helmet>
+                <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
+            </Helmet>
             {iframe && iframe.current && iframe.current.contentWindow && (
                 <ReaderSettings showMenu={showSettings} closeSettings={closeSettingsMenu}
                     iframeWindow={iframe.current.contentWindow}

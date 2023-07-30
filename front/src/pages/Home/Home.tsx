@@ -5,6 +5,7 @@ import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {ComponentScroller} from "../../components/ComponentScroller/ComponentScroller";
 import {SerieWithProgress, SeriesFilter} from "../../types/serie";
+import {Helmet} from "react-helmet";
 
 export function Home():React.ReactElement {
     const {reloaded} = useGlobal();
@@ -62,6 +63,9 @@ export function Home():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden">
+            <Helmet>
+                <title>YomiYasu</title>
+            </Helmet>
             <div className="text-white px-8 py-4 flex flex-col gap-4">
                 {progresoData && progresoData.length > 0 && (
                     <ComponentScroller type="books" title="En progreso" components={progresoData}/>

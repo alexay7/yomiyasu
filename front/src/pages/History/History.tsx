@@ -7,6 +7,7 @@ import {Table, TableBody, TableCell, TableHead, TableRow} from "@mui/material";
 import {formatTime, goTo} from "../../helpers/helpers";
 import {useNavigate} from "react-router-dom";
 import {DataGrid, GridColDef, GridToolbar, GridValueGetterParams} from "@mui/x-data-grid";
+import {Helmet} from "react-helmet";
 
 export function History():React.ReactElement {
     const {data:progressData = []} = useQuery("progresses", async()=>{
@@ -98,6 +99,9 @@ export function History():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden p-4 pb-4">
+            <Helmet>
+                <title>YomiYasu - Historial</title>
+            </Helmet>
             <h1 className="text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
             <div className="bg-[#1E1E1E] mx-4 flex justify-center shadow-lg shadow-[#1E1E1E]">
                 <DataGrid rows={progressData} columns={columns} slots={{toolbar:GridToolbar}}/>

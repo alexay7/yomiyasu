@@ -14,6 +14,7 @@ import {EditSerie} from "../../components/EditSerie/EditSerie";
 import {useAuth} from "../../contexts/AuthContext";
 import {Reviews} from "./components/Reviews";
 import {addToReadlist, removeFromReadlist} from "../../helpers/series";
+import {Helmet} from "react-helmet";
 
 export function Serie():React.ReactElement {
     const {id} = useParams();
@@ -56,6 +57,9 @@ export function Serie():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
+            <Helmet>
+                <title>{`YomiYasu - ${serieData?.visibleName ? serieData?.visibleName : "serie"}`}</title>
+            </Helmet>
             <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4 w-5/6 overflow-hidden">
                     <IconButton onClick={()=>goBack(navigate)}>

@@ -7,6 +7,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import {useNavigate} from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
 import {goTo} from "../../helpers/helpers";
+import {Helmet} from "react-helmet";
 
 function Login():React.ReactElement {
     const {loginUser, loading, loggedIn} = useAuth();
@@ -34,6 +35,9 @@ function Login():React.ReactElement {
 
     return (
         <div className="h-screen flex justify-center items-center bg-cover bg-gradient-radial from-gray-500 to-[#000011]">
+            <Helmet>
+                <title>YomiYasu - Login</title>
+            </Helmet>
             <div className="bg-[#2D2D2D] w-11/12 md:w-2/3 lg:w-1/2 xl:w-1/3 rounded-xl text-white flex flex-col items-center py-8">
                 <h1>Inicio de Sesión</h1>
                 <Divider className="w-3/4 pt-2"/>

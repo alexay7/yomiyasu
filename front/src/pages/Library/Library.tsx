@@ -11,6 +11,7 @@ import {useGlobal} from "../../contexts/GlobalContext";
 import {LibrarySettings} from "./components/LibrarySettings";
 import {useAuth} from "../../contexts/AuthContext";
 import {LibraryFilter} from "./components/LibraryFilter";
+import {Helmet} from "react-helmet";
 
 export function Library():React.ReactElement {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -87,6 +88,9 @@ export function Library():React.ReactElement {
 
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
+            <Helmet>
+                <title>YomiYasu - Biblioteca</title>
+            </Helmet>
             <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4">
                     <IconButton onClick={()=>goBack(navigate)}>
