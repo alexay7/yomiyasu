@@ -533,7 +533,11 @@ export function Reader():React.ReactElement {
                     {showToolBar && (
                         <div className="bg-[#272727] w-full h-[5vh] text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
                             <div className="w-1/2 flex items-center gap-2 px-2">
-                                <IconButton onClick={()=>window.location.href = window.localStorage.getItem("origin") || "/app"}>
+                                <IconButton onClick={async()=>{
+                                    await createProgress(bookData, currentPage, timer);
+                                    window.location.href = window.localStorage.getItem("origin") || "/app";
+                                }}
+                                >
                                     <ArrowBack/>
                                 </IconButton>
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
@@ -561,7 +565,8 @@ export function Reader():React.ReactElement {
                     {showToolBar && (
                         <div className="bg-[#272727] h-[5vh] w-full text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                             <div className="justify-between flex items-center">
-                                <IconButton onClick={()=>{
+                                <IconButton onClick={async()=>{
+                                    await createProgress(bookData, currentPage, timer);
                                     void prevBook(bookData);
                                 }}
                                 >
@@ -588,7 +593,8 @@ export function Reader():React.ReactElement {
                                 >
                                     <SkipNext/>
                                 </IconButton>
-                                <IconButton onClick={()=>{
+                                <IconButton onClick={async()=>{
+                                    await createProgress(bookData, currentPage, timer);
                                     void nextBook(bookData);
                                 }}
                                 >
