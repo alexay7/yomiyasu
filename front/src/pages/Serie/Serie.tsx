@@ -143,11 +143,9 @@ export function Serie():React.ReactElement {
                                 )}
                             </div>
                         </div>
-                        {serieData.reviews && serieData.reviews.length > 0 && (
-                            <div className="w-full md:w-3/4 lg:w-1/2 mx-auto">
-                                <Reviews serieData={serieData}/>
-                            </div>
-                        )}
+                        <div className="w-full md:w-3/4 lg:w-1/2 mx-auto">
+                            <Reviews serieData={serieData}/>
+                        </div>
                     </div>
                     <div className="flex flex-col gap-2 pt-8 pb-4">
                         {serieData.genres.length > 0 && (

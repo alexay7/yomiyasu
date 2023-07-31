@@ -33,7 +33,7 @@ export function Reviews(props:ReviewProps):React.ReactElement {
                 <ReviewForm serieData={serieData}/>
             </div>
             <Divider/>
-            <ul className="py-2 h-72 overflow-y-auto">
+            <ul className="py-2 max-h-[18rem] overflow-y-auto">
                 {serieData.reviews.map((review)=>(
                     <Fragment key={review._id}>
                         <li className="relative flex flex-col py-2 gap-1">
