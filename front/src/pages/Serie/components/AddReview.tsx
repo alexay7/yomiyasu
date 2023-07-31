@@ -15,7 +15,7 @@ interface EditSerieProps {
 
 const difficultyLabels: {[index: string]: string} = {
     1: "Muy fácil para mi nivel",
-    2: "Fácil para mi nivel+",
+    2: "Fácil para mi nivel",
     3: "Bien para mi nivel",
     4: "Difícil para mi nivel",
     5: "Muy difícil para mi nivel"

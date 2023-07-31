@@ -22,7 +22,7 @@ export class BooksService {
           aggregate.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
 
-      // Filtrado por serie (path, no _id)
+      // Filtrado por serie
       if (query.serie) aggregate.match({"serie":new Types.ObjectId(query.serie)});
 
       /**

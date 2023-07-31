@@ -29,12 +29,14 @@ export class BooksController {
 
         const {userId} = req.user as {userId: Types.ObjectId};
 
-        if (!query.page || query.page < 1) {
-            query.page = 1;
-        }
+        if (!query.serie) {
+            if (!query.page || query.page < 1) {
+                query.page = 1;
+            }
 
-        if (!query.limit || query.limit < 1) {
-            query.limit = 25;
+            if (!query.limit || query.limit < 1) {
+                query.limit = 25;
+            }
         }
 
         return this.booksService.filterBooks(userId, query);
