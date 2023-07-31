@@ -62,7 +62,7 @@ export class BooksController {
     }
 
     @Patch(":id/chars")
-    async updateCharacterCount(@Req() req:Request, @Param("id", ParseObjectIdPipe) book:Types.ObjectId) {
+    async updateCharacterCount(@Req() req:Request, @Param("id", ParseObjectIdPipe) book:Types.ObjectId, @Query("borders") borders:boolean) {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
@@ -75,7 +75,7 @@ export class BooksController {
 
         const mainFolderPath = join(process.cwd(), "..", "exterior");
 
-        const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"));
+        const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"), borders);
 
         return this.booksService.editBook(book, {characters});
     }

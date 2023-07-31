@@ -18,7 +18,7 @@ async function countFilesInFolder(folderPath: string): Promise<number> {
     return files.length;
 }
 
-export async function getCharacterCount(bookPath:string):Promise<number> {
+export async function getCharacterCount(bookPath:string, applyBorders?:boolean):Promise<number> {
     const htmlContent = await fs.readFile(bookPath, "utf8");
 
     const japaneseRegex = /[\u3040-\u30FF\u4E00-\u9FFF]/g; // Expresión regular para kanji (U+4E00 - U+9FFF) y kana (U+3040 - U+30FF)
@@ -28,23 +28,40 @@ export async function getCharacterCount(bookPath:string):Promise<number> {
 
     // Buscar todos los elementos <div> con clase "textBox"
     $("div.textBox").each((index, element) => {
-        // Dentro de cada div.textBox, buscar todos los elementos <p>
-        $(element).find("p").each((i, pElement) => {
-        // Obtener el texto de cada elemento <p>
-            const text = $(pElement).text();
+        const pageWidth = $(element).parent().css("width");
+        const pageHeight = $(element).parent().css("height");
+        let minLeft = 0;
+        let maxLeft = parseInt(pageWidth || "0");
+        let minTop = 0;
+
+        if (pageWidth && pageHeight) {
+            minLeft = parseInt(pageWidth) * 0.12;
+            maxLeft = parseInt(pageWidth) * 0.85;
+            minTop = parseInt(pageHeight) * 0.05;
+        }
+
+        const horizPos = parseInt($(element).css("left") || "0");
+        const verticPos = parseInt($(element).css("top") || "0");
+
+        if ((horizPos > minLeft && horizPos < maxLeft && verticPos > minTop) || !applyBorders) {
+            // Dentro de cada div.textBox, buscar todos los elementos <p>
+            $(element).find("p").each((i, pElement) => {
+                // Obtener el texto de cada elemento <p>
+                const text = $(pElement).text();
   
-            // Usar expresión regular para filtrar solo los caracteres japoneses
-            const japaneseCharacters = text.match(japaneseRegex);
+                // Usar expresión regular para filtrar solo los caracteres japoneses
+                const japaneseCharacters = text.match(japaneseRegex);
   
-            // Sumar la cantidad de caracteres japoneses encontrados
-            if (japaneseCharacters) {
-                japaneseCharacterCount += japaneseCharacters.length;
-            }
-        });
+                // Sumar la cantidad de caracteres japoneses encontrados
+                if (japaneseCharacters) {
+                    japaneseCharacterCount += japaneseCharacters.length;
+                }
+            });
+        }
     });
 
 
-    return japaneseCharacterCount * 0.9;
+    return Math.floor(japaneseCharacterCount);
 }
 
 export async function extractUrlFromHtml(

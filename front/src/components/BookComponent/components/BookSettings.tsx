@@ -59,6 +59,20 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
         }
     }
 
+    async function recaculateChars(borders?:boolean):Promise<void> {
+        let link = `books/${bookData._id}/chars`;
+
+        if (borders) {
+            link += "?borders=true";
+        }
+
+        const response = await api.patch<unknown, {status:string}>(link, {});
+
+        if (response) {
+            forceReload("all");
+        }
+    }
+
     return (
         <div className="">
             <IconButton className="text-center" onClick={(e)=>{
@@ -70,6 +84,21 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             <Menu id="long-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
+                {userData?.admin && (
+                    [
+                        <EditBook key="edit" bookData={bookData}/>,
+                        <MenuItem key="chars" onClick={()=>{
+                            void recaculateChars();
+                        }}
+                        >Recalcular caracteres
+                        </MenuItem>,
+                        <MenuItem key="charsborder" onClick={()=>{
+                            void recaculateChars(true);
+                        }}
+                        >Recalcular caracteres (con bordes)
+                        </MenuItem>
+                    ]
+                )}
                 {!insideSerie && (
                     <MenuItem key="serie" onClick={()=>{
                         goTo(navigate, `/app/series/${bookData.serie}`);
@@ -78,9 +107,6 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                     >
                         Ir a la serie
                     </MenuItem>
-                )}
-                {userData?.admin && (
-                    <EditBook bookData={bookData}/>
                 )}
                 {bookData.status !== "completed" && (
                     <MenuItem key="read" onClick={async()=>{
