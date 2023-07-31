@@ -157,6 +157,7 @@ export class AppService {
                   if (imagesFolder) {
                       const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath);
                       await this.seriesService.increaseBookCount(foundSerie._id);
+                      const charData = await getCharacterCount(elem.bookPath);
 
                       const newBook = {
                           path: elem.bookName,
@@ -167,7 +168,8 @@ export class AppService {
                           seriePath:elem.seriePath,
                           thumbnailPath: imagesFolder.thumbnailPath,
                           pages: imagesFolder.totalImages,
-                          characters: Math.floor(await getCharacterCount(elem.bookPath))
+                          characters: charData.total,
+                          pageChars:charData.pages
                       };
                       await this.booksService.updateOrCreate(newBook);
                   }

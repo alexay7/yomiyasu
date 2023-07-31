@@ -171,6 +171,7 @@ export class BooksService {
       seriePath:string;
       pages: number;
       characters:number;
+      pageChars:number[];
   }): Promise<Book | null> {
       const found = await this.bookModel.findOne({path: newBook.path});
 

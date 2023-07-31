@@ -46,6 +46,9 @@ export class Book {
 
   @Prop({type:Number, default:0})
   characters:number;
+
+  @Prop({type:Array, default:[]})
+  pageChars:number[];
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

@@ -29,6 +29,7 @@ export interface Book {
     missing: boolean,
     lastModifiedDate:Date;
     characters?:number;
+    pageChars?:number[];
 }
 
 export interface BookProgress {

@@ -564,6 +564,11 @@ export function Reader():React.ReactElement {
                     />
                     {showToolBar && (
                         <div className="bg-[#272727] h-[5vh] w-full text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
+                            <div className="absolute -top-6 right-1 text-white text-sm">
+                                {bookData.pageChars && (
+                                    <p><span className="text-xs">Caracteres leídos:</span> {bookData.pageChars[currentPage - 1]} / {bookData.characters}</p>
+                                )}
+                            </div>
                             <div className="justify-between flex items-center">
                                 <IconButton onClick={async()=>{
                                     await createProgress(bookData, currentPage, timer);

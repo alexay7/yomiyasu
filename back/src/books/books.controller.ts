@@ -77,7 +77,7 @@ export class BooksController {
 
         const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"), borders);
 
-        return this.booksService.editBook(book, {characters});
+        return this.booksService.editBook(book, {characters:characters.total, pageChars:characters.pages});
     }
 
     @Get("genresAndArtists")

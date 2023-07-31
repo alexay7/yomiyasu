@@ -1,4 +1,4 @@
-import {IsISO8601, IsNumber, IsOptional, IsString} from "class-validator";
+import {IsArray, IsISO8601, IsNumber, IsOptional, IsString} from "class-validator";
 import {Book} from "../schemas/book.schema";
 
 export class UpdateBookDto implements Partial<Book> {
@@ -17,4 +17,8 @@ export class UpdateBookDto implements Partial<Book> {
     @IsNumber()
     @IsOptional()
     characters?: number;
+
+    @IsArray()
+    @IsOptional()
+    pageChars?: number[];
 }
