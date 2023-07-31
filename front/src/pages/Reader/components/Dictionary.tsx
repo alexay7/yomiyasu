@@ -98,7 +98,7 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
                                     ))}
                                 </ul>
                             ) : (
-                                <p className="text-gray-300">Inflexión del Verbo o partícula</p>
+                                <p className="text-gray-300">Palabra no encontrada: Posiblemente sea inflexión de un Verbo o partícula</p>
                             )}
                         </div>
                     )}
