@@ -18,7 +18,7 @@ import {Helmet} from "react-helmet";
 export function Reader():React.ReactElement {
     const {id} = useParams();
     const iframe = useRef<HTMLIFrameElement>(null);
-    const {readerSettings} = useSettings();
+    const {readerSettings, siteSettings} = useSettings();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [showToolBar, setShowToolbar] = useState(true);
@@ -26,6 +26,7 @@ export function Reader():React.ReactElement {
     const [showSettings, setShowSettings] = useState(false);
     const [pageText, setPageText] = useState<string[][][]>([]);
     const [timer, setTimer] = useState(0);
+    const [timerOn, setTimerOn] = useState(false);
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
     const [searchWord, setSearchWord] = useState("");
 
@@ -38,6 +39,12 @@ export function Reader():React.ReactElement {
         const res = await api.get<BookProgress>(`readprogress?book=${id}&status=reading`);
         return res;
     }, {refetchOnWindowFocus:false});
+
+    useEffect(()=>{
+        if (siteSettings.autoCrono) {
+            setTimerOn(true);
+        }
+    }, [siteSettings, setTimerOn]);
 
     useEffect(()=>{
         function replaceWindowSelection():Selection | null {
@@ -554,7 +561,9 @@ export function Reader():React.ReactElement {
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
-                                <StopWatchMenu timer={timer} setTimer={setTimer}/>
+                                <StopWatchMenu timer={timer} setTimer={setTimer}
+                                    timerOn={timerOn} setTimerOn={setTimerOn}
+                                />
                                 {/* <IconButton>
                                     <Translate/>
                                 </IconButton> */}
