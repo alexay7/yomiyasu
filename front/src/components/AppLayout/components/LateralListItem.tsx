@@ -11,7 +11,7 @@ interface LateralListItemProps extends LiHTMLAttributes<HTMLLIElement> {
 }
 
 export function LateralListItem(props:LateralListItemProps):React.ReactElement {
-    const {text, link, Icon, toggleMenu, ...moreProps} = props;
+    const {text, link, Icon, toggleMenu, className, ...moreProps} = props;
 
     const navigate = useNavigate();
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
@@ -24,7 +24,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
     if (active) backColor = "bg-[#666666] hover:bg-[#666666]";
 
     return (
-        <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer`}
+        <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer ${className}`}
             onClick={()=>{
                 if (link && window.location.pathname === link) window.location.href = link;
                 if (link && toggleMenu) {

@@ -1,4 +1,4 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub} from "@mui/icons-material";
 import {Divider, IconButton} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
@@ -58,7 +58,11 @@ export function AppLayout():React.ReactElement {
                         {userData?.admin && (
                             <LateralListItem toggleMenu={toggleMenu} text="Configuración" link="/app/config" Icon={AdminPanelSettings}/>
                         )}
-                        <LateralListItem text="Cerrar Sesión" Icon={Logout} onClick={()=>logoutUser()}/>
+                        <LateralListItem className="hover:bg-red-200 hover:text-black duration-150 transition-colors" text="Cerrar Sesión" Icon={Logout} onClick={()=>logoutUser()}/>
+                        <Divider/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Reportar fallos" Icon={GitHub} onClick={()=>
+                            window.open("https://github.com/alexay7/tfg/issues/new", "_blank")?.focus()}
+                        />
                     </ul>
                 </div>
             </CSSTransition>
