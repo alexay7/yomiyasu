@@ -29,6 +29,7 @@ export function Reader():React.ReactElement {
     const [timerOn, setTimerOn] = useState(false);
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
     const [searchWord, setSearchWord] = useState("");
+    const [changedTab, setChangedTab] = useState(false);
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -96,12 +97,25 @@ export function Reader():React.ReactElement {
             await createProgress(bookData, currentPage, timer);
         };
 
+        const handleOutFocus = ():void=>{
+            if (document.visibilityState === "hidden" && timerOn) {
+                setTimerOn(false);
+                setChangedTab(true);
+            }
+            if (changedTab && document.visibilityState === "visible" && !timerOn) {
+                setTimerOn(true);
+                setChangedTab(false);
+            }
+        };
+
         window.addEventListener("beforeunload", handleBeforeUnload);
+        window.addEventListener("visibilitychange", handleOutFocus);
 
         return () => {
             window.removeEventListener("beforeunload", handleBeforeUnload);
+            window.removeEventListener("visibilitychange", handleOutFocus);
         };
-    }, [bookData, currentPage, timer]);
+    }, [bookData, currentPage, timer, timerOn, changedTab]);
 
     useEffect(()=>{
         /**
