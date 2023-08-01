@@ -32,6 +32,11 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
         forceReload("all");
     }
 
+    async function markAsRead():Promise<void> {
+        await api.post<unknown, {status:string}>(`readprogress/${serieData._id}`, {});
+        forceReload("all");
+    }
+
     return (
         <div className="">
             <IconButton className="text-center" onClick={(e)=>{
@@ -49,6 +54,14 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                     }}
                 >Leer Siguiente volumen
                 </MenuItem>
+                {serieData.unreadBooks > 0 && (
+                    <MenuItem
+                        onClick={()=>{
+                            void markAsRead();
+                        }}
+                    >Marcar serie como leída
+                    </MenuItem>
+                )}
                 {userData?.admin && (
                     <EditSerie serieData={serieData} handleClose={handleClose}/>
                 )}

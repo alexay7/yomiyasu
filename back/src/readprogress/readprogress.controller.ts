@@ -8,7 +8,8 @@ import {
     Query,
     UnauthorizedException,
     BadRequestException,
-    HttpStatus
+    HttpStatus,
+    Param
 } from "@nestjs/common";
 import {ReadprogressService} from "./readprogress.service";
 import {ProgressDto} from "./dto/create-readprogress.dto";
@@ -43,6 +44,8 @@ export class ReadprogressController {
 
         const foundProgress = await this.readprogressService.findProgressByBookAndUser(progressDto.book, userId);
 
+        if (progressDto.status !== "reading" && foundProgress?.status === progressDto.status) return null;
+
         const foundBook = await this.booksService.findById(progressDto.book);
 
         if (!foundBook) throw new BadRequestException();
@@ -73,6 +76,17 @@ export class ReadprogressController {
 
         // Se ha encontrado un proceso con estado de reading o unread, se actualizan los datos
         return this.readprogressService.modifyReadProgress(foundProgress._id as Types.ObjectId, {...progressDto, lastUpdateDate:new Date()});
+    }
+
+    @Post(":serieId")
+    async setSerieAsRead(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serieId:Types.ObjectId) {
+        const found = await this.booksService.getSerieBooks(serieId);
+
+        found.forEach(async(book)=>{
+            await this.modifyOrCreateProgress(req, {book:book._id, status:"completed", currentPage:book.pages, endDate:new Date()});
+        });
+
+        return {status:"OK"};
     }
 
     @Get()
