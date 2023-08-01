@@ -87,7 +87,7 @@ export class SeriesService {
   }
 
   async filterSeries(query:SeriesSearch) {
-      const result = this.seriesModel.find();
+      const result = this.seriesModel.find().collation({locale: "es"});
 
       if (query.author) {
           result.where({authors:{$in:[query.author]}});

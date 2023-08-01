@@ -26,7 +26,7 @@ export function Home():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     const {data:recentBooks, refetch:recentRefetch} = useQuery("recentbooks", async()=> {
-        const res = await api.get<BookWithProgress[]>("books?sort=!createdDate&limit=15");
+        const res = await api.get<BookWithProgress[]>("books?sort=!_id&limit=15");
         return res;
     }, {refetchOnWindowFocus:false});
 
@@ -36,7 +36,7 @@ export function Home():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     const {data:newSeries, refetch:newSeriesRefetch} = useQuery("newseries", async()=> {
-        const res = await api.get<SeriesFilter>("series?sort=!createdDate&limit=15");
+        const res = await api.get<SeriesFilter>("series?sort=!_id&limit=15");
         return res.data;
     }, {refetchOnWindowFocus:false});
 

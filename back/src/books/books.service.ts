@@ -12,8 +12,7 @@ export class BooksService {
   private readonly logger = new Logger(BooksService.name);
 
   async filterBooks(user:Types.ObjectId, query:SearchQuery):Promise<UserBook[]> {
-
-      const aggregate = this.bookModel.aggregate()
+      const aggregate = this.bookModel.aggregate().collation({locale: "es"})
           .match({missing:false});
 
       // Filtrado por nombre
