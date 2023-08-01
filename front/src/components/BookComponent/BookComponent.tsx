@@ -43,6 +43,23 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
         goTo(navigate, `/reader/${bookData._id}`);
     }
 
+    function renderBookInfo():string {
+        switch (siteSettings.bookView) {
+            case "characters":{
+                return `${bookData.characters} caracteres`;
+            }
+            case "pages":{
+                return `${bookData.pages} páginas`;
+            }
+            case "both":{
+                return `${bookData.pages} pags y ${bookData.characters} chars`;
+            }
+            default:{
+                return `${bookData.pages} páginas`;
+            }
+        }
+    }
+
     return (
         <div className="w-[9rem] flex-shrink-0">
             <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
@@ -75,12 +92,8 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                     }}
                 >{bookData.visibleName}
                 </a>
-                <div className="flex items-center justify-between">
-                    {siteSettings.characters ? (
-                        <p className="text-gray-300 text-sm lg:text-xs">{bookData.characters} caracteres</p>
-                    ) : (
-                        <p className="text-gray-300 text-sm lg:text-xs">{bookData.pages} páginas</p>
-                    )}
+                <div className="flex items-center justify-between text-sm">
+                    {renderBookInfo()}
                     <BookSettings bookData={bookData} insideSerie={insideSerie}/>
                 </div>
             </div>

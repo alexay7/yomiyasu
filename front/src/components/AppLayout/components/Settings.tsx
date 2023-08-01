@@ -3,7 +3,7 @@ import {PopupWindow} from "../../PopupWindow/PopupWindow";
 import {LateralListItem} from "./LateralListItem";
 import {Settings as SettingsIcon} from "@mui/icons-material";
 import {useSettings} from "../../../contexts/SettingsContext";
-import {Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel} from "@mui/material";
+import {Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, MenuItem, Select} from "@mui/material";
 
 export function Settings():React.ReactElement {
     const [open, setOpen] = useState(false);
@@ -32,15 +32,19 @@ export function Settings():React.ReactElement {
                         />
                     } label="Abrir HTML directamente (no usar lector nativo)"
                     />
-                    <FormControlLabel className="select-none" control={
-                        <Checkbox checked={siteSettings.characters} onChange={(e, c)=>{
+                    <div className="flex w-full justify-between items-center gap-4">
+                        <p>¿Qué Información te interesa de cada libro?</p>
+                        <Select value={siteSettings.bookView} onChange={(e)=>{
                             setSiteSettings((prev)=>{
-                                return {...prev, characters:c};
+                                return {...prev, bookView:e.target.value as "characters" | "pages" | "both"};
                             });
-                        }}
-                        />
-                    } label="Ver caracteres en vez de páginas en la carátula de los libros"
-                    />
+                        }} className="w-1/2"
+                        >
+                            <MenuItem value="pages">Páginas</MenuItem>
+                            <MenuItem value="characters">Caracteres</MenuItem>
+                            <MenuItem value="both">Ambos</MenuItem>
+                        </Select>
+                    </div>
                     <FormControlLabel className="select-none" control={
                         <Checkbox checked={siteSettings.autoCrono} onChange={(e, c)=>{
                             setSiteSettings((prev)=>{

@@ -64,7 +64,7 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
 
     const defaultSiteSettings:SiteConfig = {
         openHTML:false,
-        characters:false,
+        bookView:"pages",
         autoCrono:true
     };
 

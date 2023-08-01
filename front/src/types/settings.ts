@@ -19,6 +19,6 @@ export interface FullReaderConfig extends ReaderConfig {
 
 export interface SiteConfig {
     openHTML:boolean;
-    characters:boolean;
+    bookView:"characters" | "pages" | "both";
     autoCrono:boolean;
 }
