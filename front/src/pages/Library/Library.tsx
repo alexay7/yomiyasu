@@ -3,7 +3,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Alphabet, SeriesFilter} from "../../types/serie";
 import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
-import {IconButton, Pagination} from "@mui/material";
+import {IconButton, Pagination, Tooltip} from "@mui/material";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {ArrowBack} from "@mui/icons-material";
 import {goBack} from "../../helpers/helpers";
@@ -97,9 +97,11 @@ export function Library():React.ReactElement {
             </Helmet>
             <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4">
-                    <IconButton onClick={()=>goBack(navigate)}>
-                        <ArrowBack/>
-                    </IconButton>
+                    <Tooltip title="Volver atrás">
+                        <IconButton onClick={()=>goBack(navigate)}>
+                            <ArrowBack/>
+                        </IconButton>
+                    </Tooltip>
                     {userData?.admin && (
                         <LibrarySettings/>
                     )}

@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {useAuth} from "../../../contexts/AuthContext";
-import {IconButton, Menu, MenuItem} from "@mui/material";
+import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
 import {MoreVert} from "@mui/icons-material";
 import {api} from "../../../api/api";
 import {toast} from "react-toastify";
@@ -29,12 +29,14 @@ export function LibrarySettings():React.ReactElement {
 
     return (
         <div className="">
-            <IconButton className="text-center" onClick={(e)=>{
-                handleClick(e);
-            }}
-            >
-                <MoreVert className="w-6 h-6"/>
-            </IconButton>
+            <Tooltip title="Ajustes de la biblioteca">
+                <IconButton className="text-center" onClick={(e)=>{
+                    handleClick(e);
+                }}
+                >
+                    <MoreVert className="w-6 h-6"/>
+                </IconButton>
+            </Tooltip>
             <Menu id="long-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >

@@ -3,7 +3,7 @@ import {useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
-import {IconButton, Slider} from "@mui/material";
+import {IconButton, Slider, Tooltip} from "@mui/material";
 import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
@@ -565,13 +565,15 @@ export function Reader():React.ReactElement {
                     {showToolBar && (
                         <div className="bg-[#272727] w-full h-[5vh] text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
                             <div className="w-1/2 flex items-center gap-2 px-2">
-                                <IconButton onClick={async()=>{
-                                    await createProgress(bookData, currentPage, timer);
-                                    window.location.href = window.localStorage.getItem("origin") || "/app";
-                                }}
-                                >
-                                    <ArrowBack/>
-                                </IconButton>
+                                <Tooltip title="Volver atrás">
+                                    <IconButton onClick={async()=>{
+                                        await createProgress(bookData, currentPage, timer);
+                                        window.location.href = window.localStorage.getItem("origin") || "/app";
+                                    }}
+                                    >
+                                        <ArrowBack/>
+                                    </IconButton>
+                                </Tooltip>
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
@@ -581,12 +583,16 @@ export function Reader():React.ReactElement {
                                 {/* <IconButton>
                                     <Translate/>
                                 </IconButton> */}
-                                <IconButton onClick={()=>setShowSettings(true)}>
-                                    <Settings/>
-                                </IconButton>
-                                <IconButton onClick={toggleSidebar}>
-                                    <ViewSidebar/>
-                                </IconButton>
+                                <Tooltip title="Ajustes del lector">
+                                    <IconButton onClick={()=>setShowSettings(true)}>
+                                        <Settings/>
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Mostrar caracteres por separado">
+                                    <IconButton onClick={toggleSidebar}>
+                                        <ViewSidebar/>
+                                    </IconButton>
+                                </Tooltip>
                             </div>
                         </div>
                     )}
@@ -604,19 +610,23 @@ export function Reader():React.ReactElement {
                                 )}
                             </div>
                             <div className="justify-between flex items-center">
-                                <IconButton onClick={async()=>{
-                                    await createProgress(bookData, currentPage, timer);
-                                    void prevBook(bookData);
-                                }}
-                                >
-                                    <ArrowLeft/>
-                                </IconButton>
-                                <IconButton onClick={()=>{
-                                    setPage(1);
-                                }}
-                                >
-                                    <SkipPrevious/>
-                                </IconButton>
+                                <Tooltip title="It al libro anterior">
+                                    <IconButton onClick={async()=>{
+                                        await createProgress(bookData, currentPage, timer);
+                                        void prevBook(bookData);
+                                    }}
+                                    >
+                                        <ArrowLeft/>
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Ir a la primera página">
+                                    <IconButton onClick={()=>{
+                                        setPage(1);
+                                    }}
+                                    >
+                                        <SkipPrevious/>
+                                    </IconButton>
+                                </Tooltip>
                                 <p>{currentPage}</p>
                             </div>
                             <Slider className="mx-4" min={1} max={bookData.pages} value={currentPage} onChange={(e, v)=>{
@@ -626,19 +636,23 @@ export function Reader():React.ReactElement {
                             />
                             <div className="justify-between flex items-center">
                                 <p>{bookData?.pages}</p>
-                                <IconButton  onClick={()=>{
-                                    setPage(bookData.pages);
-                                }}
-                                >
-                                    <SkipNext/>
-                                </IconButton>
-                                <IconButton onClick={async()=>{
-                                    await createProgress(bookData, currentPage, timer);
-                                    void nextBook(bookData);
-                                }}
-                                >
-                                    <ArrowRight/>
-                                </IconButton>
+                                <Tooltip title="Ir a la última página">
+                                    <IconButton  onClick={()=>{
+                                        setPage(bookData.pages);
+                                    }}
+                                    >
+                                        <SkipNext/>
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Ir al siguiente libro">
+                                    <IconButton onClick={async()=>{
+                                        await createProgress(bookData, currentPage, timer);
+                                        void nextBook(bookData);
+                                    }}
+                                    >
+                                        <ArrowRight/>
+                                    </IconButton>
+                                </Tooltip>
                             </div>
                         </div>
                     )}

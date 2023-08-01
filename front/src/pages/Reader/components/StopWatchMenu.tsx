@@ -1,5 +1,5 @@
 import {Timer, TimerOff} from "@mui/icons-material";
-import {IconButton, Menu, MenuItem} from "@mui/material";
+import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 
@@ -47,13 +47,15 @@ export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
 
     return (
         <div className="">
-            <IconButton onClick={handleClick}>
-                {timerOn ? (
-                    <Timer/>
-                ) : (
-                    <TimerOff/>
-                )}
-            </IconButton>
+            <Tooltip title="Cronómetro">
+                <IconButton onClick={handleClick}>
+                    {timerOn ? (
+                        <Timer/>
+                    ) : (
+                        <TimerOff/>
+                    )}
+                </IconButton>
+            </Tooltip>
             <Menu id="stopwatch-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >

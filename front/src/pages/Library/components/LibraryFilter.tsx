@@ -1,5 +1,5 @@
 import {RestartAlt, Sort} from "@mui/icons-material";
-import {Autocomplete, Divider, IconButton, MenuItem, Select, Slider, TextField} from "@mui/material";
+import {Autocomplete, Divider, IconButton, MenuItem, Select, Slider, TextField, Tooltip} from "@mui/material";
 import React, {Fragment, useState} from "react";
 import {PopupWindow} from "../../../components/PopupWindow/PopupWindow";
 import {SetURLSearchParams} from "react-router-dom";
@@ -50,9 +50,11 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
 
     return (
         <Fragment>
-            <IconButton onClick={()=>setOpen(true)}>
-                <Sort/>
-            </IconButton>
+            <Tooltip title="Abrir filtros">
+                <IconButton onClick={()=>setOpen(true)}>
+                    <Sort/>
+                </IconButton>
+            </Tooltip>
             <PopupWindow open={open} title="Filtrar y Ordenar" closePopup={closePopup} onSubmit={filterSeries}>
                 <div className="flex flex-col gap-4">
                     <p>Ordenar por...</p>
