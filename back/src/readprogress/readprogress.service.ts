@@ -59,4 +59,8 @@ export class ReadprogressService {
         }
         return [];
     }
+
+    async deleteReadProgress(id:Types.ObjectId, user:Types.ObjectId) {
+        return this.readProgressModel.findOneAndDelete({_id:id, user});
+    }
 }

@@ -9,7 +9,8 @@ import {
     UnauthorizedException,
     BadRequestException,
     HttpStatus,
-    Param
+    Param,
+    Delete
 } from "@nestjs/common";
 import {ReadprogressService} from "./readprogress.service";
 import {ProgressDto} from "./dto/create-readprogress.dto";
@@ -139,5 +140,14 @@ export class ReadprogressController {
         const returnBooks = await Promise.all(promises);
 
         return returnBooks.filter((item) => item !== null);
+    }
+
+    @Delete(":id")
+    async deleteReadProgress(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+        
+        return this.readprogressService.deleteReadProgress(id, userId);
     }
 }

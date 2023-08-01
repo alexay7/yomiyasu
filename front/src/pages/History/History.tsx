@@ -1,24 +1,25 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {UserProgress} from "../../types/user";
-import {Table, TableBody, TableCell, TableHead, TableRow} from "@mui/material";
-import {formatTime, goTo} from "../../helpers/helpers";
-import {useNavigate} from "react-router-dom";
-import {DataGrid, GridColDef, GridToolbar, GridValueGetterParams} from "@mui/x-data-grid";
+import {IconButton} from "@mui/material";
+import {formatTime} from "../../helpers/helpers";
+import {DataGrid, GridColDef, GridToolbar} from "@mui/x-data-grid";
 import {Helmet} from "react-helmet";
+import {Delete} from "@mui/icons-material";
+import {BookProgress} from "../../types/book";
+import {toast} from "react-toastify";
 
 export function History():React.ReactElement {
-    const {data:progressData = []} = useQuery("progresses", async()=>{
+    const {data:progressData = [], refetch:refetchProgress} = useQuery("progresses", async()=>{
         const res = await api.get<UserProgress[]>("readprogress/all");
 
-        const rows:{id:number, image:string, book:string, serie:string, status:string,
+        const rows:{id:string, image:string, book:string, serie:string, status:string,
             pages:number, start:Date, end:Date | undefined, time:number, lastupdate:Date | undefined}[] = [];
 
-        res.forEach((progress, i)=>{
+        res.forEach((progress)=>{
             rows.push({
-                id:i,
+                id:progress._id,
                 image:`/api/static/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`,
                 book:progress.bookInfo.visibleName,
                 serie:progress.serieInfo.visibleName,
@@ -34,15 +35,32 @@ export function History():React.ReactElement {
         return rows;
     }, {refetchOnWindowFocus:false});
 
-    const navigate = useNavigate();
+    async function deleteProgress(id:string):Promise<void> {
+        const res = await api.delete<BookProgress>(`readprogress/${id}`);
+
+        if (res) {
+            toast.success("Progreso borrado con éxito");
+            void refetchProgress();
+        }
+    }
 
     const columns: GridColDef[] = [
         {
             field: "id",
-            headerName: "ID",
+            headerName: "Borrar",
             width: 20,
             sortable:false,
-            filterable:false
+            filterable:false,
+            renderCell:(params)=>(
+                <IconButton color="error" onClick={()=>{
+                    if (confirm("¿Seguro que quieres borrar el progreso?")) {
+                        void deleteProgress(params.value);
+                    }
+                }}
+                >
+                    <Delete/>
+                </IconButton>
+            )
         },
         {
             field: "image",
