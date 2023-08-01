@@ -150,7 +150,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     <Checkbox id="r2l" onClick={setRightToLeft} checked={readerSettings.r2l}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Ctrl para hacer zoom (PC)" childrenId="ctrl">
+                            <SettingsItem className="text-white" label="Ctrl para moverse por el libro (PC)" childrenId="ctrl">
                                 <div className="flex justify-end">
                                     <Checkbox id="ctrl" onClick={setCtrlToPan} checked={readerSettings.ctrlToPan}/>
                                 </div>
