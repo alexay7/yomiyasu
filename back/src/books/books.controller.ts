@@ -94,17 +94,21 @@ export class BooksController {
     
     @Get(":id/defaultname")
     @ApiOkResponse({status:HttpStatus.OK})
-    async getBookDefaultName(@Param("id") book:Types.ObjectId) {
+    async getBookDefaultName( @Param("id") book:Types.ObjectId) {
         return this.booksService.getDefaultName(book);
     }
 
     @Get(":id/next")
-    async getNextBook(@Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+    async getNextBook(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
         const foundBook = await this.booksService.findById(id);
 
         if (!foundBook) throw new NotFoundException();
 
-        const serieBooks = await this.booksService.getSerieBooks(foundBook.serie);
+        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie});
 
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
@@ -112,16 +116,20 @@ export class BooksController {
             return {id:"end"};
         }
 
-        return {id:serieBooks[bookIndex + 1]._id};
+        return serieBooks[bookIndex + 1];
     }
 
     @Get(":id/prev")
-    async getPrevBook(@Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+    async getPrevBook(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
         const foundBook = await this.booksService.findById(id);
 
         if (!foundBook) throw new NotFoundException();
 
-        const serieBooks = await this.booksService.getSerieBooks(foundBook.serie);
+        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie});
 
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
@@ -129,6 +137,6 @@ export class BooksController {
             return {id:"start"};
         }
 
-        return {id:serieBooks[bookIndex - 1]._id};
+        return serieBooks[bookIndex - 1];
     }
 }

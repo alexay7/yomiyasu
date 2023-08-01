@@ -68,7 +68,7 @@ export function Reader():React.ReactElement {
             initial.page_idx = page;
             window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
 
-            setCurrentPage(page);
+            setCurrentPage(page - 1);
         }
     }, [bookProgress, bookData, isLoading]);
 
@@ -106,7 +106,7 @@ export function Reader():React.ReactElement {
             if (rawProgress) {
                 const progress = JSON.parse(rawProgress) as {"page_idx":number, "singlePageView":boolean};
                 setDoublePages(!progress.singlePageView);
-                setCurrentPage(progress.page_idx + 1);
+                setCurrentPage(progress.page_idx);
             }
         }
     }, [bookData]);
@@ -126,8 +126,19 @@ export function Reader():React.ReactElement {
         function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):void {
             switch (e.data.action) {
                 case "newPage": {
+                    if (!bookData) return;
                     const {value} = e.data as {value:number};
                     if (value || value === 0) {
+                        if (value === -1) {
+                            if (!confirm("¿Volver al libro anterior?")) return;
+                            void prevBook(bookData);
+                            return;
+                        }
+                        if (value === bookData.pages) {
+                            if (!confirm("¿Pasar al siguiente libro?")) return;
+                            void nextBook(bookData);
+                            return;
+                        }
                         setCurrentPage(value + 1);
                     }
                     break;
@@ -209,7 +220,7 @@ export function Reader():React.ReactElement {
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
         };
-    }, []);
+    }, [bookData]);
 
     // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {

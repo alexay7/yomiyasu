@@ -123,6 +123,9 @@ export function Serie():React.ReactElement {
                                 <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
                                 {serieBooks && serieBooks.length > 0 && (
                                     <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={()=>{
+                                        if (serieData.unreadBooks === 0) {
+                                            if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+                                        }
                                         let bookId = 0;
                                         serieBooks.forEach((book, i)=>{
                                             if (book.status === "reading") {

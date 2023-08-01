@@ -37,6 +37,9 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             window.location.href = `/api/static/${bookData.seriePath}/${bookData.path}.html`;
             return;
         }
+        if (bookData.status === "completed") {
+            if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+        }
         goTo(navigate, `/reader/${bookData._id}`);
     }
 
