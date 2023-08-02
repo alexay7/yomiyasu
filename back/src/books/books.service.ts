@@ -110,6 +110,11 @@ export class BooksService {
       let currentBook:Types.ObjectId | undefined = undefined;
       let thumbnail:string | undefined;
 
+      const paused = serieBooks.some(x=>{
+          if (!x.lastProgress) return;
+          return x.lastProgress.paused;
+      });
+
       if (readingBooks.length > 0) {
           thumbnail = `${readingBooks[0].seriePath}/${readingBooks[0].imagesFolder}/${readingBooks[0].thumbnailPath}`;
           currentBook = readingBooks[0]._id;
@@ -129,7 +134,8 @@ export class BooksService {
               unreadBooks:unreadBooks.length,
               thumbnailPath:thumbnail,
               currentBook,
-              type:"serie"
+              type:"serie",
+              paused
           };
       }
 

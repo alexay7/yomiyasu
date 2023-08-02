@@ -10,7 +10,8 @@ import {
     BadRequestException,
     HttpStatus,
     Param,
-    Delete
+    Delete,
+    Patch
 } from "@nestjs/common";
 import {ReadprogressService} from "./readprogress.service";
 import {ProgressDto} from "./dto/create-readprogress.dto";
@@ -127,10 +128,16 @@ export class ReadprogressController {
             const allBooks = await this.booksService.filterBooks(userId, {serie, sort:"sortName"});
             const unreadBooks = await this.booksService.filterBooks(userId, {serie, sort:"sortName", status:"unread"});
 
+            if (allBooks.some(x=>{
+                if (!x.lastProgress) return false;
+                return x.lastProgress.paused;
+            })) {
+                return null;
+            }
+
             // Si existen libros leidos en la serie pero NO libros en progreso, considerar serie para tablero
             if (unreadBooks.length > 0 && (allBooks.length !== unreadBooks.length) && !allBooks.some(x=>x.status === "reading")) {
                 // Se buscan todos los libros que no hayan sido leidos por el usuario y se coge el primero no leido
-
                 return unreadBooks[0];
             }
 
@@ -140,6 +147,26 @@ export class ReadprogressController {
         const returnBooks = await Promise.all(promises);
 
         return returnBooks.filter((item) => item !== null);
+    }
+
+    @Patch("serie/:serieId/pause")
+    async pauseSerie(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serie:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.readprogressService.modifyWholeSerie(serie, userId, true);
+        return {status:"OK"};
+    }
+
+    @Patch("serie/:serieId/resume")
+    async resumeSerie(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serie:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.readprogressService.modifyWholeSerie(serie, userId, false);
+        return {status:"OK"};
     }
 
     @Delete(":id")

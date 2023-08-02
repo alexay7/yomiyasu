@@ -63,4 +63,8 @@ export class ReadprogressService {
     async deleteReadProgress(id:Types.ObjectId, user:Types.ObjectId) {
         return this.readProgressModel.findOneAndDelete({_id:id, user});
     }
+
+    async modifyWholeSerie(serie:Types.ObjectId, user:Types.ObjectId, paused:boolean) {
+        return this.readProgressModel.updateMany({serie:new Types.ObjectId(serie), user:new Types.ObjectId(user)}, {paused});
+    }
 }

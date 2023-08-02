@@ -37,6 +37,16 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
         forceReload("all");
     }
 
+    async function pauseSerie():Promise<void> {
+        await api.patch<unknown, {status:string}>(`readprogress/serie/${  serieData._id  }/pause`, {});
+        forceReload("all");
+    }
+
+    async function resumeSerie():Promise<void> {
+        await api.patch<unknown, {status:string}>(`readprogress/serie/${  serieData._id  }/resume`, {});
+        forceReload("all");
+    }
+
     return (
         <div className="">
             <IconButton className="text-center" onClick={(e)=>{
@@ -52,8 +62,23 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                     onClick={()=>{
                         void iBook(serieData);
                     }}
-                >Leer Siguiente volumen
+                >Leer siguiente volumen
                 </MenuItem>
+                {serieData.paused ? (
+                    <MenuItem onClick={()=>{
+                        void resumeSerie();
+                    }}
+                    >
+                        Reanudar serie
+                    </MenuItem>
+                ) : (
+                    <MenuItem onClick={()=>{
+                        void pauseSerie();
+                    }}
+                    >
+                        Pausar serie
+                    </MenuItem>
+                )}
                 {serieData.unreadBooks > 0 && (
                     <MenuItem
                         onClick={()=>{

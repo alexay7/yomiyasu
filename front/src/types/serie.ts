@@ -22,6 +22,7 @@ export interface SerieWithProgress extends Serie {
     unreadBooks: number;
     type:"serie";
     readlist:boolean;
+    paused:boolean;
 }
 
 export interface SeriesFilter {

@@ -42,6 +42,9 @@ export class ReadProgress {
       default: "unread"
   })
   status: ReadProgressStatus;
+
+  @Prop({type: Boolean, default: false})
+  paused: boolean;
 }
 
 export const ReadProgressSchema = SchemaFactory.createForClass(ReadProgress);
