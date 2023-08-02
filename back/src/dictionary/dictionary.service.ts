@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {tokenize} from "@enjoyjs/node-mecab";
-import {Injectable, InternalServerErrorException} from "@nestjs/common";
+import {BadRequestException, Injectable, InternalServerErrorException} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
 import {kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
 import levelup from "levelup";
@@ -36,51 +37,78 @@ export class DictionaryService {
       return this.db;
   }
   
-  async searchByKanji(word:string) {
+  async getWordMeaning(word:string):Promise<WordWithDisplay | null> {
       const db = await this.getDb();
 
       const wholeResult:WordWithDisplay = {display:word, words:[]};
 
-      if (word.length < 7) {
-          wholeResult.words = await readingBeginning(db, word, 1);
+      wholeResult.words = await readingBeginning(db, word, 1);
 
-          if (wholeResult.words.length === 0) {
-              wholeResult.words = await kanjiBeginning(db, word, 3);
-          }
+      if (wholeResult.words.length === 0) {
+          wholeResult.words = await kanjiBeginning(db, word, 3);
+      }
+    
+      return wholeResult;
+  }
+
+  wordsAreEqual(query:string, word:string):boolean {
+      if (query === word) {
+          return true;
       }
 
-      if (wholeResult.words.length > 0) {
-          return [wholeResult];
+      //   Soporte para la forma base de los verbos
+      if (query + "る" === word) {
+          return true;
       }
 
-      const analisis = await tokenize(word);
+      return false;
+  }
 
-      const queries = analisis.filter(x=>x.surface !== "BOS" && x.surface !== "EOS");
+  async searchByKanji(word:string) {
+      if (word.length > 30) {
+          throw new BadRequestException("Texto demasiado largo");
+      }
+      const words:WordWithDisplay[] = [];
 
-      const results:WordWithDisplay[] = [];
+      const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
 
-      await Promise.all(queries.map(async(currentWord, i)=>{
-          let query = currentWord.feature.basicForm || "";
-      
-          if (currentWord.feature.pos === "動詞" || currentWord.feature.pos === "形容詞") {
-              query = currentWord.feature.basicForm || query;
+      let auxWord = word.replace(regex, "");
+
+      while (auxWord.length > 0) {
+          for (let index = auxWord.length; index >= 0; index--) {
+              const text = auxWord.substring(0, index);
+          
+              const result = await this.getWordMeaning(text);
+
+              if (result?.words && result?.words.length > 0) {
+                  let exactMatch = false;
+                  result.words.forEach((definition)=>{
+                      definition.kana.forEach((kanaDef)=>{
+                          if (this.wordsAreEqual(text, kanaDef.text)) {
+                              exactMatch = true;
+                          }
+                      });
+                      definition.kanji.forEach((kanjiDef)=>{
+                          if (this.wordsAreEqual(text, kanjiDef.text)) {
+                              exactMatch = true;
+                          }
+                      });
+                  });
+                  if (exactMatch) {
+                      result.words = result.words.filter((v, i, a)=>a.findIndex(x=>x.id === v.id) === i);
+                      words.push(result);
+                      auxWord = auxWord.replace(result.display || "", "");
+                      break;
+                  }
+              }
+
+              if (text.length === 1) {
+                  words.push({display:auxWord, words:[]});
+                  auxWord = "";
+                  break;
+              }
           }
-
-          const result:WordWithDisplay = {display:currentWord.surface, words:[]};
-
-          result.words = await readingBeginning(db, query, 1);
-
-          if (result.words.length === 0) {
-              result.words = await kanjiBeginning(db, query, 3);
-          }
-
-          if (currentWord.feature.pos === "助動詞" || currentWord.feature.pos === "助詞") {
-              result.words = [];
-          }
-
-          results[i] = result;
-      }));
-      
-      return results;
+      }
+      return words;
   }
 }

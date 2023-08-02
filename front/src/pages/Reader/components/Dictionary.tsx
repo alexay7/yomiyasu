@@ -3,6 +3,7 @@ import React, {Fragment, useEffect, useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {DicionaryResult} from "../../../types/dictionary";
+import {toast} from "react-toastify";
 
 interface DictionaryProps {
     searchWord:string;
@@ -16,8 +17,14 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
 
     const {data:wordDefinitions} = useQuery(searchWord, async()=>{
         if (searchWord === "" || searchWord === "\n") return undefined;
-        const res = await api.get<DicionaryResult[]>(`dictionary/${searchWord}`);
-        return res;
+
+        try {
+            const res = await api.get<DicionaryResult[]>(`dictionary/${searchWord}`);
+            return res;
+        } catch {
+            toast.error("El máximo de texto seleccionable es de 30 caracteres");
+            setSearchWord("");
+        }
     });
 
     useEffect(()=>{
