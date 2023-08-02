@@ -137,7 +137,7 @@ export function Reader():React.ReactElement {
         document.documentElement.style.setProperty("--height", `${window.innerHeight}px`);
 
         function getselectedText(text:string):void {
-            if (text !== "" && text !== "\n") {
+            if (text !== "" && text !== "\n" && readerSettings.nativeDictionary) {
                 document.body.style.cursor = "wait";
                 setSearchWord(text);
                 document.body.style.cursor = "default";
@@ -179,7 +179,7 @@ export function Reader():React.ReactElement {
 
         function handleMouseUp():void {
             const selection = window.getSelection();
-            if (selection && selection.toString()) {
+            if (selection && selection.toString() && readerSettings.nativeDictionary) {
                 getselectedText(selection.toString());
                 selection.removeAllRanges();
             }
@@ -241,7 +241,7 @@ export function Reader():React.ReactElement {
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
         };
-    }, [bookData]);
+    }, [bookData, readerSettings]);
 
     // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {

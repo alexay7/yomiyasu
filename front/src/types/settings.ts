@@ -10,6 +10,7 @@ export interface ReaderConfig {
     fontSize:string; // tamaño de fuente del ocr
     toggleOCRTextBoxes:boolean; // mantiene el texto de un cuadro al hacer click
     panAndZoom:boolean; // activa el zoom nativo de mokuro
+    nativeDictionary:boolean;
 }
 
 export interface FullReaderConfig extends ReaderConfig {

@@ -118,6 +118,12 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         });
     }
 
+    function setDictionary():void {
+        setReaderSettings((prev)=>{
+            return ({...prev, nativeDictionary:!prev.nativeDictionary || false});
+        });
+    }
+
     return (
         <>
             <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
@@ -134,6 +140,14 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                         <p className="text-lg">Ajustes del Lector</p>
                     </div>
                     <div className="flex flex-col bg-[#1E1E1E] py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
+                        <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de YomiYasu</p>
+                        <div className="ml-2 flex flex-col gap-2">
+                            <SettingsItem className="text-white" label="Activar diccionario nativo" childrenId="dict">
+                                <div className="flex justify-end">
+                                    <Checkbox id="dict" onClick={setDictionary} checked={readerSettings.nativeDictionary}/>
+                                </div>
+                            </SettingsItem>
+                        </div>
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
                             <SettingsItem className="text-white" label="Tipo de fuente" childrenId="font">
