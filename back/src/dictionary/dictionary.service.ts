@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {tokenize} from "@enjoyjs/node-mecab";
 import {BadRequestException, Injectable, InternalServerErrorException} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
@@ -51,23 +50,17 @@ export class DictionaryService {
       return wholeResult;
   }
 
-  wordsAreEqual(query:string, word:string):boolean {
-      if (query === word) {
-          return true;
-      }
-
-      //   Soporte para la forma base de los verbos
-      if (query + "る" === word) {
-          return true;
-      }
-
-      return false;
-  }
-
   async searchByKanji(word:string) {
       if (word.length > 30) {
           throw new BadRequestException("Texto demasiado largo");
       }
+
+      const prevResult = await this.getWordMeaning(word);
+
+      if (prevResult &&  prevResult.words.length > 0) {
+          return [prevResult];
+      }
+
       const words:WordWithDisplay[] = [];
 
       const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
@@ -78,18 +71,31 @@ export class DictionaryService {
           for (let index = auxWord.length; index >= 0; index--) {
               const text = auxWord.substring(0, index);
           
-              const result = await this.getWordMeaning(text);
+              let result = await this.getWordMeaning(text);
+
+              if (word.length > 2 && word.length < 6) {
+                  const analysis = await tokenize(text);
+                  const realAnalysis = analysis.slice(1, analysis.length - 1);
+                  if (realAnalysis.length > 0 && realAnalysis[0].feature.pos === "動詞") {
+                      result = await this.getWordMeaning(realAnalysis[0].feature.basicForm || text);
+                      if (result) {
+                          result.display = realAnalysis[0].surface;
+                          words.push(result);
+                          auxWord = auxWord.replace(realAnalysis[0].surface, "");
+                      }
+                  }
+              }
 
               if (result?.words && result?.words.length > 0) {
                   let exactMatch = false;
                   result.words.forEach((definition)=>{
                       definition.kana.forEach((kanaDef)=>{
-                          if (this.wordsAreEqual(text, kanaDef.text)) {
+                          if (text === kanaDef.text) {
                               exactMatch = true;
                           }
                       });
                       definition.kanji.forEach((kanjiDef)=>{
-                          if (this.wordsAreEqual(text, kanjiDef.text)) {
+                          if (text === kanjiDef.text) {
                               exactMatch = true;
                           }
                       });
