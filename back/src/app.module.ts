@@ -17,6 +17,8 @@ import {DictionaryModule} from "./dictionary/dictionary.module";
 import {ReviewsModule} from "./reviews/reviews.module";
 import {BullModule} from "@nestjs/bull";
 import {ScanWorker} from "./queue/scan-library.job";
+import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
+import {APP_GUARD} from "@nestjs/core";
 
 @Module({
     imports: [
@@ -42,6 +44,10 @@ import {ScanWorker} from "./queue/scan-library.job";
             }),
             inject: [ConfigService]
         }),
+        ThrottlerModule.forRoot({
+            ttl: 10,
+            limit: 100
+        }),
         TokensModule,
         BooksModule,
         SeriesModule,
@@ -53,6 +59,11 @@ import {ScanWorker} from "./queue/scan-library.job";
     ],
 
     controllers: [AppController],
-    providers: [AppService, ScanWorker]
+    providers: [AppService, ScanWorker,
+        {
+            provide: APP_GUARD,
+            useClass: ThrottlerGuard
+        }
+    ]
 })
 export class AppModule {}

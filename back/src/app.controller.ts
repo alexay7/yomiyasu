@@ -15,6 +15,7 @@ import {Types} from "mongoose";
 import {UsersService} from "./users/users.service";
 import {InjectQueue} from "@nestjs/bull";
 import {Queue} from "bull";
+import {Throttle} from "@nestjs/throttler";
 
 @Controller()
 @UseGuards(JwtAuthGuard)
@@ -48,6 +49,7 @@ export class AppController {
 
     @ApiOkResponse({status:HttpStatus.OK})
     @Get("static/*")
+    @Throttle(200, 10)
     serveFiles(@Req() req: Request, @Res() res: Response) {
         return res.sendFile(
             /**
