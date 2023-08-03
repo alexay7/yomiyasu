@@ -72,7 +72,6 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     return (
         <div className="w-[9rem] flex-shrink-0">
             <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
-                style={{backgroundImage:`url(${encodeURI(thumbnailUrl)})`}}
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
                         goToBook();
@@ -80,6 +79,9 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
+                <div className="absolute top-0 w-full h-full overflow-hidden">
+                    <img loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
+                </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {bookData.status === "unread" && (
                     <div className={`absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent ${bookData.readlist ? "border-r-blue-500" : "border-r-primary"}`} style={{borderWidth:"0 35px 35px 0"}}/>

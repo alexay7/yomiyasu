@@ -15,7 +15,7 @@ import {Dictionary} from "./components/Dictionary";
 import {nextBook, prevBook} from "../../helpers/book";
 import {Helmet} from "react-helmet";
 
-export function Reader():React.ReactElement {
+function Reader():React.ReactElement {
     const {id} = useParams();
     const iframe = useRef<HTMLIFrameElement>(null);
     const {readerSettings, siteSettings} = useSettings();
@@ -709,3 +709,5 @@ export function Reader():React.ReactElement {
         </div>
     );
 }
+
+export default Reader;

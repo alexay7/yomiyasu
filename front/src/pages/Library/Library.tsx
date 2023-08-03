@@ -13,7 +13,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import {LibraryFilter} from "./components/LibraryFilter";
 import {Helmet} from "react-helmet";
 
-export function Library():React.ReactElement {
+function Library():React.ReactElement {
     const [searchParams, setSearchParams] = useSearchParams();
     const genre = searchParams.get("genre");
     const author = searchParams.get("author");
@@ -179,3 +179,5 @@ export function Library():React.ReactElement {
         </div>
     );
 }
+
+export default Library;

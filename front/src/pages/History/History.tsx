@@ -10,7 +10,7 @@ import {Delete} from "@mui/icons-material";
 import {BookProgress} from "../../types/book";
 import {toast} from "react-toastify";
 
-export function History():React.ReactElement {
+function History():React.ReactElement {
     const {data:progressData = [], refetch:refetchProgress} = useQuery("progresses", async()=>{
         const res = await api.get<UserProgress[]>("readprogress/all");
 
@@ -127,3 +127,5 @@ export function History():React.ReactElement {
         </div>
     );
 }
+
+export default History;

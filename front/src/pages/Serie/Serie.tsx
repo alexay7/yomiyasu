@@ -16,7 +16,7 @@ import {Reviews} from "./components/Reviews";
 import {addToReadlist, removeFromReadlist} from "../../helpers/series";
 import {Helmet} from "react-helmet";
 
-export function Serie():React.ReactElement {
+function Serie():React.ReactElement {
     const {id} = useParams();
     const {reloaded, forceReload} = useGlobal();
     const {userData} = useAuth();
@@ -209,3 +209,5 @@ export function Serie():React.ReactElement {
         </div>
     );
 }
+
+export default Serie;

@@ -1,15 +1,17 @@
-import React from "react";
+import React, {Fragment, lazy} from "react";
 import {Navigate, Route, Routes} from "react-router-dom";
-import Login from "./pages/Login/Login";
 import {ProtectedLayout} from "./components/Protection/ProtectedLayout";
 import {useAuth} from "./contexts/AuthContext";
 import {AppLayout} from "./components/AppLayout/AppLayout";
-import {Home} from "./pages/Home/Home";
-import {Reader} from "./pages/Reader/Reader";
-import {Library} from "./pages/Library/Library";
-import {Serie} from "./pages/Serie/Serie";
 import {Loading} from "./pages/Loading/Loading";
-import {History} from "./pages/History/History";
+import {Helmet} from "react-helmet";
+
+const Login = lazy(() => import("./pages/Login/Login"));
+const Home = lazy(() => import("./pages/Home/Home"));
+const Library = lazy(() => import("./pages/Library/Library"));
+const Serie = lazy(() => import("./pages/Serie/Serie"));
+const History = lazy(() => import("./pages/History/History"));
+const Reader = lazy(() => import("./pages/Reader/Reader"));
 
 export function App():React.ReactElement {
     const {loading} = useAuth();
@@ -19,17 +21,28 @@ export function App():React.ReactElement {
     }
 
     return (
-        <Routes>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
-                <Route index element={<Home/>}/>
-                <Route path="library" element={<Library/>}/>
-                <Route path="series/:id" element={<Serie/>}/>
-                <Route path="history" element={<History/>}/>
+        <Fragment>
+            <Helmet
+                meta={[
+                    {
+                        name: "theme-color",
+                        content: "#272727"
+                    }
+                ]}
+            >
+            </Helmet>
+            <Routes>
+                <Route path="/login" element={<React.Suspense fallback={<Loading/>}><Login/></React.Suspense>}/>
+                <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
+                    <Route index element={<React.Suspense fallback={<Loading/>}><Home/></React.Suspense>}/>
+                    <Route path="library" element={<React.Suspense fallback={<Loading/>}><Library/></React.Suspense>}/>
+                    <Route path="series/:id" element={<React.Suspense fallback={<Loading/>}><Serie/></React.Suspense>}/>
+                    <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
+                    <Route path="*" element={<Navigate to="/app"/>}/>
+                </Route>
+                <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>
                 <Route path="*" element={<Navigate to="/app"/>}/>
-            </Route>
-            <Route path="reader/:id" element={<Reader/>}/>
-            <Route path="*" element={<Navigate to="/app"/>}/>
-        </Routes>
+            </Routes>
+        </Fragment>
     );
 }
