@@ -4,7 +4,7 @@ export interface SeriesSearch {
     genre?:string;
     author?:string;
     name?:string;
-    sort?:"createdDate" | "bookCount" | "lastModifiedDate" | "sortName" | "difficulty" | "_id";
+    sort?:"createdDate" | "bookCount" | "lastModifiedDate" | "sortName" | "difficulty" | "_id" | "characters";
     status?:"PUBLISHING" | "ENDED";
     limit:number;
     page:number;

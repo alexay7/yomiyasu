@@ -6,6 +6,7 @@ export interface SerieWithProgress extends Serie {
     readlist:boolean;
     thumbnailPath:string;
     type?:string;
+    totalCharacters?:number;
 }
 
 export interface SerieWithReviews extends Serie {

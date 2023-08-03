@@ -66,6 +66,17 @@ export function Serie():React.ReactElement {
         return "Seguir leyendo";
     }
 
+    function getCharacterCount():string {
+        if (!serieBooks || serieBooks.length === 0) return "";
+        let characters = 0;
+
+        serieBooks?.forEach((book)=>{
+            characters += book.characters || 0;
+        });
+
+        return `${characters} caracteres totales (${characters / serieBooks?.length} chars/libro)`;
+    }
+
     return (
         <div className="bg-[#121212] overflow-x-hidden pb-4">
             <Helmet>
@@ -132,6 +143,7 @@ export function Serie():React.ReactElement {
                                     <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>
                                 )}
                                 <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
+                                <p className="text py-4 pt-2 text-sm">{getCharacterCount()}</p>
                                 {serieBooks && serieBooks.length > 0 && (
                                     <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={()=>{
                                         if (serieData.unreadBooks === 0) {
