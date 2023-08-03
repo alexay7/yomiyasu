@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useQuery} from "react-query";
 import {useNavigate, useParams} from "react-router-dom";
 import {api} from "../../api/api";
@@ -21,6 +21,9 @@ export function Serie():React.ReactElement {
     const {reloaded, forceReload} = useGlobal();
     const {userData} = useAuth();
     const [readMore, setReadMore] = useState(false);
+    const [textOverflows, setTextOverflows] = useState(false);
+
+    const overflowingText = useRef<HTMLParagraphElement | null>(null);
 
     const {data:serieData, refetch:serieRefetch} = useQuery(`serie-${id}`, async()=>{
         const response = await api.get<FullSerie>(`series/${id}`);
@@ -33,6 +36,14 @@ export function Serie():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (overflowingText.current) {
+        // Check if the text overflows after the component has been rendered
+            const isOverflowing = overflowingText.current.scrollHeight > overflowingText.current.clientHeight;
+            setTextOverflows(isOverflowing);
+        }
+    }, []);
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {
@@ -140,8 +151,10 @@ export function Serie():React.ReactElement {
                                 )}
                                 {serieData.summary && (
                                     <div className="text-sm mt-4">
-                                        <p className="overflow-hidden whitespace-pre-line" style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
-                                        <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
+                                        <p className="overflow-hidden whitespace-pre-line" ref={overflowingText} style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
+                                        {textOverflows && (
+                                            <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
+                                        )}
                                     </div>
                                 )}
                             </div>
