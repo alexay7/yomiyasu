@@ -98,7 +98,7 @@ export class SeriesService {
       }
 
       if (query.name) {
-          const regex = new RegExp(query.name, "i");
+          const regex = new RegExp("^" + query.name.replace(/\s+/g, ".*"), "i");
           result.where({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
 

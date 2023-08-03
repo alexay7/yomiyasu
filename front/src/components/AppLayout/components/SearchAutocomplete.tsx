@@ -1,5 +1,5 @@
 import {Search} from "@mui/icons-material";
-import {Autocomplete, Box, TextField, createFilterOptions} from "@mui/material";
+import {Autocomplete, Box, TextField} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {api} from "../../../api/api";
 import {SerieWithProgress, SeriesFilter} from "../../../types/serie";
@@ -70,7 +70,7 @@ export function SearchAutocomplete():React.ReactElement {
             onInputChange={(e, v)=>setSearchQuery(v)}
             isOptionEqualToValue={(option, value)=>option.visibleName === value.visibleName || option.sortName === value.sortName}
             getOptionLabel={(option)=>option.visibleName}
-            filterOptions={createFilterOptions({matchFrom:"any", stringify:(option)=>option.visibleName + option.sortName})}
+            filterOptions={(options) => options}
             onChange={(e, v)=>{
                 // Redirigir a la página de la serie
                 if (v) {

@@ -17,8 +17,10 @@ export class BooksService {
 
       // Filtrado por nombre
       if (query.name) { 
-          const regex = new RegExp(query.name, "i");
-          aggregate.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
+          const regex = new RegExp("^" + query.name.replace(/\s+/g, ".*"), "i");
+          console.log(regex);
+          //   aggregate.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
+          aggregate.match({sortName:{$regex:regex}});
       }
 
       // Filtrado por serie
