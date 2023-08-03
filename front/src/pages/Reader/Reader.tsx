@@ -4,7 +4,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {IconButton, Slider, Tooltip} from "@mui/material";
-import {ArrowLeft, ArrowRight, SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar} from "@mui/icons-material";
+import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
@@ -616,7 +616,7 @@ export function Reader():React.ReactElement {
                                         void prevBook(bookData);
                                     }}
                                     >
-                                        <ArrowLeft/>
+                                        <ArrowCircleLeft/>
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Ir a la primera página">
@@ -650,7 +650,7 @@ export function Reader():React.ReactElement {
                                         void nextBook(bookData);
                                     }}
                                     >
-                                        <ArrowRight/>
+                                        <ArrowCircleRight/>
                                     </IconButton>
                                 </Tooltip>
                             </div>
