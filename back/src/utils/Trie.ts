@@ -41,6 +41,7 @@ class Trie {
     }
 }
 
+/// Inflection list ported from https://github.com/FooSoft/yomichan/blob/89ac85afd03e62818624b507c91569edbec54f3d/ext/js/language/deinflector.js
 const trieRulesData: {kanaIn: string; kanaOut: string}[] = [
     {kanaIn: "ければ", kanaOut: "い"},
     {kanaIn: "えば", kanaOut: "う"},

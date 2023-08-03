@@ -5,7 +5,6 @@ import levelup from "levelup";
 import {join} from "path";
 import {WordWithDisplay} from "./interfaces/word";
 import deinflectRules from "../utils/Trie";
-import {tokenize} from "@enjoyjs/node-mecab";
 
 
 
@@ -100,20 +99,7 @@ export class DictionaryService {
           for (let index = auxWord.length; index >= 0; index--) {
               const text = auxWord.substring(0, index);
         
-              let result = await this.getWordMeaning(text);
-
-              if (word.length > 2 && word.length < 6) {
-                  const analysis = await tokenize(text);
-                  const realAnalysis = analysis.slice(1, analysis.length - 1);
-                  if (realAnalysis.length > 0 && realAnalysis[0].feature.pos === "動詞") {
-                      result = await this.getWordMeaning(realAnalysis[0].feature.basicForm || text);
-                      if (result) {
-                          result.display = realAnalysis[0].surface;
-                          words.push(result);
-                          auxWord = auxWord.replace(realAnalysis[0].surface, "");
-                      }
-                  }
-              }
+              const result = await this.getWordMeaning(text);
 
               if (result?.words && result?.words.length > 0) {
                   let exactMatch = false;
