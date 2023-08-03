@@ -10,12 +10,25 @@ import {Delete} from "@mui/icons-material";
 import {BookProgress} from "../../types/book";
 import {toast} from "react-toastify";
 
+interface LogData {
+    id:string,
+    image:string,
+    book:string,
+    serie:string,
+    status:string,
+    pages:number,
+    start:Date,
+    end:Date | undefined,
+    time:number,
+    lastupdate:Date | undefined,
+    characters:number
+}
+
 function History():React.ReactElement {
     const {data:progressData = [], refetch:refetchProgress} = useQuery("progresses", async()=>{
         const res = await api.get<UserProgress[]>("readprogress/all");
 
-        const rows:{id:string, image:string, book:string, serie:string, status:string,
-            pages:number, start:Date, end:Date | undefined, time:number, lastupdate:Date | undefined}[] = [];
+        const rows:LogData[] = [];
 
         res.forEach((progress)=>{
             rows.push({
@@ -28,7 +41,8 @@ function History():React.ReactElement {
                 start:progress.startDate,
                 end:progress.endDate,
                 time:progress.time,
-                lastupdate:progress.lastUpdateDate
+                lastupdate:progress.lastUpdateDate,
+                characters:progress.bookInfo.characters || 0
             });
         });
 
@@ -90,6 +104,11 @@ function History():React.ReactElement {
             width: 120
         },
         {
+            field: "characters",
+            headerName: "Caracteres leídos",
+            width: 120
+        },
+        {
             field: "lastupdate",
             headerName: "Última actualización",
             width: 160,
@@ -122,7 +141,21 @@ function History():React.ReactElement {
             </Helmet>
             <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
             <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500">
-                <DataGrid rows={progressData} columns={columns} slots={{toolbar:GridToolbar}}/>
+                <DataGrid rows={progressData} columns={columns} slots={{toolbar:GridToolbar}} onRowClick={(row)=>{
+                    const rowData = row.row as LogData;
+                    let text = `.log manga ${rowData.pages} ${rowData.book}`;
+
+                    if (rowData.time > 0) {
+                        text += `;${Math.floor(rowData.time / 60)}`;
+                    }
+
+                    if (rowData.characters > 0) {
+                        text += `&${rowData.characters}`;
+                    }
+
+                    void navigator.clipboard.writeText(text);
+                }}
+                />
             </div>
         </div>
     );
