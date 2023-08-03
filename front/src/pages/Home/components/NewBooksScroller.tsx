@@ -8,7 +8,7 @@ import {useGlobal} from "../../../contexts/GlobalContext";
 function NewBooksScroller():React.ReactElement {
     const {reloaded} = useGlobal();
     const {data:recentBooks, refetch:recentRefetch} = useQuery("recentbooks", async()=> {
-        const res = await api.get<BookWithProgress[]>("books?sort=!_id&limit=15");
+        const res = await api.get<BookWithProgress[]>("books?sort=!_id&limit=15&status=unread");
         return res;
     }, {refetchOnWindowFocus:false});
 
