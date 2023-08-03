@@ -3,14 +3,20 @@ import {dirname, join} from "path";
 import {load} from "cheerio";
 
 async function extractFirstFileNameFromFolder(folderPath: string): Promise<string | null> {
-    const files = await fs.readdir(folderPath);
+    try {
+        const files = await fs.readdir(folderPath);
 
-    if (files.length > 0) {
-        const firstFileName = files[0];
-        return firstFileName;
+        if (files.length > 0) {
+            const firstFileName = files[0];
+            if (!firstFileName.endsWith(".jpg") && !firstFileName.endsWith(".png") && !firstFileName.endsWith(".jpeg")) return null;
+            return firstFileName;
+        }
+
+        return null; // Return null if no files found
+    } catch {
+        console.error("Directory " + folderPath + " does not exist");
+        return null;
     }
-
-    return null; // Return null if no files found
 }
 
 async function countFilesInFolder(folderPath: string): Promise<number> {
@@ -85,9 +91,11 @@ export async function extractUrlFromHtml(
         const imagesName = decodeURI(match[1].split("/")[0]);
         const imagesPath = join(dirname(bookPath), imagesName);
         const firstImage = await extractFirstFileNameFromFolder(imagesPath);
+        if (!firstImage) return null;
+        
         const totalImages = await countFilesInFolder(imagesPath);
 
-        if (!firstImage) return null;
+        if (!totalImages) return null;
 
         return {
             folderName: imagesName,
