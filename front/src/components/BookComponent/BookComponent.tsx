@@ -6,7 +6,7 @@ import {Fade, IconButton} from "@mui/material";
 import {BookSettings} from "./components/BookSettings";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../helpers/helpers";
-import {useSettings} from "../../contexts/SettingsContext";
+import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 
 interface BookComponentProps {
     bookData:BookWithProgress,
@@ -34,6 +34,15 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
     function goToBook():void {
         if (siteSettings.openHTML) {
+            let settings = defaultSets() as {backgroundColor:string};
+            const prevSettings = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`);
+            if (prevSettings) {
+                settings = JSON.parse(prevSettings) as {backgroundColor:string};
+                settings.backgroundColor = "#121212";
+            }
+
+            window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(settings));
+
             window.location.href = `/api/static/${bookData.seriePath}/${bookData.path}.html`;
             return;
         }
