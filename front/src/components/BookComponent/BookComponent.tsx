@@ -96,7 +96,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 </Fade>
             </div>
 
-            <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
+            <div className="dark:bg-[#1E1E1E] dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
                 <a href={siteSettings.openHTML ? `/api/static/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
                     className="line-clamp-2 h-12" onClick={()=>{
                         window.localStorage.setItem("origin", window.location.pathname);
@@ -104,7 +104,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 >{bookData.visibleName}
                 </a>
                 <div className="flex items-center justify-between text-sm">
-                    <p className="text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
+                    <p className="dark:text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
                     <BookSettings bookData={bookData} insideSerie={insideSerie}/>
                 </div>
             </div>

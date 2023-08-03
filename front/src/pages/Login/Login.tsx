@@ -38,7 +38,7 @@ function Login():React.ReactElement {
             <Helmet>
                 <title>YomiYasu - Login</title>
             </Helmet>
-            <div className="bg-[#2D2D2D] w-11/12 md:w-2/3 lg:w-1/2 xl:w-1/3 rounded-xl text-white flex flex-col items-center py-8">
+            <div className="dark:bg-[#2D2D2D] bg-white w-11/12 md:w-2/3 lg:w-1/2 xl:w-1/3 rounded-xl dark:text-white flex flex-col items-center py-8">
                 <h1>Inicio de Sesión</h1>
                 <Divider className="w-3/4 pt-2"/>
                 <div className="border-4 border-primary border-solid rounded-full p-2 my-4">

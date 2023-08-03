@@ -59,7 +59,7 @@ export function SearchAutocomplete():React.ReactElement {
             )}
             renderInput={(params) => (
                 <div className="flex items-center gap-4">
-                    <Search className="text-white"/>
+                    <Search className="dark:text-white"/>
                     <TextField {...params} placeholder="Buscar" variant="standard"
                         InputProps={{...params.InputProps, disableUnderline:true}}
                         value={searchQuery}

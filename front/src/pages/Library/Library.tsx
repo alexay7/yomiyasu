@@ -107,11 +107,11 @@ function Library():React.ReactElement {
     }, [refetchAlphabet, refetchSeries, reloaded, searchParams]);
 
     return (
-        <div className="bg-[#121212] overflow-x-hidden pb-4">
+        <div className="dark:bg-[#121212] overflow-x-hidden pb-4">
             <Helmet>
                 <title>YomiYasu - Biblioteca</title>
             </Helmet>
-            <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
+            <div className="fixed z-20 w-fill dark:bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4">
                     <Tooltip title="Volver atrás">
                         <IconButton onClick={()=>goBack(navigate)}>
@@ -129,13 +129,13 @@ function Library():React.ReactElement {
             {/* Elegir alfabeto */}
             <div className="flex w-full justify-center gap-1 flex-wrap pt-16">
                 {alphabet?.map((letter)=>{
-                    let textColor = "text-white";
+                    let textColor = "dark:text-white text-black";
                     let disabled = false;
 
                     if (letter.group.toUpperCase() === selectedLetter) {
                         textColor = "text-primary";
                     } else if (letter.count === 0) {
-                        textColor = "text-gray-700";
+                        textColor = "dark:text-gray-700 text-gray-300";
                         disabled = true;
                     }
 

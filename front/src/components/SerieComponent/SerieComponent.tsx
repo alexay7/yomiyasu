@@ -53,14 +53,14 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 </Fade>
             </div>
 
-            <div className="bg-[#1E1E1E] text-white flex flex-col px-2 pt-3 pb-1 rounded-b">
+            <div className="dark:bg-[#1E1E1E] dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
                 <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12" onClick={()=>{
                     window.localStorage.setItem("origin", window.location.pathname);
                 }}
                 >{serieData.visibleName}
                 </a>
                 <div className="flex items-center justify-between">
-                    <p className="text-gray-300 text-sm lg:text-xs">{serieData.bookCount} libros</p>
+                    <p className="dark:text-gray-300 text-sm lg:text-xs">{serieData.bookCount} libros</p>
                     <SerieSettings serieData={serieData}/>
                 </div>
             </div>

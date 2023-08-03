@@ -78,11 +78,11 @@ function Serie():React.ReactElement {
     }
 
     return (
-        <div className="bg-[#121212] overflow-x-hidden pb-4">
+        <div className="dark:bg-[#121212] overflow-x-hidden pb-4">
             <Helmet>
                 <title>{`YomiYasu - ${serieData?.visibleName ? serieData?.visibleName : "serie"}`}</title>
             </Helmet>
-            <div className="fixed z-20 w-fill bg-[#212121] py-1 flex items-center justify-between h-12">
+            <div className="fixed z-20 w-fill dark:bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4 w-5/6 overflow-hidden">
                     <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>
@@ -90,7 +90,7 @@ function Serie():React.ReactElement {
                     {serieData && (
                         <div className="flex gap-4 items-center w-full">
                             <SerieSettings serieData={serieData}/>
-                            <p className="text-white text-2xl max-w-[50%] overflow-hidden text-ellipsis whitespace-nowrap">{serieData.visibleName}</p>
+                            <p className="dark:text-white text-2xl max-w-[50%] overflow-hidden text-ellipsis whitespace-nowrap">{serieData.visibleName}</p>
                             <p className="text-white px-3 py-1 bg-[#555555] rounded-md font-semibold">{serieData.bookCount}</p>
                         </div>
                     )}
@@ -137,7 +137,7 @@ function Serie():React.ReactElement {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex sm:w-4/6 flex-col text-white">
+                            <div className="flex sm:w-4/6 flex-col dark:text-white">
                                 <p className="text-3xl">{serieData.visibleName}</p>
                                 {serieData.status && (
                                     <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>

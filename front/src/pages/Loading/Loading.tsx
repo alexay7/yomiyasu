@@ -4,7 +4,7 @@ import {Helmet} from "react-helmet";
 
 export function Loading():React.ReactElement {
     return (
-        <div className="h-screen bg-[#121212] flex justify-center items-center">
+        <div className="h-screen dark:bg-[#121212] flex justify-center items-center">
             <Helmet>
                 <title>YomiYasu - Cargando...</title>
             </Helmet>

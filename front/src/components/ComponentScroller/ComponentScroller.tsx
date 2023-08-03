@@ -70,13 +70,13 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
                 </div>
             </div>
             {type === "books" ? (
-                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar">
+                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4">
                     {components?.map((book)=>(
                         <BookComponent key={book._id} bookData={book as BookWithProgress}/>
                     ))}
                 </ul>
             ) : (
-                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar">
+                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4">
                     {components?.map((serie)=>(
                         <SerieComponent key={serie._id} serieData={serie as SerieWithProgress}/>
                     ))}

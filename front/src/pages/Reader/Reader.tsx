@@ -611,7 +611,7 @@ function Reader():React.ReactElement {
             {bookData && (
                 <Fragment>
                     {showToolBar && (
-                        <div className="bg-[#272727] w-full h-[5vh] text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
+                        <div className="dark:bg-[#272727] bg-white w-full h-[5vh] dark:text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
                             <div className="w-1/2 flex items-center gap-2 px-2">
                                 <Tooltip title="Volver atrás">
                                     <IconButton onClick={async()=>{
@@ -651,7 +651,7 @@ function Reader():React.ReactElement {
                         onLoad={injectCustomScript}
                     />
                     {showToolBar && (
-                        <div className="bg-[#272727] h-[5vh] w-full text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
+                        <div className="dark:bg-[#272727] bg-white h-[5vh] w-full dark:text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                             <div className="absolute -top-6 right-1 text-white text-sm">
                                 {bookData.pageChars && (
                                     <p><span className="text-xs">Caracteres leídos:</span> {bookData.pageChars[currentPage - 1]} / {bookData.characters}</p>

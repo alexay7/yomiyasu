@@ -116,12 +116,12 @@ function History():React.ReactElement {
     ];
 
     return (
-        <div className="bg-[#121212] overflow-x-hidden p-4 pb-4">
+        <div className="dark:bg-[#121212] overflow-x-hidden p-4 pb-4">
             <Helmet>
                 <title>YomiYasu - Historial</title>
             </Helmet>
-            <h1 className="text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
-            <div className="bg-[#1E1E1E] mx-4 flex justify-center shadow-lg shadow-[#1E1E1E]">
+            <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
+            <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500">
                 <DataGrid rows={progressData} columns={columns} slots={{toolbar:GridToolbar}}/>
             </div>
         </div>

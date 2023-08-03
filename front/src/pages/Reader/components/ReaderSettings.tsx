@@ -134,28 +134,28 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
     return (
         <>
             <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
-                <div className="bg-black w-full h-screen fixed top-0 left-0 z-10 opacity-40"
+                <div className="dark:bg-black w-full h-screen fixed top-0 left-0 z-10 opacity-40"
                     onClick={closeSettings}
                 />
             </CSSTransition>
             <CSSTransition in={showMenu} timeout={300} classNames="readerconf" unmountOnExit>
                 <div className="w-full lg:w-1/2 max-w-screen-sm absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
-                    <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl text-white">
+                    <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl dark:text-white">
                         <IconButton onClick={closeSettings}>
                             <Close/>
                         </IconButton>
                         <p className="text-lg">Ajustes del Lector</p>
                     </div>
-                    <div className="flex flex-col bg-[#1E1E1E] py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
+                    <div className="flex flex-col dark:bg-[#1E1E1E] bg-white py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de YomiYasu</p>
                         <div className="ml-2 flex flex-col gap-2">
-                            <SettingsItem className="text-white" label="Activar diccionario nativo" childrenId="dict">
+                            <SettingsItem className="dark:text-white" label="Activar diccionario nativo" childrenId="dict">
                                 <div className="flex justify-end">
                                     <Checkbox id="dict" onClick={setDictionary} checked={readerSettings.nativeDictionary}/>
                                 </div>
                             </SettingsItem>
                             {readerSettings.nativeDictionary && (
-                                <SettingsItem className="text-white" label="Versión de diccionario" childrenId="dictver">
+                                <SettingsItem className="dark:text-white" label="Versión de diccionario" childrenId="dictver">
                                     <div className="flex justify-end">
                                         <Select className="w-full" variant="standard" id="dictver" value={readerSettings.dictionaryVersion}
                                             onChange={(e)=>setDictVersion(e)}
@@ -169,7 +169,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                         </div>
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
-                            <SettingsItem className="text-white" label="Tipo de fuente" childrenId="font">
+                            <SettingsItem className="dark:text-white" label="Tipo de fuente" childrenId="font">
                                 <div className="flex justify-end">
                                     <Select className="w-full" variant="standard" id="font" value={readerSettings.fontFamily} onChange={(e)=>setFont(e)}>
                                         <MenuItem value="Zen Antique">Zen Antique</MenuItem>
@@ -178,17 +178,17 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     </Select>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Leer de derecha a izquierda" childrenId="r2l">
+                            <SettingsItem className="dark:text-white" label="Leer de derecha a izquierda" childrenId="r2l">
                                 <div className="flex justify-end">
                                     <Checkbox id="r2l" onClick={setRightToLeft} checked={readerSettings.r2l}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Ctrl para moverse por el libro (PC)" childrenId="ctrl">
+                            <SettingsItem className="dark:text-white" label="Ctrl para moverse por el libro (PC)" childrenId="ctrl">
                                 <div className="flex justify-end">
                                     <Checkbox id="ctrl" onClick={setCtrlToPan} checked={readerSettings.ctrlToPan}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Zoom al pasar de página" childrenId="zoom">
+                            <SettingsItem className="dark:text-white" label="Zoom al pasar de página" childrenId="zoom">
                                 <div className="flex justify-end">
                                     <Select className="w-full" variant="standard" id="zoom" value={readerSettings.defaultZoomMode} onChange={(e)=>setZoom(e)}>
                                         <MenuItem value="fit to screen">Ajustar verticalmente</MenuItem>
@@ -198,27 +198,27 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     </Select>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Mostrar OCR" childrenId="ocr">
+                            <SettingsItem className="dark:text-white" label="Mostrar OCR" childrenId="ocr">
                                 <div className="flex justify-end">
                                     <Checkbox id="ocr" onClick={setOcr} checked={readerSettings.displayOCR}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Mostrar doble página" childrenId="doublepage">
+                            <SettingsItem className="dark:text-white" label="Mostrar doble página" childrenId="doublepage">
                                 <div className="flex justify-end">
                                     <Checkbox id="doublepage" onClick={setDoublePage} checked={!readerSettings.singlePageView}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Primera página es portada" childrenId="coverpage">
+                            <SettingsItem className="dark:text-white" label="Primera página es portada" childrenId="coverpage">
                                 <div className="flex justify-end">
                                     <Checkbox id="coverpage" onClick={setCoverPage} checked={readerSettings.hasCover}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Mostrar bordes en cuadros de texto" childrenId="borders">
+                            <SettingsItem className="dark:text-white" label="Mostrar bordes en cuadros de texto" childrenId="borders">
                                 <div className="flex justify-end">
                                     <Checkbox id="borders" onClick={setBorders} checked={readerSettings.textBoxBorders}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Tamaño del texto" childrenId="fontsize">
+                            <SettingsItem className="dark:text-white" label="Tamaño del texto" childrenId="fontsize">
                                 <div className="flex justify-end">
                                     <Select className="w-full" variant="standard" id="zoom" value={readerSettings.fontSize} onChange={(e)=>setFontSize(e)}>
                                         <MenuItem value="auto">Auto</MenuItem>
@@ -228,12 +228,12 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     </Select>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Mantener texto al hacer click" childrenId="togglebox">
+                            <SettingsItem className="dark:text-white" label="Mantener texto al hacer click" childrenId="togglebox">
                                 <div className="flex justify-end">
                                     <Checkbox id="togglebox" onClick={setToggleBox} checked={readerSettings.toggleOCRTextBoxes}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="text-white" label="Activar Zoom&Pan" childrenId="zoompan">
+                            <SettingsItem className="dark:text-white" label="Activar Zoom&Pan" childrenId="zoompan">
                                 <div className="flex justify-end">
                                     <Checkbox id="zoompan" onClick={setZoomPan} checked={readerSettings.panAndZoom}/>
                                 </div>

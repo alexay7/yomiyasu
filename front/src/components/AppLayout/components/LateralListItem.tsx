@@ -16,15 +16,15 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
     const navigate = useNavigate();
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
-    let backColor = "hover:bg-[#444444]";
+    let backColor = "dark:hover:bg-[#444444] hover:bg-gray-200";
 
     let active = false;
     if (window.location.pathname === link) active = true;
 
-    if (active) backColor = "bg-[#666666] hover:bg-[#666666]";
+    if (active) backColor = "dark:bg-[#666666] dark:hover:bg-[#666666] bg-gray-200 hover:bg-gray-200";
 
     return (
-        <li className={`${backColor} list-none w-full flex items-center text-white justify-around py-4 duration-100 cursor-pointer ${className}`}
+        <li className={`${backColor} list-none w-full flex items-center text-gray-800 dark:text-white justify-around py-4 duration-100 cursor-pointer ${className}`}
             onClick={()=>{
                 if (link && window.location.pathname === link) window.location.href = link;
                 if (link && toggleMenu) {

@@ -11,11 +11,11 @@ const RecentSeriesScroller = loadable(() => import("./components/RecentSeriesScr
 
 function Home():React.ReactElement {
     return (
-        <div className="bg-[#121212] overflow-x-hidden">
+        <div className="dark:bg-[#121212] bg-white overflow-x-hidden">
             <Helmet>
                 <title>YomiYasu</title>
             </Helmet>
-            <div className="text-white px-8 py-4 flex flex-col gap-4">
+            <div className="dark:text-white px-8 py-4 flex flex-col gap-4">
                 <ProgressScroller/>
                 <TableroScroller/>
                 <ReadLaterScroller/>

@@ -4,7 +4,6 @@ import "./index.css";
 import {App} from "./App";
 import {AuthProvider} from "./contexts/AuthContext";
 import {BrowserRouter} from "react-router-dom";
-import {ThemeProvider, createTheme} from "@mui/material/styles";
 import "react-toastify/dist/ReactToastify.css";
 import {ToastContainer} from "react-toastify";
 import {QueryClient, QueryClientProvider} from "react-query";
@@ -17,15 +16,6 @@ const root = createRoot(
     document.getElementById("root") as HTMLElement
 );
 
-const darkTheme = createTheme({
-    palette: {
-        mode: "dark",
-        primary:{
-            main:"#24B14D"
-        }
-    }
-});
-
 const queryClient = new QueryClient();
 
 root.render(
@@ -33,16 +23,14 @@ root.render(
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <QueryClientProvider client={queryClient}>
                 <GlobalProvider>
-                    <ThemeProvider theme={darkTheme}>
-                        <AuthProvider>
-                            <SettingsProvider>
-                                <BrowserRouter>
-                                    <ToastContainer/>
-                                    <App/>
-                                </BrowserRouter>
-                            </SettingsProvider>
-                        </AuthProvider>
-                    </ThemeProvider>
+                    <AuthProvider>
+                        <SettingsProvider>
+                            <BrowserRouter>
+                                <ToastContainer/>
+                                <App/>
+                            </BrowserRouter>
+                        </SettingsProvider>
+                    </AuthProvider>
                 </GlobalProvider>
             </QueryClientProvider>
         </LocalizationProvider>
