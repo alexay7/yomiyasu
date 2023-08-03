@@ -124,6 +124,13 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         });
     }
 
+    function setDictVersion(e:SelectChangeEvent):void {
+        setReaderSettings((prev)=>{
+            return ({...prev, dictionaryVersion:e.target.value as "word" | "sentence"});
+        });
+        window.location.reload();
+    }
+
     return (
         <>
             <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
@@ -147,6 +154,18 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     <Checkbox id="dict" onClick={setDictionary} checked={readerSettings.nativeDictionary}/>
                                 </div>
                             </SettingsItem>
+                            {readerSettings.nativeDictionary && (
+                                <SettingsItem className="text-white" label="Versión de diccionario" childrenId="dictver">
+                                    <div className="flex justify-end">
+                                        <Select className="w-full" variant="standard" id="dictver" value={readerSettings.dictionaryVersion}
+                                            onChange={(e)=>setDictVersion(e)}
+                                        >
+                                            <MenuItem value="word">Click para buscar (más precisión, busca palabra)</MenuItem>
+                                            <MenuItem value="sentence">Seleccionar para buscar (menos precisión, busca frase)</MenuItem>
+                                        </Select>
+                                    </div>
+                                </SettingsItem>
+                            )}
                         </div>
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">

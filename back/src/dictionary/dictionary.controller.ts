@@ -5,8 +5,13 @@ import {DictionaryService} from "./dictionary.service";
 export class DictionaryController {
     constructor(private readonly dictionaryService: DictionaryService) {}
 
-    @Get(":word")
+    @Get("v1/:word")
     searchWord(@Param("word") word:string) {
-        return this.dictionaryService.searchByKanji(word);
+        return this.dictionaryService.searchByWord(word);
+    }
+
+    @Get("v2/:word")
+    searchSentence(@Param("word") word:string) {
+        return this.dictionaryService.searchBySelection(word);
     }
 }

@@ -1,10 +1,11 @@
-import {tokenize} from "@enjoyjs/node-mecab";
 import {BadRequestException, Injectable, InternalServerErrorException} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
 import {kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
 import levelup from "levelup";
 import {join} from "path";
 import {WordWithDisplay} from "./interfaces/word";
+import deinflectRules from "../utils/Trie";
+import {tokenize} from "@enjoyjs/node-mecab";
 
 
 
@@ -41,7 +42,7 @@ export class DictionaryService {
 
       const wholeResult:WordWithDisplay = {display:word, words:[]};
 
-      wholeResult.words = await readingBeginning(db, word, 1);
+      wholeResult.words = await readingBeginning(db, word, 3);
 
       if (wholeResult.words.length === 0) {
           wholeResult.words = await kanjiBeginning(db, word, 3);
@@ -50,7 +51,35 @@ export class DictionaryService {
       return wholeResult;
   }
 
-  async searchByKanji(word:string) {
+  convertKana(text:string) {
+  
+      let result = "";
+      let i = 0;
+      while (i < text.length) {
+          let node = deinflectRules.root;
+          let j = i;
+          let replacement = null;
+  
+          while (j < text.length && node.children[text[j]]) {
+              node = node.children[text[j]];
+              if (node.isEndOfWord) {
+                  replacement = node.value;
+                  i = j + 1;
+              }
+              j++;
+          }
+  
+          if (replacement) {
+              result += replacement;
+          } else {
+              result += text[i];
+              i++;
+          }
+      }
+      return result.replaceAll("るる", "る");
+  }
+
+  async searchBySelection(word:string) {
       if (word.length > 30) {
           throw new BadRequestException("Texto demasiado largo");
       }
@@ -70,7 +99,7 @@ export class DictionaryService {
       while (auxWord.length > 0) {
           for (let index = auxWord.length; index >= 0; index--) {
               const text = auxWord.substring(0, index);
-          
+        
               let result = await this.getWordMeaning(text);
 
               if (word.length > 2 && word.length < 6) {
@@ -116,5 +145,50 @@ export class DictionaryService {
           }
       }
       return words;
+  }
+
+
+  async searchByWord(queryWord:string) {
+      const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
+
+      console.log(queryWord);
+      let word = queryWord.replace(regex, "");
+      if (queryWord.length > 10) {
+          word = queryWord.substring(0, 15);
+      }
+
+      let auxWord = word;
+      for (let index = word.length; index >= 0; index--) {
+          const def = await this.getWordMeaning(auxWord);
+
+          if ( def && def?.words.length > 0 && def.words.some(x=>{
+              if (x.kana.some(y=>y.text === auxWord)) return true;
+              if (x.kanji.some(y=>y.text === auxWord)) return true;
+              return false;
+          })) {
+              return [def];
+          }
+
+          const parsed = this.convertKana(auxWord);
+          const parsedDef = await this.getWordMeaning(parsed);
+
+          if ( parsedDef && parsedDef?.words.length > 0) {
+              return [parsedDef];
+          }
+
+          auxWord = word.substring(0, index); 
+      }
+
+      const parsedWord = this.convertKana(word);
+
+      auxWord = parsedWord;
+      for (let index = parsedWord.length; index >= 0; index--) {
+          const def = await this.getWordMeaning(auxWord);
+
+          if ( def && def?.words.length > 0) {
+              return [def];
+          }
+          auxWord = parsedWord.substring(0, index); 
+      }
   }
 }

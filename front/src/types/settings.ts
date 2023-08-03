@@ -11,6 +11,7 @@ export interface ReaderConfig {
     toggleOCRTextBoxes:boolean; // mantiene el texto de un cuadro al hacer click
     panAndZoom:boolean; // activa el zoom nativo de mokuro
     nativeDictionary:boolean;
+    dictionaryVersion:"word" | "sentence"
 }
 
 export interface FullReaderConfig extends ReaderConfig {

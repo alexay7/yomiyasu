@@ -7,7 +7,7 @@ import {useSettings} from "../../../contexts/SettingsContext";
 import {useMediaQuery} from "react-responsive";
 
 interface PageTextProps {
-    lines:string[][][];
+    lines:string[][][][];
     open:boolean;
     setOpen:(v:React.SetStateAction<boolean>)=>void;
 }
@@ -126,7 +126,12 @@ export function PageText(props:PageTextProps):React.ReactElement {
                                             <li key={`${i}-${j}`}>
                                                 <ul className="flex flex-col gap-2">
                                                     {koma.map((text, k)=>(
-                                                        <li key={`${i}-${j}-${k}`}>・{text}</li>
+                                                        <li key={`${i}-${j}-${k}`} className="flex gap-2">
+                                                            ・
+                                                            {text.map((p)=>(
+                                                                <p key={p}>{p}</p>
+                                                            ))}
+                                                        </li>
                                                     ))}
                                                 </ul>
                                             </li>

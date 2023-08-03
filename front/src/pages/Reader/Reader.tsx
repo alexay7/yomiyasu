@@ -24,7 +24,7 @@ export function Reader():React.ReactElement {
     const [showToolBar, setShowToolbar] = useState(true);
     const [doublePages, setDoublePages] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    const [pageText, setPageText] = useState<string[][][]>([]);
+    const [pageText, setPageText] = useState<string[][][][]>([]);
     const [timer, setTimer] = useState(0);
     const [timerOn, setTimerOn] = useState(false);
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
@@ -165,7 +165,7 @@ export function Reader():React.ReactElement {
                     break;
                 }
                 case "text":{
-                    const {value} = e.data as {value:string[][][]};
+                    const {value} = e.data as {value:string[][][][]};
                     setPageText(value);
                     break;
                 }
@@ -177,23 +177,48 @@ export function Reader():React.ReactElement {
             }
         }
 
-        function handleMouseUp():void {
-            const selection = window.getSelection();
-            if (selection && selection.toString() && readerSettings.nativeDictionary) {
-                getselectedText(selection.toString());
-                selection.removeAllRanges();
+        function handleMouseUp(event:MouseEvent):void {
+            if (readerSettings.dictionaryVersion === "word") {
+                if (!event.target) return;
+                const target = event.target as HTMLElement;
+                const text = target.textContent;
+                if (!text || target.tagName !== "P") return;
+                const clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
+                if (clickedPosition !== undefined) {
+                    const extracted = text.slice(clickedPosition);
+                    setSearchWord(extracted);
+                }
+            } else {
+                const selection = window.getSelection();
+                if (selection && selection.toString() && readerSettings.nativeDictionary) {
+                    getselectedText(selection.toString());
+                    selection.removeAllRanges();
+                }
             }
         }
 
         function handleTouchUp(e:TouchEvent):void {
-            e.stopImmediatePropagation();
-            const selection = window.getSelection();
-            if (selection && selection.toString()) {
+            if (readerSettings.dictionaryVersion === "word") {
+                if (!e.target) return;
+                const target = e.target as HTMLElement;
+                const text = target.textContent;
+                if (!text || target.tagName !== "P") return;
+                const clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
+                if (clickedPosition) {
+                    const extracted = text.slice(clickedPosition);
+                    console.log(extracted);
+                    setSearchWord(extracted);
+                }
+            } else {
+                e.stopImmediatePropagation();
+                const selection = window.getSelection();
+                if (selection && selection.toString()) {
                 // Dar tiempo a quitar el dedo
-                setTimeout(()=>{
-                    getselectedText(selection.toString());
-                    selection.removeAllRanges();
-                }, 200);
+                    setTimeout(()=>{
+                        getselectedText(selection.toString());
+                        selection.removeAllRanges();
+                    }, 200);
+                }
             }
         }
 
@@ -223,7 +248,11 @@ export function Reader():React.ReactElement {
         addEventListener("message", handleNewMessage);
 
         // Detectar clicks en pc
-        addEventListener("mouseup", handleMouseUp);
+        if (readerSettings.dictionaryVersion === "word") {
+            addEventListener("click", handleMouseUp);
+        } else {
+            addEventListener("mouseup", handleMouseUp);
+        }
 
         // Detectar clicks en móviles
         addEventListener("touchend", handleTouchUp);
@@ -236,7 +265,11 @@ export function Reader():React.ReactElement {
 
         return ()=>{
             removeEventListener("message", handleNewMessage);
-            removeEventListener("mouseup", handleMouseUp);
+            if (readerSettings.dictionaryVersion === "word") {
+                removeEventListener("click", handleMouseUp);
+            } else {
+                removeEventListener("mouseup", handleMouseUp);
+            }
             removeEventListener("touchend", handleTouchUp);
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
@@ -381,14 +414,25 @@ export function Reader():React.ReactElement {
                     e.stopImmediatePropagation();
                 });
 
+                ${readerSettings.dictionaryVersion === "word" ?
+        `
+                function sendClickedWord(e){
+                    if (!event.target) return;
+                    const target = event.target;
+                    const text = target.textContent;
+                    if (!text || target.tagName !== "P") return;
+                    let clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
+                    const extracted = text.slice(clickedPosition);
+                    window.parent.postMessage({action:"selection",value:extracted},"*")
+                }
+
+                document.body.addEventListener("click",sendClickedWord)
+                ` : `
                 document.body.addEventListener("click",(e)=>{
                     if(window.getSelection().toString()){
                         window.parent.postMessage({action:"selection",value:window.getSelection().toString()},"*")
                     }
                 })
-
-                // Desactiva el menú de mokuro si así lo pone en ajustes
-                ${readerSettings.panAndZoom ? "" : "pz.pause();zoomEnabled=false;"}
 
                 function addClickHandlersToParagraphs() {
                     const paragraphs = document.querySelectorAll('p');
@@ -404,7 +448,11 @@ export function Reader():React.ReactElement {
                     });
                 }
         
-                addClickHandlersToParagraphs();
+                addClickHandlersToParagraphs();                
+                `}
+
+                // Desactiva el menú de mokuro si así lo pone en ajustes
+                ${readerSettings.panAndZoom ? "" : "pz.pause();zoomEnabled=false;"}
 
                 // Oculta el menú de mokuro
                 document.getElementById('topMenu').style.display="none";

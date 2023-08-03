@@ -53,7 +53,8 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
         fontSize:"auto",
         toggleOCRTextBoxes:true,
         panAndZoom:!isTabletOrMobile, // Si el usuario está usando móvil es más cómodo no usar el zoom
-        nativeDictionary:true
+        nativeDictionary:true,
+        dictionaryVersion:"word"
     };
 
     const rawUserSettings = window.localStorage.getItem("reader");
@@ -65,6 +66,10 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
         // Adjustments for 2.0
         if (userSettings.nativeDictionary === undefined) {
             userSettings.nativeDictionary = true;
+        }
+
+        if (userSettings.dictionaryVersion === undefined) {
+            userSettings.dictionaryVersion = "word";
         }
     }
 

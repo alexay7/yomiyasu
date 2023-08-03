@@ -4,6 +4,7 @@ import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {DicionaryResult} from "../../../types/dictionary";
 import {toast} from "react-toastify";
+import {useSettings} from "../../../contexts/SettingsContext";
 
 interface DictionaryProps {
     searchWord:string;
@@ -12,6 +13,7 @@ interface DictionaryProps {
 
 export function Dictionary(props:DictionaryProps):React.ReactElement {
     const {searchWord, setSearchWord} = props;
+    const {readerSettings} = useSettings();
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [canClose, setCanClose] = useState(false);
 
@@ -19,7 +21,7 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
         if (searchWord === "" || searchWord === "\n") return undefined;
 
         try {
-            const res = await api.get<DicionaryResult[]>(`dictionary/${searchWord}`);
+            const res = await api.get<DicionaryResult[]>(`dictionary/${readerSettings.dictionaryVersion === "word" ? "v1" : "v2"}/${searchWord}`);
             return res;
         } catch {
             toast.error("El máximo de texto seleccionable es de 30 caracteres");
