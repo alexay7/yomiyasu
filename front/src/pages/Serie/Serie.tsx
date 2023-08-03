@@ -74,7 +74,7 @@ export function Serie():React.ReactElement {
             characters += book.characters || 0;
         });
 
-        return `${characters} caracteres totales (${characters / serieBooks?.length} chars/libro)`;
+        return `${characters} caracteres totales (${Math.floor(characters / serieBooks?.length)} caract./libro)`;
     }
 
     return (
