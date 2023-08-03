@@ -59,9 +59,26 @@ export class SeriesController {
             return null;
         });
 
-        const seriesWithProgress = await Promise.all(promises);
+        let seriesWithProgress = await Promise.all(promises);
 
-        return {data:seriesWithProgress.filter((item) => item !== null), pages:foundSeries.pages};
+        if (seriesWithProgress.length > 0 && query.readprogress) {
+            switch (query.readprogress) {
+            case "completed": {
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === 0);
+                break;
+            }
+            case "reading":{
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks !== x?.bookCount && x?.unreadBooks && x.unreadBooks > 0);
+                break;
+            }
+            case "unread":{
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === x?.bookCount);
+                break;
+            }
+            }
+        }
+
+        return {data:seriesWithProgress.filter((item) => item !== null).slice(0, query.limit), pages:foundSeries.pages};
     }
 
     @Patch(":id")

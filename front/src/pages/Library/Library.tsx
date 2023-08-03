@@ -15,19 +15,21 @@ import {Helmet} from "react-helmet";
 
 export function Library():React.ReactElement {
     const [searchParams, setSearchParams] = useSearchParams();
+    const genre = searchParams.get("genre");
+    const author = searchParams.get("author");
+    const sortby = searchParams.get("sortBy");
+    const min = searchParams.get("min");
+    const max = searchParams.get("max");
+    const readprogress = searchParams.get("readprogress");
+    const page = searchParams.get("page");
     const {reloaded} = useGlobal();
     const {userData} = useAuth();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(parseInt(page || "1"));
 
     const navigate = useNavigate();
 
     const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter, currentPage], async()=>{
-        const genre = searchParams.get("genre");
-        const author = searchParams.get("author");
-        const sortby = searchParams.get("sortBy");
-        const min = searchParams.get("min");
-        const max = searchParams.get("max");
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
@@ -40,6 +42,10 @@ export function Library():React.ReactElement {
 
         if (genre) {
             link += `genre=${genre}&`;
+        }
+
+        if (readprogress) {
+            link += `readprogress=${readprogress}&`;
         }
 
         if (author) {
@@ -60,22 +66,32 @@ export function Library():React.ReactElement {
             link += `max=${max}&`;
         }
 
-        link += `page=${currentPage}&limit=25`;
+        link += `page=${page || "1"}&limit=25`;
 
         return api.get<SeriesFilter>(link);
     }, {refetchOnWindowFocus:false});
 
     const {data:alphabet, refetch:refetchAlphabet} = useQuery("alphabet", async()=>{
-        const genre = searchParams.get("genre");
-        const author = searchParams.get("author");
         let link = "series/alphabet?";
 
         if (genre) {
             link += `genre=${genre}&`;
         }
 
+        if (status) {
+            link += `status=${status}&`;
+        }
+
         if (author) {
             link += `author=${author}&`;
+        }
+
+        if (min) {
+            link += `min=${min}&`;
+        }
+
+        if (max) {
+            link += `max=${max}&`;
         }
 
         return api.get<Alphabet[]>(link);
@@ -133,7 +149,13 @@ export function Library():React.ReactElement {
 
             {series.pages > 1 && (
                 <div className="flex justify-center py-4">
-                    <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={series.pages}/>
+                    <Pagination onChange={(e, p)=>{
+                        setCurrentPage(p);
+                        setSearchParams((prev)=>{
+                            return {...prev, page:p};
+                        });
+                    }} page={currentPage} color="primary" count={series.pages}
+                    />
                 </div>
             )}
 
@@ -145,7 +167,13 @@ export function Library():React.ReactElement {
 
             {series.pages > 1 && (
                 <div className="flex justify-center">
-                    <Pagination onChange={(e, p)=>setCurrentPage(p)} page={currentPage} color="primary" count={(series || {pages:1}).pages}/>
+                    <Pagination onChange={(e, p)=>{
+                        setCurrentPage(p);
+                        setSearchParams((prev)=>{
+                            return {...prev, page:p};
+                        });
+                    }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
+                    />
                 </div>
             )}
         </div>

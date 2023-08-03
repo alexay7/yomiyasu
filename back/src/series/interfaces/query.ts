@@ -11,6 +11,7 @@ export interface SeriesSearch {
     firstLetter?:string;
     min?:string;
     max?:string;
+    readprogress?:"completed" | "reading" | "unread";
 }
 
 export interface UpdateSerie extends UpdateSeriesDto {
