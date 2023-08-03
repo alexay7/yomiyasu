@@ -93,7 +93,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 >{bookData.visibleName}
                 </a>
                 <div className="flex items-center justify-between text-sm">
-                    {renderBookInfo()}
+                    <p className="text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
                     <BookSettings bookData={bookData} insideSerie={insideSerie}/>
                 </div>
             </div>
