@@ -5,7 +5,7 @@ import {Alphabet, SeriesFilter} from "../../types/serie";
 import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
 import {IconButton, Pagination, Tooltip} from "@mui/material";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {ArrowBack} from "@mui/icons-material";
+import {ArrowBack, RestorePage} from "@mui/icons-material";
 import {goBack} from "../../helpers/helpers";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {LibrarySettings} from "./components/LibrarySettings";
@@ -29,7 +29,7 @@ function Library():React.ReactElement {
 
     const navigate = useNavigate();
 
-    const {data:series = {pages:1, data:[]}, refetch:refetchSeries} = useQuery(["seriesData", selectedLetter, currentPage], async()=>{
+    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading} = useQuery(["seriesData", selectedLetter, currentPage], async()=>{
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
@@ -159,11 +159,23 @@ function Library():React.ReactElement {
                 </div>
             )}
 
-            <ul className="flex flex-wrap p-8 py-4 gap-4">
-                {series && series.data.map((serie)=>(
-                    <SerieComponent key={serie._id} serieData={serie}/>
-                ))}
-            </ul>
+            {!isLoading && (
+                <div className="flex w-full items-center justify-center">
+                    {series.data.length > 0 ? (
+                        <ul className="flex flex-wrap p-8 py-4 gap-4">
+                            {series.data.map((serie)=>(
+                                <SerieComponent key={serie._id} serieData={serie}/>
+                            ))}
+                        </ul>
+
+                    ) : (
+                        <div className="flex items-center flex-col py-8 justify-center text-center">
+                            <RestorePage className="w-40 h-40" color="primary"/>
+                            <p className="text-3xl dark:text-white">Esta biblioteca está vacía...</p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {series.pages > 1 && (
                 <div className="flex justify-center">

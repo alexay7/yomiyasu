@@ -92,7 +92,7 @@ export function AppLayout():React.ReactElement {
 
             {/* Contenido */}
             <CSSTransition classNames="maincontent" timeout={300} in={showMenu}>
-                <div className={`h-[calc(100vh-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[256px]"} dark:bg-[#121212]`}>
+                <div className={`h-[calc(100%-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[256px]"} dark:bg-[#121212]`}>
                     <Outlet/>
                 </div>
             </CSSTransition>
