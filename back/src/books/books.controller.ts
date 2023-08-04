@@ -1,4 +1,4 @@
-import {Controller, Get, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException} from "@nestjs/common";
+import {Controller, Get, Inject, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors} from "@nestjs/common";
 import {BooksService} from "./books.service";
 import {Request} from "express";
 import {Types} from "mongoose";
@@ -11,7 +11,8 @@ import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UpdateBookDto} from "./dto/update-book.dto";
 import {getCharacterCount} from "./helpers/helpers";
 import {join} from "path";
-import {CacheTTL} from "@nestjs/cache-manager";
+import {CacheInterceptor, CacheTTL, CACHE_MANAGER} from "@nestjs/cache-manager";
+import {Cache} from "cache-manager";
 
 @Controller("books")
 @ApiTags("Libros")
@@ -20,16 +21,22 @@ export class BooksController {
     constructor(
         private readonly booksService: BooksService,
         private readonly usersService:UsersService,
-        private readonly websocketsGateway:WebsocketsGateway
+        private readonly websocketsGateway:WebsocketsGateway,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
   
     @Get()
     @CacheTTL(60)
     @ApiOkResponse({status:HttpStatus.OK})
-    filterBooks(@Req() req:Request, @Query() query:SearchQuery) {
+    async filterBooks(@Req() req:Request, @Query() query:SearchQuery) {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId: Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
 
         if (!query.serie) {
             if (!query.page || query.page < 1) {
@@ -41,7 +48,11 @@ export class BooksController {
             }
         }
 
-        return this.booksService.filterBooks(userId, query);
+        const response = await this.booksService.filterBooks(userId, query);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
     }
 
     @Patch(":id")
@@ -83,12 +94,14 @@ export class BooksController {
     }
 
     @Get("genresAndArtists")
+    @UseInterceptors(CacheInterceptor)
     @ApiOkResponse({status:HttpStatus.OK})
     async getGenresAndArtists() {
         return this.booksService.getArtistsAndGenres();
     }
 
     @Get(":id")
+    @UseInterceptors(CacheInterceptor)
     @ApiOkResponse({status:HttpStatus.OK})
     async getBook(@Param("id") book:Types.ObjectId) {
         return this.booksService.findById(book);

@@ -11,7 +11,8 @@ import {
     HttpStatus,
     Param,
     Delete,
-    Patch
+    Patch,
+    Inject
 } from "@nestjs/common";
 import {ReadprogressService} from "./readprogress.service";
 import {ProgressDto} from "./dto/create-readprogress.dto";
@@ -26,6 +27,8 @@ import {ReadProgress, ReadProgressStatus} from "./schemas/readprogress.schema";
 import {BooksService} from "../books/books.service";
 import {ParseObjectIdPipe} from "../validation/objectId";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
+import {CACHE_MANAGER} from "@nestjs/cache-manager";
+import {Cache} from "cache-manager";
 
 @Controller("readprogress")
 @ApiTags("Progresos de Lectura")
@@ -34,7 +37,8 @@ export class ReadprogressController {
     constructor(
         private readonly readprogressService: ReadprogressService,
         private readonly readListService: ReadlistService,
-        private readonly booksService:BooksService
+        private readonly booksService:BooksService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
 
     @Post()
@@ -112,7 +116,16 @@ export class ReadprogressController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
-        return this.readprogressService.findUserProgresses(userId);
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.findUserProgresses(userId);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
     }
 
     @Get("tablero")
@@ -121,6 +134,11 @@ export class ReadprogressController {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
 
         const series = await this.readprogressService.getSeriesProgress(userId);
 
@@ -146,7 +164,11 @@ export class ReadprogressController {
 
         const returnBooks = await Promise.all(promises);
 
-        return returnBooks.filter((item) => item !== null);
+        const response = returnBooks.filter((item) => item !== null);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
     }
 
     @Get("reading")
@@ -155,7 +177,16 @@ export class ReadprogressController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
-        return this.readprogressService.getReadingBooks(userId);
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getReadingBooks(userId);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
     }
 
     @Patch("serie/:serieId/pause")

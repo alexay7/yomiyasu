@@ -1,4 +1,4 @@
-import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body} from "@nestjs/common";
+import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body, Inject, UseInterceptors} from "@nestjs/common";
 import {SeriesService} from "./series.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
@@ -12,7 +12,8 @@ import {UpdateSeriesDto} from "./dto/update-series.dto";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UsersService} from "../users/users.service";
 import {ReadlistService} from "../readlist/readlist.service";
-import {CacheTTL} from "@nestjs/cache-manager";
+import {CacheTTL, CACHE_MANAGER, CacheInterceptor} from "@nestjs/cache-manager";
+import {Cache} from "cache-manager";
 
 @Controller("series")
 @UseGuards(JwtAuthGuard)
@@ -23,7 +24,8 @@ export class SeriesController {
         private readonly booksService:BooksService,
         private readonly websocketsGateway:WebsocketsGateway,
         private readonly usersService:UsersService,
-        private readonly readListsService:ReadlistService
+        private readonly readListsService:ReadlistService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
 
     @Get()
@@ -33,6 +35,11 @@ export class SeriesController {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
 
         if (!query.page || query.page < 1) {
             query.page = 1;
@@ -80,7 +87,11 @@ export class SeriesController {
             }
         }
 
-        return {data:seriesWithProgress.filter((item) => item !== null).slice(0, query.limit), pages:foundSeries.pages};
+        const response = {data:seriesWithProgress.filter((item) => item !== null).slice(0, query.limit), pages:foundSeries.pages};
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
     }
 
     @Patch(":id")
@@ -104,12 +115,14 @@ export class SeriesController {
 
     @Get("genresAndArtists")
     @ApiOkResponse({status:HttpStatus.OK})
-    getGenresAndArtists() {
+    @UseInterceptors(CacheInterceptor)
+    async getGenresAndArtists() {
         return this.seriesService.getArtistsAndGenres();
     }
 
     @Get("alphabet")
     @ApiOkResponse({status:HttpStatus.OK})
+    @UseInterceptors(CacheInterceptor)
     async getAlphabetGroups(@Query() query:SeriesSearch) {
         const filledLetters = await this.seriesService.getAlphabetCount(query);
         const alphabet: {
@@ -141,6 +154,11 @@ export class SeriesController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
         const foundSeries = await this.readListsService.getUserReadListSeries(userId);
 
         const promises = foundSeries.map(async(serieElem) => {
@@ -165,7 +183,11 @@ export class SeriesController {
         const seriesWithProgress = await Promise.all(promises);
         
         // Filtramos los valores nulos que se devolvieron en el caso de serieData no exista.
-        return seriesWithProgress.filter((item) => item !== null);
+        const response =  seriesWithProgress.filter((item) => item !== null);
+        
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
     }
 
     @Patch(":id/defaultname")
@@ -192,6 +214,11 @@ export class SeriesController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
         const foundSerie = await this.seriesService.findById(id);
 
         if (!foundSerie) throw new NotFoundException();
@@ -205,6 +232,9 @@ export class SeriesController {
                 readlist,
                 ...serieData
             };
+
+            await this.cacheManager.set(`${userId}-${req.url}`, serieWithProgress);
+
             return serieWithProgress;
         }
     }

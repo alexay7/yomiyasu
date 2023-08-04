@@ -18,9 +18,8 @@ import {ReviewsModule} from "./reviews/reviews.module";
 import {BullModule} from "@nestjs/bull";
 import {ScanWorker} from "./queue/scan-library.job";
 import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
-import {APP_GUARD, APP_INTERCEPTOR} from "@nestjs/core";
+import {APP_GUARD} from "@nestjs/core";
 import {redisStore} from "cache-manager-redis-yet";
-import {MyCacheInterceptor} from "./Cache/cache.interceptor";
 
 @Module({
     imports: [
@@ -64,10 +63,6 @@ import {MyCacheInterceptor} from "./Cache/cache.interceptor";
         {
             provide: APP_GUARD,
             useClass: ThrottlerGuard
-        },
-        {
-            provide: APP_INTERCEPTOR,
-            useClass: MyCacheInterceptor
         }
     ]
 })
