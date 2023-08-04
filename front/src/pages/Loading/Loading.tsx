@@ -10,7 +10,7 @@ export function Loading():React.ReactElement {
             </Helmet>
             <div className="flex flex-col gap-8">
                 <p className="text-6xl text-primary font-bold animate-pulse">YomiYasu</p>
-                <LinearProgress className="w-full"/>
+                <LinearProgress color="primary" className="w-full"/>
             </div>
         </div>
     );

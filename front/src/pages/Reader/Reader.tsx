@@ -683,7 +683,7 @@ function Reader():React.ReactElement {
                     {showToolBar && (
                         <div className="dark:bg-[#272727] bg-white h-[5vh] w-full dark:text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                             {bookData.pageChars && (
-                                <div className="absolute -top-6 right-1 text-white text-sm select-none" onClick={()=>setShowTimeLeft((prev)=>!prev)}>
+                                <div className="absolute -top-6 right-1 text-white text-sm select-none" onClick={()=>setShowTimeLeft((prev)=>!prev)} style={{textShadow:"-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black"}}>
                                     {showTimeLeft ? (
                                         <p><span className="text-xs">Tiempo restante estimado: {getTimeLeft()}</span></p>
                                     ) : (
