@@ -210,7 +210,6 @@ function Reader():React.ReactElement {
                 const clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
                 if (clickedPosition) {
                     const extracted = text.slice(clickedPosition);
-                    console.log(extracted);
                     setSearchWord(extracted);
                 }
             } else {
