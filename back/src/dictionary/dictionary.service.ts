@@ -1,28 +1,71 @@
 import {BadRequestException, Injectable, InternalServerErrorException} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
-import {kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
+import {Word, kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
 import levelup from "levelup";
 import {join} from "path";
 import {WordWithDisplay} from "./interfaces/word";
 import deinflectRules from "../utils/Trie";
+import {promises as fs} from "fs";
 
 
+interface FreqWord extends Word {
+    frequency?:string;
+}
+
+export interface FreqDisplay {
+    surface?:string,
+    words:FreqWord[]
+}
 
 @Injectable()
 export class DictionaryService {
     private readonly dbPromise: Promise<levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>>>;
   private db: levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>> | null = null; // Once resolved, db will hold the actual object.
   private loadingDb: boolean;
+  private freqDict:Record<string, {reading:string, freq:string}[]>;
 
   constructor() {
       this.dbPromise = this.setupDB();
   }
 
+  returnWords(words:WordWithDisplay[]) {
+      const newWords:FreqDisplay[] = [];
+
+      words.forEach((word) => {
+          const newWord:FreqDisplay = word;
+          const newDefs:FreqWord[] = word.words;
+          word.words.forEach((def: FreqWord) => {
+              const name = def.kanji.length > 0 ? def.kanji[0].text : def.kana[0].text;
+              const frequency = this.freqDict[name];
+              if (frequency) {
+                  if (frequency.length === 1) {
+                      def.frequency = frequency[0].freq;
+                  } else if (frequency.length > 1) {
+                      const foundFreq = frequency.find((x) => x.reading === def.kana[0].text);
+                      if (foundFreq) {
+                          def.frequency = foundFreq.freq;
+                      }
+                  }
+              }
+              newDefs.push(def);
+          });
+          newWord.words = newDefs.filter((v, i, a)=>a.findIndex(x=>(x.id === v.id)) === i);
+          newWords.push(newWord);
+      });
+      return newWords;
+  }
+
   private async setupDB(): Promise<levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>>> {
+
       this.loadingDb = true;
       const dictFolder = join(process.cwd(), "..", "dicts");
+
+      const rawdata = await fs.readFile(join(dictFolder, "frequency.json"), "utf-8");
+      this.freqDict = JSON.parse(rawdata);
+
       const jmdictPromise = setupJmdict(join(dictFolder, "jmdict"), join(dictFolder, "jmdict-eng-3.5.0.json"));
       const {db} = await jmdictPromise;
+      console.log("Carga finalizada");
       this.loadingDb = false;
       return db;
   }
@@ -51,7 +94,7 @@ export class DictionaryService {
   }
 
   convertKana(text:string) {
-  
+
       let result = "";
       let i = 0;
       while (i < text.length) {
@@ -86,7 +129,7 @@ export class DictionaryService {
       const prevResult = await this.getWordMeaning(word);
 
       if (prevResult &&  prevResult.words.length > 0) {
-          return [prevResult];
+          return this.returnWords([prevResult]);
       }
 
       const words:WordWithDisplay[] = [];
@@ -130,14 +173,12 @@ export class DictionaryService {
               }
           }
       }
-      return words;
+      return this.returnWords(words);
   }
-
 
   async searchByWord(queryWord:string) {
       const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
 
-      console.log(queryWord);
       let word = queryWord.replace(regex, "");
       if (queryWord.length > 10) {
           word = queryWord.substring(0, 15);
@@ -152,14 +193,14 @@ export class DictionaryService {
               if (x.kanji.some(y=>y.text === auxWord)) return true;
               return false;
           })) {
-              return [def];
+              return this.returnWords([def]);
           }
 
           const parsed = this.convertKana(auxWord);
           const parsedDef = await this.getWordMeaning(parsed);
 
           if ( parsedDef && parsedDef?.words.length > 0) {
-              return [parsedDef];
+              return this.returnWords([parsedDef]);
           }
 
           auxWord = word.substring(0, index); 
@@ -172,7 +213,7 @@ export class DictionaryService {
           const def = await this.getWordMeaning(auxWord);
 
           if ( def && def?.words.length > 0) {
-              return [def];
+              return this.returnWords([def]);
           }
           auxWord = parsedWord.substring(0, index); 
       }

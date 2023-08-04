@@ -5,6 +5,7 @@ export interface DicionaryResult {
 
 interface WordDefinition {
     id:string;
+    frequency?:string;
     kanji:KanjiVer[];
     kana:KanaVer[];
     sense:WordSense[];

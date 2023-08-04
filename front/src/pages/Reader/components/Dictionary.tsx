@@ -6,6 +6,7 @@ import {DicionaryResult} from "../../../types/dictionary";
 import {toast} from "react-toastify";
 import {useSettings} from "../../../contexts/SettingsContext";
 import {ExitToApp} from "@mui/icons-material";
+import {HttpError} from "../../../types/error";
 
 interface DictionaryProps {
     searchWord:string;
@@ -24,7 +25,12 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
         try {
             const res = await api.get<DicionaryResult[]>(`dictionary/${readerSettings.dictionaryVersion === "word" ? "v1" : "v2"}/${searchWord}`);
             return res;
-        } catch {
+        } catch (e) {
+            const error = e as HttpError;
+            if (error.status === 500) {
+                toast.error("El diccionario todavía no está listo.");
+                return;
+            }
             toast.error("El máximo de texto seleccionable es de 30 caracteres");
             setSearchWord("");
         }
@@ -84,9 +90,9 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
                                                         <ExitToApp/>
                                                     </IconButton>
                                                     {definition.kanji.length > 0 ? (
-                                                        <h2 className="mb-1">{definition.kanji[0].text}</h2>
+                                                        <h2 className="mb-1">{definition.kanji[0].text} <span className="text-xs align-top underline">{definition.frequency ? `(freq: ${definition.frequency})` : ""}</span></h2>
                                                     ) : (
-                                                        <h2 className="mb-1">{definition.kana[0].text}</h2>
+                                                        <h2 className="mb-1">{definition.kana[0].text} <span className="text-xs align-top underline">{definition.frequency ? `(freq: ${definition.frequency})` : ""}</span></h2>
                                                     )}
                                                     {definition.kanji.length > 1 && (
                                                         <li className="flex gap-2">
