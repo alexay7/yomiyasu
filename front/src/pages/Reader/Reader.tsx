@@ -596,6 +596,17 @@ function Reader():React.ReactElement {
         setOpenTextSidebar((prev)=>!prev);
     }
 
+    useEffect(() => {
+        const timerInterval = setInterval(()=>{
+            if (timerOn) {
+                setTimer((prev)=>{
+                    return (prev + 1);
+                });
+            }
+        }, 1000);
+        return () => clearInterval(timerInterval);
+    }, [timerOn, setTimer]);
+
     return (
         <div className="text-black relative overflow-hidden h-screen flex flex-col">
             <Helmet>

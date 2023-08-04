@@ -1,6 +1,6 @@
 import {Timer, TimerOff} from "@mui/icons-material";
 import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 
 interface StopWatchMenuProps {
@@ -13,17 +13,6 @@ interface StopWatchMenuProps {
 export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
     const {timer, setTimer, timerOn, setTimerOn} = props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    useEffect(() => {
-        const timerInterval = setInterval(()=>{
-            if (timerOn) {
-                setTimer((prev)=>{
-                    return (prev + 1);
-                });
-            }
-        }, 1000);
-        return () => clearInterval(timerInterval);
-    }, [timerOn, setTimer]);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
