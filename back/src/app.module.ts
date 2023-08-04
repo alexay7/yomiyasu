@@ -26,7 +26,7 @@ import {APP_GUARD} from "@nestjs/core";
         CacheModule.register({isGlobal:true}),
         BullModule.forRoot({
             redis: {
-                host: "127.0.0.1",
+                host: "cache",
                 port: 6379
             }
         }),
