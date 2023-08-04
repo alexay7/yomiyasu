@@ -68,7 +68,7 @@ export class BooksService {
                   then: "$lastProgress.status",
                   else: "unread"
               }}
-          }).project({progress:0});
+          }).project({progress:0}).project({pageChars:0});
 
       // Filtrado por estado
       if (query.status) aggregate.match({"status":query.status});

@@ -19,16 +19,28 @@ import {BullModule} from "@nestjs/bull";
 import {ScanWorker} from "./queue/scan-library.job";
 import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
 import {APP_GUARD} from "@nestjs/core";
+import {redisStore} from "cache-manager-redis-yet";
 
 @Module({
     imports: [
         ConfigModule.forRoot({isGlobal: true, envFilePath: ".env"}),
-        CacheModule.register({isGlobal:true}),
-        BullModule.forRoot({
-            redis: {
-                host: "cache",
+        CacheModule.registerAsync({
+            useFactory:(configService:ConfigService)=>({
+                isGlobal: true,
+                store: redisStore,
+                host: configService.get<string>("REDIS_HOST") || "cache",
                 port: 6379
-            }
+            }),
+            inject:[ConfigService]
+        }),
+        BullModule.forRootAsync({
+            useFactory:(configService:ConfigService)=>({
+                redis: {
+                    host: configService.get<string>("REDIS_HOST") || "cache",
+                    port: 6379
+                }
+            }),
+            inject:[ConfigService]
         }),
         BullModule.registerQueueAsync(
             {
