@@ -136,7 +136,7 @@ export class DictionaryService {
 
       const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
 
-      let auxWord = word.replace(regex, "");
+      let auxWord = word.replace(regex, "").trim();
 
       while (auxWord.length > 0) {
           for (let index = auxWord.length; index >= 0; index--) {
@@ -179,8 +179,9 @@ export class DictionaryService {
   async searchByWord(queryWord:string) {
       const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
 
-      let word = queryWord.replace(regex, "");
-      if (queryWord.length > 10) {
+      let word = queryWord.replace(regex, "").trim();
+
+      if (word.length > 10) {
           word = queryWord.substring(0, 15);
       }
 
