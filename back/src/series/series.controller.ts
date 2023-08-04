@@ -12,6 +12,7 @@ import {UpdateSeriesDto} from "./dto/update-series.dto";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UsersService} from "../users/users.service";
 import {ReadlistService} from "../readlist/readlist.service";
+import {CacheTTL} from "@nestjs/cache-manager";
 
 @Controller("series")
 @UseGuards(JwtAuthGuard)
@@ -27,6 +28,7 @@ export class SeriesController {
 
     @Get()
     @ApiOkResponse({status:HttpStatus.OK})
+    @CacheTTL(60)
     async filterSeries(@Req() req:Request, @Query() query:SeriesSearch) {
         if (!req.user) throw new UnauthorizedException();
 
