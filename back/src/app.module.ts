@@ -5,7 +5,7 @@ import {AuthModule} from "./auth/auth.module";
 import {UsersModule} from "./users/users.module";
 import {MongooseModule} from "@nestjs/mongoose";
 import {TokensModule} from "./tokens/tokens.module";
-import {ConfigModule, ConfigService} from "@nestjs/config";
+import {ConfigModule} from "@nestjs/config";
 import {BooksModule} from "./books/books.module";
 import {SeriesModule} from "./series/series.module";
 import {ScheduleModule} from "@nestjs/schedule";
@@ -24,23 +24,17 @@ import {redisStore} from "cache-manager-redis-yet";
 @Module({
     imports: [
         ConfigModule.forRoot({isGlobal: true, envFilePath: ".env"}),
-        CacheModule.registerAsync({
-            useFactory:(configService:ConfigService)=>({
-                isGlobal: true,
-                store: redisStore,
-                host: configService.get<string>("REDIS_HOST") || "cache",
-                port: 6379
-            }),
-            inject:[ConfigService]
+        CacheModule.register({
+            isGlobal: true,
+            store: redisStore,
+            host: process.env.REDIS_HOST || "cache",
+            port: 6379
         }),
-        BullModule.forRootAsync({
-            useFactory:(configService:ConfigService)=>({
-                redis: {
-                    host: configService.get<string>("REDIS_HOST") || "cache",
-                    port: 6379
-                }
-            }),
-            inject:[ConfigService]
+        BullModule.forRoot({
+            redis: {
+                host: process.env.REDIS_HOST || "cache",
+                port: 6379
+            }
         }),
         BullModule.registerQueueAsync(
             {
@@ -50,12 +44,7 @@ import {redisStore} from "cache-manager-redis-yet";
         AuthModule,
         UsersModule,
         ScheduleModule.forRoot(),
-        MongooseModule.forRootAsync({
-            useFactory: (configService: ConfigService) => ({
-                uri: configService.get<string>("MONGOURL") || "mongodb://mongodb:27017/yomiyasu"
-            }),
-            inject: [ConfigService]
-        }),
+        MongooseModule.forRoot(process.env.MONGOURL || "mongodb://mongodb:27017/yomiyasu"),
         ThrottlerModule.forRoot({
             ttl: 10,
             limit: 100
