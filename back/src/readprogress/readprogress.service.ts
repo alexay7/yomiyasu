@@ -60,6 +60,30 @@ export class ReadprogressService {
         return [];
     }
 
+    async getReadingBooks(user:Types.ObjectId) {
+        const pipe = await this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user)})
+            .match({status:"reading"})
+            .addFields({lastProgress: "$$ROOT"})
+            .lookup({
+                from: "books",
+                localField: "book",
+                foreignField: "_id",
+                as: "bookInfo"
+            })
+            .unwind({
+                path: "$bookInfo",
+                includeArrayIndex: "string",
+                preserveNullAndEmptyArrays: false
+            }).addFields({
+                "bookInfo.lastProgress": "$lastProgress"
+            }).replaceRoot("$bookInfo").addFields({
+                status: "reading",
+                type: "book"
+            });
+        return pipe;
+    }
+
     async deleteReadProgress(id:Types.ObjectId, user:Types.ObjectId) {
         return this.readProgressModel.findOneAndDelete({_id:id, user});
     }

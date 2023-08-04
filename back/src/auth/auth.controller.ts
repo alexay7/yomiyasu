@@ -18,6 +18,7 @@ import {Types} from "mongoose";
 import {JwtAuthGuard} from "./strategies/jwt.strategy";
 import {UsersService} from "../users/users.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
+import {NoCache} from "../Cache/cache.decorator";
 
 @Controller("auth")
 @ApiTags("Autenticación")
@@ -135,6 +136,7 @@ export class AuthController {
     }
 
     @Get("me")
+    @NoCache()
     @ApiOkResponse({status:HttpStatus.OK})
     @UseGuards(JwtAuthGuard)
     async checkAuth(

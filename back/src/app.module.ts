@@ -12,7 +12,7 @@ import {ScheduleModule} from "@nestjs/schedule";
 import {ReadprogressModule} from "./readprogress/readprogress.module";
 import {ReadlistModule} from "./readlist/readlist.module";
 import {WebsocketsModule} from "./websockets/websockets.module";
-import {CacheInterceptor, CacheModule} from "@nestjs/cache-manager";
+import {CacheModule} from "@nestjs/cache-manager";
 import {DictionaryModule} from "./dictionary/dictionary.module";
 import {ReviewsModule} from "./reviews/reviews.module";
 import {BullModule} from "@nestjs/bull";
@@ -20,6 +20,7 @@ import {ScanWorker} from "./queue/scan-library.job";
 import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
 import {APP_GUARD, APP_INTERCEPTOR} from "@nestjs/core";
 import {redisStore} from "cache-manager-redis-yet";
+import {MyCacheInterceptor} from "./Cache/cache.interceptor";
 
 @Module({
     imports: [
@@ -66,7 +67,7 @@ import {redisStore} from "cache-manager-redis-yet";
         },
         {
             provide: APP_INTERCEPTOR,
-            useClass: CacheInterceptor
+            useClass: MyCacheInterceptor
         }
     ]
 })

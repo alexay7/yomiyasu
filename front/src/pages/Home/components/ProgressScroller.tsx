@@ -8,7 +8,7 @@ import {useGlobal} from "../../../contexts/GlobalContext";
 function ProgressScroller():React.ReactElement {
     const {reloaded} = useGlobal();
     const {data:progresoData, refetch:progressRefetch} = useQuery("progreso", async()=> {
-        const res = await api.get<BookWithProgress[]>("books?status=reading");
+        const res = await api.get<BookWithProgress[]>("readprogress/reading");
         return res;
     }, {refetchOnWindowFocus:false});
 

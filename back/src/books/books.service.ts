@@ -26,6 +26,19 @@ export class BooksService {
       // Filtrado por serie
       if (query.serie) aggregate.match({"serie":new Types.ObjectId(query.serie)});
 
+      // Si no se quiere filtrar por estado, aplicar los límites antes de hacer la operación
+      if (query.sort) {
+          if (query.sort.includes("!")) {
+              aggregate.sort({[query.sort.replace("!", "")]:"desc"});
+          } else {
+              aggregate.sort({[query.sort]:"asc"});
+          }
+      }
+  
+      if (query.limit && query.page) {
+          aggregate.skip((query.page - 1) * query.limit).limit(parseInt(`${query.limit}`));
+      }
+
       /**
      * OBTENER EL ESTADO DE LECTURA DEL USUARIO
      */
@@ -72,15 +85,6 @@ export class BooksService {
 
       // Filtrado por estado
       if (query.status) aggregate.match({"status":query.status});
-
-      // Como ordenar los resultados | ! = descendente
-      if (query.sort) {
-          if (query.sort.includes("!")) {
-              aggregate.sort({[query.sort.replace("!", "")]:"desc"});
-          } else {
-              aggregate.sort({[query.sort]:"asc"});
-          }
-      }
 
       if (query.limit && query.page) {
           aggregate.skip((query.page - 1) * query.limit).limit(parseInt(`${query.limit}`));

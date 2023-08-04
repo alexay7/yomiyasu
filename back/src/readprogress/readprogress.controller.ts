@@ -149,6 +149,15 @@ export class ReadprogressController {
         return returnBooks.filter((item) => item !== null);
     }
 
+    @Get("reading")
+    async getReading(@Req() req:Request) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        return this.readprogressService.getReadingBooks(userId);
+    }
+
     @Patch("serie/:serieId/pause")
     async pauseSerie(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serie:Types.ObjectId) {
         if (!req.user) throw new UnauthorizedException();
