@@ -27,12 +27,11 @@ import {redisStore} from "cache-manager-redis-yet";
         CacheModule.register({
             isGlobal: true,
             store: redisStore,
-            host: process.env.REDIS_HOST || "cache",
-            port: 6379
-        }),
+            url:"redis://" + process.env.REDIS_HOST + ":6379"}
+        ),
         BullModule.forRoot({
             redis: {
-                host: process.env.REDIS_HOST || "cache",
+                host: "cache",
                 port: 6379
             }
         }),
