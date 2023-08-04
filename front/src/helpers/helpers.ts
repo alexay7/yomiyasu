@@ -9,7 +9,7 @@ function addLeadingZero(value: number): string {
 export function formatTime(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
+    const remainingSeconds = Math.floor(seconds % 60);
 
     const formattedHours = addLeadingZero(hours);
     const formattedMinutes = addLeadingZero(minutes);

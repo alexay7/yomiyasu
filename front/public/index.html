@@ -34,11 +34,17 @@
       (!('color-theme' in localStorage) &&
         window.matchMedia('(prefers-color-scheme: dark)').matches)
     ) {
+      localStorage.setItem("color-theme", "dark");
       document.documentElement.classList.add('dark');
       document.documentElement.style.backgroundColor = "#1E1E1E";
-    } else {
+    } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      localStorage.setItem("color-theme", "light")
       document.documentElement.classList.remove('dark');
       document.documentElement.style.backgroundColor = "white";
+    } else {
+      localStorage.setItem("color-theme", "dark")
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.backgroundColor = "#1E1E1E";
     }
   </script>
 </head>

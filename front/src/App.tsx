@@ -5,7 +5,7 @@ import {useAuth} from "./contexts/AuthContext";
 import {AppLayout} from "./components/AppLayout/AppLayout";
 import {Loading} from "./pages/Loading/Loading";
 import {Helmet} from "react-helmet";
-import {ThemeProvider, createTheme, responsiveFontSizes, useMediaQuery} from "@mui/material";
+import {ThemeProvider, createTheme, responsiveFontSizes} from "@mui/material";
 import {ColorModeContext} from "./contexts/ColorModeContext";
 
 const Login = lazy(() => import("./pages/Login/Login"));
@@ -16,12 +16,11 @@ const History = lazy(() => import("./pages/History/History"));
 const Reader = lazy(() => import("./pages/Reader/Reader"));
 
 export function App():React.ReactElement {
-    const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-    const [mode, setMode] = useState<"dark" | "light">();
+    const [mode, setMode] = useState<"dark" | "light">("dark");
 
     useEffect(() => {
         setMode(window.localStorage.getItem("color-theme") as "dark" | "light" || "dark");
-    }, [prefersDarkMode]);
+    }, []);
 
     const colorMode = useMemo(
         () => ({

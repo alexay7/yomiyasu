@@ -14,6 +14,7 @@ import {PageText} from "./components/PageText";
 import {Dictionary} from "./components/Dictionary";
 import {nextBook, prevBook} from "../../helpers/book";
 import {Helmet} from "react-helmet";
+import {formatTime} from "../../helpers/helpers";
 
 function Reader():React.ReactElement {
     const {id} = useParams();
@@ -30,6 +31,8 @@ function Reader():React.ReactElement {
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
     const [searchWord, setSearchWord] = useState("");
     const [changedTab, setChangedTab] = useState(false);
+    const [progressTime, setProgressTime] = useState(0);
+    const [showTimeLeft, setShowTimeLeft] = useState(false);
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -68,6 +71,7 @@ function Reader():React.ReactElement {
             let page = 1;
 
             if (bookProgress && bookProgress.currentPage) {
+                setProgressTime(bookProgress.time || 0);
                 page = bookProgress.currentPage;
             }
 
@@ -607,6 +611,20 @@ function Reader():React.ReactElement {
         return () => clearInterval(timerInterval);
     }, [timerOn, setTimer]);
 
+    function getTimeLeft():string {
+        if (!bookData?.pageChars || !bookData.characters) return "";
+
+        const readChars = bookData.pageChars[currentPage];
+        const consumedTime = timer + progressTime;
+        let speed = readChars / consumedTime;
+        if (speed <= 0) {
+            speed = 1;
+        }
+        const charactersLeft = bookData.characters - bookData.pageChars[currentPage];
+
+        return formatTime(charactersLeft / speed);
+    }
+
     return (
         <div className="text-black relative overflow-hidden h-screen flex flex-col">
             <Helmet>
@@ -638,6 +656,7 @@ function Reader():React.ReactElement {
                             <div className="flex items-center flex-row px-2 gap-1">
                                 <StopWatchMenu timer={timer} setTimer={setTimer}
                                     timerOn={timerOn} setTimerOn={setTimerOn}
+                                    progressTime={progressTime}
                                 />
                                 {/* <IconButton>
                                     <Translate/>
@@ -663,11 +682,15 @@ function Reader():React.ReactElement {
                     />
                     {showToolBar && (
                         <div className="dark:bg-[#272727] bg-white h-[5vh] w-full dark:text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
-                            <div className="absolute -top-6 right-1 text-white text-sm">
-                                {bookData.pageChars && (
-                                    <p><span className="text-xs">Caracteres leídos:</span> {bookData.pageChars[currentPage - 1]} / {bookData.characters}</p>
-                                )}
-                            </div>
+                            {bookData.pageChars && (
+                                <div className="absolute -top-6 right-1 text-white text-sm select-none" onClick={()=>setShowTimeLeft((prev)=>!prev)}>
+                                    {showTimeLeft ? (
+                                        <p><span className="text-xs">Tiempo restante estimado: {getTimeLeft()}</span></p>
+                                    ) : (
+                                        <p><span className="text-xs">Caracteres leídos:</span> {bookData.pageChars[currentPage - 1]} / {bookData.characters}</p>
+                                    )}
+                                </div>
+                            )}
                             <div className="justify-between flex items-center">
                                 <Tooltip title="It al libro anterior">
                                     <IconButton onClick={async()=>{

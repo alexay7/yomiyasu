@@ -3,15 +3,17 @@ import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
 import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 
+
 interface StopWatchMenuProps {
     timer:number;
     setTimer:(v:React.SetStateAction<number>)=>void;
     timerOn:boolean;
-    setTimerOn:(v:React.SetStateAction<boolean>)=>void
+    setTimerOn:(v:React.SetStateAction<boolean>)=>void;
+    progressTime:number;
 }
 
 export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
-    const {timer, setTimer, timerOn, setTimerOn} = props;
+    const {timer, setTimer, timerOn, setTimerOn, progressTime} = props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
@@ -49,7 +51,7 @@ export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
                 <li style={{paddingTop:".25rem", paddingBottom:".25rem"}}>
-                    <p style={{textAlign:"center"}}>{formatTime(timer)}</p>
+                    <p style={{textAlign:"center"}}>{formatTime(timer)} ({formatTime(timer + progressTime)})</p>
                 </li>
                 <hr />
                 {!timerOn ? (
