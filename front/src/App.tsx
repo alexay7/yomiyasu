@@ -14,6 +14,7 @@ const Library = lazy(() => import("./pages/Library/Library"));
 const Serie = lazy(() => import("./pages/Serie/Serie"));
 const History = lazy(() => import("./pages/History/History"));
 const Reader = lazy(() => import("./pages/Reader/Reader"));
+const Anki = lazy(() => import("./pages/Anki/Anki"));
 
 export function App():React.ReactElement {
     const [mode, setMode] = useState<"dark" | "light">("dark");
@@ -74,6 +75,7 @@ export function App():React.ReactElement {
                         <Route path="*" element={<Navigate to="/app"/>}/>
                     </Route>
                     <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>
+                    <Route path="ankiexport" element={<Anki/>}/>
                     <Route path="*" element={<Navigate to="/app"/>}/>
                 </Routes>
             </ThemeProvider>

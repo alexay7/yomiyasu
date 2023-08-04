@@ -1,10 +1,11 @@
-import {Dialog, DialogContent, DialogTitle, Divider} from "@mui/material";
+import {Dialog, DialogContent, DialogTitle, Divider, IconButton} from "@mui/material";
 import React, {Fragment, useEffect, useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {DicionaryResult} from "../../../types/dictionary";
 import {toast} from "react-toastify";
 import {useSettings} from "../../../contexts/SettingsContext";
+import {ExitToApp} from "@mui/icons-material";
 
 interface DictionaryProps {
     searchWord:string;
@@ -68,7 +69,20 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
                                     {wordDefinitions[selectedIndex].words.map((definition)=>(
                                         <Fragment key={definition.id}>
                                             <li>
-                                                <ul className="flex flex-col">
+                                                <ul className="relative flex flex-col">
+                                                    <IconButton className="absolute right-0 top-0" size="small"
+                                                        onClick={()=>{
+                                                            const word = definition.kanji.length > 0 ? encodeURI(definition.kanji[0].text) :
+                                                                encodeURI(definition.kana[0].text);
+                                                            const reading = encodeURI(definition.kana[0].text);
+                                                            const definitions = definition.sense[0].gloss.map((x)=>x.text);
+
+                                                            window.open(`/ankiexport?word=${word}&reading=${reading}&definition=${encodeURI(definitions.join("\n"))}`,
+                                                                "YomiYasu - Exportar a Anki", "height=600,width=500,resizable=no,menubar=no,toolbar=no,location=no,status=no");
+                                                        }}
+                                                    >
+                                                        <ExitToApp/>
+                                                    </IconButton>
                                                     {definition.kanji.length > 0 ? (
                                                         <h2 className="mb-1">{definition.kanji[0].text}</h2>
                                                     ) : (
