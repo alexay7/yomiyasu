@@ -42,7 +42,10 @@ export function Settings():React.ReactElement {
                         >
                             <MenuItem value="pages">Páginas</MenuItem>
                             <MenuItem value="characters">Caracteres</MenuItem>
-                            <MenuItem value="both">Ambos</MenuItem>
+                            <MenuItem value="both">Páginas y caracteres</MenuItem>
+                            <MenuItem value="remainingpages">Páginas restantes</MenuItem>
+                            <MenuItem value="remainingchars">Caracteres restantes</MenuItem>
+                            <MenuItem value="remainingtime">Tiempo restante</MenuItem>
                         </Select>
                     </div>
                     <FormControlLabel className="select-none" control={

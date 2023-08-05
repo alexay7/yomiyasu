@@ -5,8 +5,9 @@ import "./styles.css";
 import {Fade, IconButton} from "@mui/material";
 import {BookSettings} from "./components/BookSettings";
 import {useNavigate} from "react-router-dom";
-import {goTo} from "../../helpers/helpers";
+import {goTo, formatTime} from "../../helpers/helpers";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
+
 
 interface BookComponentProps {
     bookData:BookWithProgress,
@@ -62,6 +63,20 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             }
             case "both":{
                 return `${bookData.pages} pags y ${bookData.characters} chars`;
+            }
+            case "remainingchars":{
+                if (!bookData.pageChars || !bookData.lastProgress || !bookData.characters) return `${bookData.characters} caracteres`;
+                return `${bookData.characters - bookData.pageChars[bookData.lastProgress.currentPage]} caract. restantes`;
+            }
+            case "remainingpages":{
+                if (!bookData.lastProgress || !bookData.characters) return `${bookData.pages} páginas`;
+                return `${bookData.pages - bookData.lastProgress.currentPage} pags. restantes`;
+            }
+            case "remainingtime":{
+                if (!bookData.pageChars || !bookData.lastProgress || !bookData.characters) return `${bookData.characters} caracteres`;
+                const speed = bookData.pageChars[bookData.lastProgress.currentPage] / bookData.lastProgress.time / 60;
+                const charsLeft = bookData.characters - bookData.pageChars[bookData.lastProgress.currentPage];
+                return `${formatTime(charsLeft / speed)}`;
             }
             default:{
                 return `${bookData.pages} páginas`;
