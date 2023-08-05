@@ -155,6 +155,11 @@ function History():React.ReactElement {
 
                     void navigator.clipboard.writeText(text);
                 }}
+                initialState={{
+                    sorting:{
+                        sortModel:[{field:"lastupdate", sort:"desc"}]
+                    }
+                }}
                 />
             </div>
         </div>

@@ -31,7 +31,7 @@ import {redisStore} from "cache-manager-redis-yet";
         ),
         BullModule.forRoot({
             redis: {
-                host: "cache",
+                host: process.env.REDIS_HOST || "cache",
                 port: 6379
             }
         }),
