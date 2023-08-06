@@ -27,9 +27,9 @@ export function Reviews(props:ReviewProps):React.ReactElement {
     }
 
     return (
-        <div className="border-[#212121] border-2 border-solid rounded-md p-2 bg-[#363636] text-white">
+        <div className="border-[#212121] border-2 border-solid rounded-md p-2 dark:bg-[#363636] dark:text-white">
             <div className="relative flex items-center justify-center py-3">
-                <p className="text-white text-center font-semibold">Valoraciones de usuarios ({serieData.reviews.length})</p>
+                <p className="dark:text-white text-center font-semibold">Valoraciones de usuarios ({serieData.reviews.length})</p>
                 <ReviewForm serieData={serieData}/>
             </div>
             <Divider/>
@@ -67,7 +67,7 @@ export function Reviews(props:ReviewProps):React.ReactElement {
                             {review.comment && (
                                 <div className="flex rounded-md flex-col gap-2 border-dashed border border-[#212121] p-2">
                                     <span className="font-semibold">Comentario:</span>
-                                    <p className="text-gray-300 text-sm">{review.comment}</p>
+                                    <p className="dark:text-gray-300 text-gray-600 text-sm">{review.comment}</p>
                                 </div>
                             )}
                         </li>

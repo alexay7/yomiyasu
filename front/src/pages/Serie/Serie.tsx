@@ -82,7 +82,7 @@ function Serie():React.ReactElement {
             <Helmet>
                 <title>{`YomiYasu - ${serieData?.visibleName ? serieData?.visibleName : "serie"}`}</title>
             </Helmet>
-            <div className="fixed z-20 w-fill dark:bg-[#212121] py-1 flex items-center justify-between h-12">
+            <div className="fixed z-20 w-fill bg-white dark:bg-[#212121] py-1 flex items-center justify-between h-12">
                 <div className="flex items-center mx-4 w-5/6 overflow-hidden">
                     <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>
@@ -177,22 +177,22 @@ function Serie():React.ReactElement {
                     </div>
                     <div className="flex flex-col gap-2 pt-8 pb-4">
                         {serieData.genres.length > 0 && (
-                            <div className="flex text-white items-center">
+                            <div className="flex dark:text-white items-center">
                                 <p className="w-[14rem] text-sm">GÉNEROS</p>
                                 <ul className="list-none flex gap-2 text-xs">
                                     {serieData.genres.map((genre)=>(
-                                        <Button onClick={()=>goTo(navigate, `/app/library?genre=${genre}`)} className="px-2 py-0 text-white normal-case border border-solid border-gray-700 rounded-md" key={genre}>{genre}</Button>
+                                        <Button onClick={()=>goTo(navigate, `/app/library?genre=${genre}`)} className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={genre}>{genre}</Button>
                                     ))}
                                 </ul>
                             </div>
                         )}
 
                         {serieData.authors.length > 0 && (
-                            <div className="flex text-white items-center">
+                            <div className="flex dark:text-white items-center">
                                 <p className="w-[14rem] text-sm">AUTORES</p>
                                 <ul className="list-none flex gap-2 text-xs">
                                     {serieData.authors.map((author)=>(
-                                        <Button onClick={()=>goTo(navigate, `/app/library?author=${author}`)} className="px-2 py-0 text-white normal-case border border-solid border-gray-700 rounded-md" key={author}>{author}</Button>
+                                        <Button onClick={()=>goTo(navigate, `/app/library?author=${author}`)} className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={author}>{author}</Button>
                                     ))}
                                 </ul>
                             </div>

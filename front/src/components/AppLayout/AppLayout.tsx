@@ -48,7 +48,7 @@ export function AppLayout():React.ReactElement {
             {/* Barra lateral */}
             <CSSTransition classNames="leftbar" timeout={300} in={showMenu} unmountOnExit>
                 <div className="w-[256px] bg-white dark:bg-[#363636] h-screen fixed">
-                    <div className="h-16 justify-center dark:text-white flex items-center">
+                    <div className="h-16 justify-center dark:text-white flex items-center bg-[#F5F5F5] dark:bg-[#363636]">
                         <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>navigate("/app")}>YomiYasu</h1>
                     </div>
                     <Divider/>
