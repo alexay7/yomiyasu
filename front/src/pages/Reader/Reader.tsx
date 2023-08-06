@@ -182,6 +182,7 @@ function Reader():React.ReactElement {
         }
 
         function handleMouseUp(event:MouseEvent):void {
+            if (!readerSettings.nativeDictionary) return;
             if (readerSettings.dictionaryVersion === "word") {
                 if (!event.target) return;
                 const target = event.target as HTMLElement;
