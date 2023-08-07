@@ -1,5 +1,5 @@
 import {RestartAlt, Sort} from "@mui/icons-material";
-import {Autocomplete, Divider, FormControl, FormControlLabel, FormLabel, IconButton, MenuItem, Radio, RadioGroup, Select, Slider, TextField, Tooltip} from "@mui/material";
+import {Autocomplete, Divider, FormControl, FormControlLabel, FormLabel, IconButton, InputLabel, MenuItem, Radio, RadioGroup, Select, Slider, TextField, Tooltip} from "@mui/material";
 import React, {Fragment, useState} from "react";
 import {PopupWindow} from "../../../components/PopupWindow/PopupWindow";
 import {SetURLSearchParams} from "react-router-dom";
@@ -18,6 +18,7 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
     const [difficulty, setDifficulty] = useState<number[]>([parseInt(searchParams.get("min") || "0"), parseInt(searchParams.get("max") || "10")]);
     const [genre, setGenre] = useState(searchParams.get("genre") || null);
     const [author, setAuthor] = useState(searchParams.get("author") || null);
+    const [status, setStatus] = useState(searchParams.get("status") || "");
     const [readProgress, setReadProgress] = useState<string>(searchParams.get("readprogress") || "all");
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
@@ -48,6 +49,10 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
 
         if (readProgress && readProgress !== "all") {
             filter.readprogress = readProgress;
+        }
+
+        if (status) {
+            filter.status = status;
         }
 
         setSearchParams(filter);
@@ -100,13 +105,28 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
                                 </IconButton>
                             </div>
                         </FormControl>
+                        <FormControl>
+                            <InputLabel id="status">Estado</InputLabel>
+                            <Select
+                                labelId="status"
+                                fullWidth
+                                value={status}
+                                onChange={(e)=>{
+                                    setStatus(e.target.value);
+                                }}
+                            >
+                                <MenuItem value="">Todas</MenuItem>
+                                <MenuItem value="ENDED">Completada</MenuItem>
+                                <MenuItem value="PUBLISHING">En progreso</MenuItem>
+                            </Select>
+                        </FormControl>
                         <FormControl className="w-full">
                             <FormLabel>Género de la serie</FormLabel>
                             <Autocomplete
                                 fullWidth
                                 value={genre}
                                 onChange={(e, v)=>{
-                                    setGenre(v);
+                                    setGenre(v || "");
                                 }}
                                 renderInput={(params)=>(
                                     <TextField
@@ -124,7 +144,7 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
                                 fullWidth
                                 value={author}
                                 onChange={(e, v)=>{
-                                    setAuthor(v);
+                                    setAuthor(v || "");
                                 }}
                                 renderInput={(params)=>(
                                     <TextField

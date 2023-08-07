@@ -22,6 +22,7 @@ function Library():React.ReactElement {
     const max = searchParams.get("max");
     const readprogress = searchParams.get("readprogress");
     const page = searchParams.get("page");
+    const status = searchParams.get("status");
     const {reloaded} = useGlobal();
     const {userData} = useAuth();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
@@ -64,6 +65,10 @@ function Library():React.ReactElement {
 
         if (max) {
             link += `max=${max}&`;
+        }
+
+        if (status) {
+            link += `status=${status}&`;
         }
 
         link += `page=${page || "1"}&limit=25`;
@@ -151,9 +156,8 @@ function Library():React.ReactElement {
                 <div className="flex justify-center py-4">
                     <Pagination onChange={(e, p)=>{
                         setCurrentPage(p);
-                        setSearchParams((prev)=>{
-                            return {...prev, page:p};
-                        });
+                        searchParams.set("page", `${p}`);
+                        setSearchParams(searchParams);
                     }} page={currentPage} color="primary" count={series.pages}
                     />
                 </div>
@@ -181,9 +185,8 @@ function Library():React.ReactElement {
                 <div className="flex justify-center">
                     <Pagination onChange={(e, p)=>{
                         setCurrentPage(p);
-                        setSearchParams((prev)=>{
-                            return {...prev, page:p};
-                        });
+                        searchParams.set("page", `${p}`);
+                        setSearchParams(searchParams);
                     }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
                     />
                 </div>
