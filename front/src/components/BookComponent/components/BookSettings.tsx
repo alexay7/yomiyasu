@@ -117,7 +117,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Marcar como leído
                     </MenuItem>
                 )}
-                {bookData.status !== "unread" && (
+                {bookData.status && bookData.status !== "unread" && (
                     <MenuItem key="unread" onClick={async()=>{
                         await markAsUnread();
                         handleClose();

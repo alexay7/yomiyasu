@@ -8,6 +8,7 @@ import {
 } from "./schemas/readprogress.schema";
 import {ReadlistModule} from "../readlist/readlist.module";
 import {BooksModule} from "../books/books.module";
+import {SerieprogressModule} from "../serieprogress/serieprogress.module";
 
 @Module({
     imports: [
@@ -15,7 +16,8 @@ import {BooksModule} from "../books/books.module";
             {name: ReadProgress.name, schema: ReadProgressSchema}
         ]),
         ReadlistModule,
-        BooksModule
+        BooksModule,
+        SerieprogressModule
     ],
     controllers: [ReadprogressController],
     providers: [ReadprogressService],

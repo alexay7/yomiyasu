@@ -14,6 +14,7 @@ import {UsersService} from "../users/users.service";
 import {ReadlistService} from "../readlist/readlist.service";
 import {CacheTTL, CACHE_MANAGER, CacheInterceptor} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
+import {SerieprogressService} from "../serieprogress/serieprogress.service";
 
 @Controller("series")
 @UseGuards(JwtAuthGuard)
@@ -25,6 +26,7 @@ export class SeriesController {
         private readonly websocketsGateway:WebsocketsGateway,
         private readonly usersService:UsersService,
         private readonly readListsService:ReadlistService,
+        private readonly serieProgressService:SerieprogressService,
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
 
@@ -52,7 +54,9 @@ export class SeriesController {
         const foundSeries = await this.seriesService.filterSeries(query);
 
         const promises = foundSeries.data.map(async(serieElem)=>{
-            const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
+            const serieBooks = await this.booksService.getSerieBooks(serieElem._id);
+            if (serieBooks.length === 0) return null;
+            const serieData = await this.serieProgressService.getSerieProgress(userId, serieElem, serieBooks);
             const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
 
             if (serieData) {

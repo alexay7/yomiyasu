@@ -29,6 +29,9 @@ import {ParseObjectIdPipe} from "../validation/objectId";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
+import {SerieprogressService} from "../serieprogress/serieprogress.service";
+import {FullSerieProgress} from "../serieprogress/interfaces/serieprogress";
+import {Book} from "../books/schemas/book.schema";
 
 @Controller("readprogress")
 @ApiTags("Progresos de Lectura")
@@ -38,6 +41,7 @@ export class ReadprogressController {
         private readonly readprogressService: ReadprogressService,
         private readonly readListService: ReadlistService,
         private readonly booksService:BooksService,
+        private readonly serieProgressService:SerieprogressService,
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
 
@@ -59,11 +63,23 @@ export class ReadprogressController {
         if (progressDto.status !== "unread") {
             // Si el progreso es avanzar la lectura, quitarlo de la lista de lectura si existe
 
+            await this.serieProgressService.createOrIncreaseBooks({
+                serie:foundBook.serie,
+                book:progressDto.book,
+                user:userId,
+                action:"add"});
+
             const foundReadList = await this.readListService.findSerieInReadList(userId, foundBook?.serie);
       
             if (foundReadList) {
                 await this.readListService.removeSerieWithId(foundReadList._id);
             }
+        } else {
+            await this.serieProgressService.createOrIncreaseBooks({
+                serie:foundBook.serie,
+                book:progressDto.book,
+                user:userId,
+                action:"remove"});
         }
 
         if (!foundProgress || foundProgress.status === "completed") {
@@ -140,35 +156,27 @@ export class ReadprogressController {
             return cached;
         }
 
-        const series = await this.readprogressService.getSeriesProgress(userId);
+        const series:FullSerieProgress[] = await this.serieProgressService.getUserSeriesProgress(userId);
+        const readingSeries = (await this.readprogressService.getReadingSeries(userId)).map(x=>x.serie.toString());
 
-        const promises = series.map(async(serie)=>{
-            const allBooks = await this.booksService.filterBooks(userId, {serie, sort:"sortName"});
-            const unreadBooks = await this.booksService.filterBooks(userId, {serie, sort:"sortName", status:"unread"});
+        const returnBooks:Book[] = [];
 
-            if (allBooks.some(x=>{
-                if (!x.lastProgress) return false;
-                return x.lastProgress.paused;
-            })) {
-                return null;
-            }
+        series.forEach((serie)=>{
+            if (serie.readBooks.length === serie.serieBooks.length || serie.paused || 
+                readingSeries.indexOf(serie.serie.toString()) !== -1) return;
 
-            // Si existen libros leidos en la serie pero NO libros en progreso, considerar serie para tablero
-            if (unreadBooks.length > 0 && (allBooks.length !== unreadBooks.length) && !allBooks.some(x=>x.status === "reading")) {
-                // Se buscan todos los libros que no hayan sido leidos por el usuario y se coge el primero no leido
-                return unreadBooks[0];
-            }
+            const unreadBooks = serie.serieBooks.filter(
+                x=>serie.readBooks.findIndex(
+                    y=>y._id.equals(x._id as Types.ObjectId)
+                ) === -1
+            );
 
-            return null;
+            returnBooks.push(unreadBooks[0]);
         });
 
-        const returnBooks = await Promise.all(promises);
+        await this.cacheManager.set(`${userId}-${req.url}`, returnBooks);
 
-        const response = returnBooks.filter((item) => item !== null);
-
-        await this.cacheManager.set(`${userId}-${req.url}`, response);
-
-        return response;
+        return returnBooks;
     }
 
     @Get("reading")

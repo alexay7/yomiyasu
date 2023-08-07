@@ -49,17 +49,6 @@ export class ReadprogressService {
         return this.readProgressModel.findByIdAndUpdate(id, query, {new:true});
     }
 
-    async getSeriesProgress(user:Types.ObjectId):Promise<Types.ObjectId[]> {
-        const foundArray = await this.readProgressModel.aggregate()
-            .match({user:new Types.ObjectId(user)})
-            .group({_id:null, "series":{$addToSet:"$serie"}});
-
-        if (foundArray && foundArray.length > 0 && foundArray[0].series) {
-            return foundArray[0].series;
-        }
-        return [];
-    }
-
     async getReadingBooks(user:Types.ObjectId) {
         const pipe = await this.readProgressModel.aggregate()
             .match({user:new Types.ObjectId(user)})
@@ -90,5 +79,9 @@ export class ReadprogressService {
 
     async modifyWholeSerie(serie:Types.ObjectId, user:Types.ObjectId, paused:boolean) {
         return this.readProgressModel.updateMany({serie:new Types.ObjectId(serie), user:new Types.ObjectId(user)}, {paused});
+    }
+
+    async getReadingSeries(user:Types.ObjectId) {
+        return this.readProgressModel.find({user, status:"reading"});
     }
 }

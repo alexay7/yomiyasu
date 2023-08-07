@@ -38,12 +38,12 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
     }
 
     async function pauseSerie():Promise<void> {
-        await api.patch<unknown, {status:string}>(`readprogress/serie/${  serieData._id  }/pause`, {});
+        await api.post<unknown, {status:string}>(`serieprogress/pause/${  serieData._id  }`, {});
         forceReload("all");
     }
 
     async function resumeSerie():Promise<void> {
-        await api.patch<unknown, {status:string}>(`readprogress/serie/${  serieData._id  }/resume`, {});
+        await api.post<unknown, {status:string}>(`serieprogress/resume/${  serieData._id  }`, {});
         forceReload("all");
     }
 
