@@ -32,3 +32,10 @@ async function bootstrap() {
     await app.listen(3001);
 }
 bootstrap();
+
+const globalErrorHandler = function(err:Error) {
+    console.error("Uncaught Exception", err);
+};
+
+process.on("unhandledRejection", globalErrorHandler);
+process.on("uncaughtException", globalErrorHandler);
