@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {ReadProgress, ReadProgressStatus} from "./schemas/readprogress.schema";
-import {Model, QueryOptions, Types} from "mongoose";
+import {Model, Types} from "mongoose";
 import {
     CreateReadProgress,
     UpdateReadProgress
@@ -38,15 +38,8 @@ export class ReadprogressService {
     }
 
     modifyReadProgress(id:Types.ObjectId, updateReadProgress:UpdateReadProgress):Promise<ReadProgress | null> {
-        const {time, ...moreProgress} = updateReadProgress;
 
-        let query:QueryOptions<ReadProgress> = {$set:{...moreProgress}};
-
-        if (time) {
-            query = {...query, $inc:{time:time}};
-        }
-
-        return this.readProgressModel.findByIdAndUpdate(id, query, {new:true});
+        return this.readProgressModel.findByIdAndUpdate(id, updateReadProgress, {new:true});
     }
 
     async getReadingBooks(user:Types.ObjectId) {

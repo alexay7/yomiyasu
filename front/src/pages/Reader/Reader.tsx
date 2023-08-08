@@ -31,7 +31,6 @@ function Reader():React.ReactElement {
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
     const [searchWord, setSearchWord] = useState("");
     const [changedTab, setChangedTab] = useState(false);
-    const [progressTime, setProgressTime] = useState(0);
     const [showTimeLeft, setShowTimeLeft] = useState(false);
 
     const {data:bookData} = useQuery("book", async()=> {
@@ -71,7 +70,7 @@ function Reader():React.ReactElement {
             let page = 1;
 
             if (bookProgress && bookProgress.currentPage) {
-                setProgressTime(bookProgress.time || 0);
+                setTimer(bookProgress.time || 0);
                 page = bookProgress.currentPage;
             }
 
@@ -615,7 +614,7 @@ function Reader():React.ReactElement {
         if (!bookData?.pageChars || !bookData.characters) return "";
 
         const readChars = bookData.pageChars[currentPage];
-        const consumedTime = timer + progressTime;
+        const consumedTime = timer;
         let speed = readChars / consumedTime;
         if (speed <= 0) {
             speed = 1;
@@ -656,7 +655,6 @@ function Reader():React.ReactElement {
                             <div className="flex items-center flex-row px-2 gap-1">
                                 <StopWatchMenu timer={timer} setTimer={setTimer}
                                     timerOn={timerOn} setTimerOn={setTimerOn}
-                                    progressTime={progressTime}
                                 />
                                 {/* <IconButton>
                                     <Translate/>

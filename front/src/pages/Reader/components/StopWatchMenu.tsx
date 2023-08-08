@@ -9,11 +9,10 @@ interface StopWatchMenuProps {
     setTimer:(v:React.SetStateAction<number>)=>void;
     timerOn:boolean;
     setTimerOn:(v:React.SetStateAction<boolean>)=>void;
-    progressTime:number;
 }
 
 export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
-    const {timer, setTimer, timerOn, setTimerOn, progressTime} = props;
+    const {timer, setTimer, timerOn, setTimerOn} = props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
@@ -51,7 +50,7 @@ export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
                 <li style={{paddingTop:".25rem", paddingBottom:".25rem"}}>
-                    <p style={{textAlign:"center"}}>{formatTime(timer)} ({formatTime(timer + progressTime)})</p>
+                    <p style={{textAlign:"center"}}>{formatTime(timer)}</p>
                 </li>
                 <hr />
                 {!timerOn ? (
