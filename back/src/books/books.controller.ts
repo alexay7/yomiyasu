@@ -123,7 +123,7 @@ export class BooksController {
 
         if (!foundBook) throw new NotFoundException();
 
-        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie});
+        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie, sort:"sortName"});
 
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
@@ -144,7 +144,7 @@ export class BooksController {
 
         if (!foundBook) throw new NotFoundException();
 
-        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie});
+        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie, sort:"sortName"});
 
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
