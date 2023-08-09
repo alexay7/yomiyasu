@@ -169,7 +169,13 @@ export class ReadprogressController {
                 x=>serie.readBooks.findIndex(
                     y=>y._id.equals(x._id as Types.ObjectId)
                 ) === -1
-            );
+            ).sort((a, b)=>{
+                if (a.sortName < b.sortName) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
 
             returnBooks.push(unreadBooks[0]);
         });
