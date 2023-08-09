@@ -42,7 +42,8 @@ function History():React.ReactElement {
                 end:progress.endDate,
                 time:progress.time,
                 lastupdate:progress.lastUpdateDate,
-                characters:progress.bookInfo.characters || 0
+                characters:progress.bookInfo.pageChars && progress.bookInfo.pageChars.length >=
+                    progress.currentPage ? progress.bookInfo.pageChars[progress.currentPage - 1] : 0
             });
         });
 
@@ -145,7 +146,7 @@ function History():React.ReactElement {
                     const rowData = row.row as LogData;
                     let text = `.log manga ${rowData.pages} ${rowData.book}`;
 
-                    if (rowData.time > 0) {
+                    if (rowData.time > 59) {
                         text += `;${Math.floor(rowData.time / 60)}`;
                     }
 
