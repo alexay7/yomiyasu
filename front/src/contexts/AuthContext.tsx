@@ -30,7 +30,7 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
     const [userData, setUserData] = useState<LoggedUser | undefined>();
     const [loggedIn, setLoggedIn] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [reauth, setReauth] = useState(true);
 
     async function registerUser(username:string, email:string, password:string):Promise<AuthResponse | undefined> {
@@ -95,7 +95,6 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
             if (window.location.pathname === "/login") {
                 setLoggedIn(false);
                 setLoading(false);
-                setReauth(false);
                 return;
             }
 
@@ -106,7 +105,6 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
                 setUserData(myData);
                 setLoggedIn(true);
                 setLoading(false);
-                setReauth(false);
             } catch (e) {
                 // Excepción encontrada, se comprueba si es por 401
                 const error = e as HttpError;
@@ -115,7 +113,6 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
                     // Otra cosa ha causado la excepción o no existe token de refresco, interrumpir login
                     setLoggedIn(false);
                     setLoading(false);
-                    setReauth(false);
                     return;
                 }
                 // Excepción 401, se prueba a refrescar el access token con el refresh token
@@ -129,12 +126,10 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
                     setUserData(myData);
                     setLoggedIn(true);
                     setLoading(false);
-                    setReauth(false);
                 } catch (refreshError) {
                     // Excepción, independientemente del tipo que sea, interrumpir login
                     setLoggedIn(false);
                     setLoading(false);
-                    setReauth(false);
                 }
             }
         }
