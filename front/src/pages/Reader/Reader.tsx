@@ -44,6 +44,11 @@ function Reader():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     useEffect(()=>{
+        if (!bookData || timer % 60 !== 0 || timer === 0) return;
+        void createProgress(bookData, currentPage, timer);
+    }, [currentPage, timer, bookData]);
+
+    useEffect(()=>{
         if (siteSettings.autoCrono) {
             setTimerOn(true);
         }
@@ -82,16 +87,6 @@ function Reader():React.ReactElement {
             setCurrentPage(page - 1);
         }
     }, [bookProgress, bookData, isLoading]);
-
-    useEffect(()=>{
-        if (!bookData) return;
-
-        const interval = setInterval(async()=>{
-            await createProgress(bookData, currentPage, timer);
-        }, 5 * 1000 * 60 * 60);
-
-        return ()=>clearInterval(interval);
-    }, [bookData, currentPage, timer]);
 
     useEffect(() => {
         const handleBeforeUnload = async():Promise<void> => {
