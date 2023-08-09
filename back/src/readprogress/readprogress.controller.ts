@@ -162,7 +162,7 @@ export class ReadprogressController {
         const returnBooks:Book[] = [];
 
         series.forEach((serie)=>{
-            if (serie.readBooks.length === serie.serieBooks.length || serie.paused || 
+            if (serie.readBooks.length === 0 || serie.readBooks.length === serie.serieBooks.length || serie.paused || 
                 readingSeries.indexOf(serie.serie.toString()) !== -1) return;
 
             const unreadBooks = serie.serieBooks.filter(

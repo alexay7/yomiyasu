@@ -30,7 +30,7 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
         return ()=>{
             window.removeEventListener("resize", setRight);
         };
-    }, [ulRef]);
+    }, [ulRef, components]);
 
     function scrollRight():void {
         if (!ulRef || !ulRef.current) return;
