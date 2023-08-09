@@ -1,6 +1,7 @@
 import {NavigateFunction} from "react-router-dom";
 import {api} from "../api/api";
 import {RefreshResponse} from "../types/responses";
+import {setCookie} from "./cookies";
 
 function addLeadingZero(value: number): string {
     return value.toString().padStart(2, "0");
@@ -21,6 +22,7 @@ export function formatTime(seconds: number): string {
 export async function checkRefreshToken():Promise<RefreshResponse> {
     const uuid = window.localStorage.getItem("uuid");
     const response = await api.post<{uuid: string}, RefreshResponse>("auth/refresh", {uuid:uuid || ""});
+    setCookie("logged", "true", 2);
     return response;
 }
 

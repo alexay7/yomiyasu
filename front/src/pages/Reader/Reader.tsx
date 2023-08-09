@@ -15,11 +15,14 @@ import {Dictionary} from "./components/Dictionary";
 import {nextBook, prevBook} from "../../helpers/book";
 import {Helmet} from "react-helmet";
 import {formatTime} from "../../helpers/helpers";
+import {useAuth} from "../../contexts/AuthContext";
+import {getCookie} from "../../helpers/cookies";
 
 function Reader():React.ReactElement {
     const {id} = useParams();
     const iframe = useRef<HTMLIFrameElement>(null);
     const {readerSettings, siteSettings} = useSettings();
+    const {reauth} = useAuth();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [showToolBar, setShowToolbar] = useState(true);
@@ -44,9 +47,15 @@ function Reader():React.ReactElement {
     }, {refetchOnWindowFocus:false});
 
     useEffect(()=>{
+        const logged = getCookie("logged");
+
+        if (!logged) {
+            reauth(true);
+        }
+
         if (!bookData || timer % 60 !== 0 || timer === 0) return;
         void createProgress(bookData, currentPage, timer);
-    }, [currentPage, timer, bookData]);
+    }, [currentPage, timer, bookData, reauth]);
 
     useEffect(()=>{
         if (siteSettings.autoCrono) {
