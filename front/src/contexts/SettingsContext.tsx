@@ -96,6 +96,14 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
         window.localStorage.setItem("site", JSON.stringify(siteSettings));
     }, [siteSettings]);
 
+    // Limpia el almacenamiento de mokuro
+    const keys = Object.keys(localStorage);
+    keys.forEach((key)=>{
+        if (key.includes("mokuro")) {
+            localStorage.removeItem(key);
+        }
+    });
+
     return (
         <SettingsContext.Provider value={{
             readerSettings:readerSettings,

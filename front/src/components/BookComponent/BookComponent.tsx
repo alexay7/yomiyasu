@@ -39,8 +39,8 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             const prevSettings = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`);
             if (prevSettings) {
                 settings = JSON.parse(prevSettings) as {backgroundColor:string};
-                settings.backgroundColor = "#121212";
             }
+            settings.backgroundColor = "#121212";
 
             window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(settings));
 
