@@ -80,6 +80,14 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
         setLoading(false);
     }
 
+    // Renueva el token de acceso cada hora
+    useEffect(()=>{
+        const interval = setInterval(async()=>{
+            await checkRefreshToken();
+        }, 1000 * 60 * 60);
+        return ()=>clearInterval(interval);
+    }, []);
+
     useEffect(()=>{
         /**
          * Este useEffect se encarga de validar el estado de autenticación del usuario cada vez que
@@ -96,6 +104,17 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
                 setLoggedIn(false);
                 setLoading(false);
                 return;
+            }
+
+            /**
+             * Nada más llegue el usuario a la página renovarle el token, esto es para evitar casos en los que
+             * el usuario recargue la página antes de que se renueve el token (cada hora) y provocando así que
+             * le caduque.
+             */
+            try {
+                await checkRefreshToken();
+            } catch {
+                setLoading(true);
             }
 
             try {
