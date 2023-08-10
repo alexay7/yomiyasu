@@ -15,7 +15,7 @@ export class AppService {
         private readonly seriesService: SeriesService,
         private readonly booksService: BooksService,
         private readonly websocketsGateway:WebsocketsGateway,
-        @InjectQueue("rescanLibrary") private readonly rescanQueue: Queue
+        @InjectQueue("rescan-library") private readonly rescanQueue: Queue
     ) {}
   private readonly logger = new Logger(AppService.name);
 
@@ -25,7 +25,9 @@ export class AppService {
 
   @Cron("0 0 3 * * *")
   async addScheduleToQueue() {
-      await this.rescanQueue.add({});
+      const job = await this.rescanQueue.add("scanjob");
+
+      console.log(`created job ${ job.id}`);
   }
 
   /**

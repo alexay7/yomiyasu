@@ -20,7 +20,7 @@ import {ScanWorker} from "./queue/scan-library.job";
 import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
 import {APP_GUARD} from "@nestjs/core";
 import {redisStore} from "cache-manager-redis-yet";
-import { SerieprogressModule } from './serieprogress/serieprogress.module';
+import {SerieprogressModule} from "./serieprogress/serieprogress.module";
 
 @Module({
     imports: [
@@ -36,9 +36,9 @@ import { SerieprogressModule } from './serieprogress/serieprogress.module';
                 port: 6379
             }
         }),
-        BullModule.registerQueueAsync(
+        BullModule.registerQueue(
             {
-                name: "rescanLibrary"
+                name: "rescan-library"
             }
         ),
         AuthModule,

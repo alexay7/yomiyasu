@@ -24,7 +24,7 @@ export class AppController {
     constructor(
         private readonly appService: AppService,
         private readonly usersService:UsersService,
-        @InjectQueue("rescanLibrary") private readonly rescanQueue: Queue
+        @InjectQueue("rescan-library") private readonly rescanQueue: Queue
     ) {}
 
     @ApiOkResponse({status:HttpStatus.OK})
@@ -42,7 +42,9 @@ export class AppController {
 
         await this.usersService.isAdmin(userId);
 
-        await this.rescanQueue.add({});
+        const job = await this.rescanQueue.add("scanjob");
+
+        console.log(`created job ${ job.id}`);
 
         return {status:"OK"};
     }
