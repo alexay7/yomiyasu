@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {useQuery} from "react-query";
+import {useQuery, useQueryClient} from "react-query";
 import {useNavigate, useParams} from "react-router-dom";
 import {api} from "../../api/api";
 import {FullSerie, SerieWithProgress} from "../../types/serie";
@@ -18,10 +18,11 @@ import {Helmet} from "react-helmet";
 
 function Serie():React.ReactElement {
     const {id} = useParams();
-    const {reloaded, forceReload} = useGlobal();
+    const {reloaded} = useGlobal();
     const {userData} = useAuth();
     const [readMore, setReadMore] = useState(false);
     const [textOverflows, setTextOverflows] = useState(false);
+    const queryClient = useQueryClient();
 
     const overflowingText = useRef<HTMLParagraphElement | null>(null);
 
@@ -98,17 +99,17 @@ function Serie():React.ReactElement {
                 {serieData && (
                     <div className="flex items-center mx-4 flex-shrink-0 justify-end">
                         {!serieData?.readlist ? (
-                            <IconButton onClick={()=>{
-                                void addToReadlist(serieData._id, serieData.visibleName);
-                                forceReload("readlist");
+                            <IconButton onClick={async()=>{
+                                await addToReadlist(serieData._id, serieData.visibleName);
+                                queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:true});
                             }}
                             >
                                 <BookmarkAdd/>
                             </IconButton>
                         ) : (
-                            <IconButton onClick={()=>{
-                                void removeFromReadlist(serieData._id, serieData.visibleName);
-                                forceReload("readlist");
+                            <IconButton onClick={async()=>{
+                                await removeFromReadlist(serieData._id, serieData.visibleName);
+                                queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:false});
                             }}
                             >
                                 <BookmarkRemove/>
