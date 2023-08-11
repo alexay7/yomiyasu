@@ -97,12 +97,14 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     }, [siteSettings]);
 
     // Limpia el almacenamiento de mokuro
-    const keys = Object.keys(localStorage);
-    keys.forEach((key)=>{
-        if (key.includes("mokuro")) {
-            localStorage.removeItem(key);
-        }
-    });
+    if (!auxSiteSettings || !auxSiteSettings.openHTML) {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key)=>{
+            if (key.includes("mokuro")) {
+                localStorage.removeItem(key);
+            }
+        });
+    }
 
     return (
         <SettingsContext.Provider value={{
