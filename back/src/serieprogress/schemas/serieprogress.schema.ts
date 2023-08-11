@@ -5,7 +5,7 @@ import {Serie} from "../../series/schemas/series.schema";
 
 export type SerieProgressDocument = SerieProgress & Document;
 
-@Schema()
+@Schema({optimisticConcurrency:true})
 export class SerieProgress {
     _id?:Types.ObjectId;
 

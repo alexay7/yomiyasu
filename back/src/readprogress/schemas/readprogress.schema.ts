@@ -8,7 +8,7 @@ export type ReadProgressDocument = ReadProgress & Document;
 
 export type ReadProgressStatus = "unread" | "reading" | "completed";
 
-@Schema()
+@Schema({optimisticConcurrency:true})
 export class ReadProgress {
   _id?: Types.ObjectId;
 

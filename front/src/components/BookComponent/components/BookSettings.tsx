@@ -14,10 +14,12 @@ import {BookInfo} from "../../BookInfo/BookInfo";
 interface BookSettingsProps {
     bookData:BookWithProgress;
     insideSerie?:boolean;
+    read:boolean;
+    setRead:(v:React.SetStateAction<boolean>)=>void
 }
 
 export function BookSettings(props:BookSettingsProps):React.ReactElement {
-    const {bookData, insideSerie} = props;
+    const {bookData, insideSerie, read, setRead} = props;
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -40,9 +42,8 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             endDate:new Date()
         }
         );
-
         if (response) {
-            forceReload("all");
+            forceReload("serie");
         }
     }
 
@@ -53,9 +54,8 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             status:"unread"
         }
         );
-
         if (response) {
-            forceReload("all");
+            forceReload("serie");
         }
     }
 
@@ -108,22 +108,24 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Ir a la serie
                     </MenuItem>
                 )}
-                {bookData.status !== "completed" && (
+                {!read && (
                     <MenuItem key="read" onClick={async()=>{
                         await markAsRead();
+                        setRead(true);
                         handleClose();
                     }}
                     >
                         Marcar como leído
                     </MenuItem>
                 )}
-                {bookData.status && bookData.status !== "unread" && (
+                {bookData.status && read && (
                     <MenuItem key="unread" onClick={async()=>{
                         await markAsUnread();
+                        setRead(false);
                         handleClose();
                     }}
                     >
-                        {bookData.status === "completed" ? "Marcar como no leído" : "Eliminar progreso actual"}
+                        {bookData.status === "reading" ? "Eliminar progreso actual" : "Marcar como no leído"}
                     </MenuItem>
                 )}
                 <div>

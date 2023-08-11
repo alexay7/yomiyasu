@@ -19,19 +19,27 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     const {siteSettings} = useSettings();
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
+    const [read, setRead] = useState(bookData.status && bookData.status !== "unread");
 
     const navigate = useNavigate();
     const thumbnailUrl = `/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}`;
 
     useEffect(()=>{
         if (lastProgressRef.current && bookData.lastProgress) {
+            if (!read) {
+                lastProgressRef.current.style.width = "0%";
+                return;
+            }
+            if (read && bookData.status === "unread") {
+                lastProgressRef.current.style.width = "100%";
+                return;
+            }
             // Sets the lastProgress bar
             let value = bookData.lastProgress.currentPage * 100 / bookData.pages;
             value = value < 100 ? value : 100;
-            value = value > 2 ? value : 2;
             lastProgressRef.current.style.width = `${value}%`;
         }
-    }, [bookData]);
+    }, [bookData, read]);
 
     function goToBook():void {
         if (siteSettings.openHTML) {
@@ -47,7 +55,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             window.location.href = `/api/static/${bookData.seriePath}/${bookData.path}.html`;
             return;
         }
-        if (bookData.status === "completed") {
+        if (read && bookData.status === "completed") {
             if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
         }
         goTo(navigate, `/reader/${bookData._id}`);
@@ -98,7 +106,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                     <img loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
-                {bookData.status === "unread" && (
+                {!read && (
                     <div className={`absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent ${bookData.readlist ? "border-r-blue-500" : "border-r-primary"}`} style={{borderWidth:"0 35px 35px 0"}}/>
                 )}
 
@@ -120,7 +128,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 </a>
                 <div className="flex items-center justify-between text-sm">
                     <p className="dark:text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
-                    <BookSettings bookData={bookData} insideSerie={insideSerie}/>
+                    <BookSettings bookData={bookData} insideSerie={insideSerie} read={read} setRead={setRead}/>
                 </div>
             </div>
         </div>
