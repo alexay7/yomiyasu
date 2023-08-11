@@ -88,7 +88,7 @@ export function AppLayout():React.ReactElement {
                         />
                     </ul>
                     <div className="absolute bottom-0 left-0 p-4">
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/tfg" className="text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu 0.3.1</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/tfg" className="text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu {process.env.REACT_APP_VERSION}</a>
                     </div>
                 </div>
             </CSSTransition>

@@ -3,7 +3,7 @@ vault
 dist
 exterior/*
 build
-.env
+back/.env
 yarn-error.log
 yarn.lock
 dicts/*
