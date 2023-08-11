@@ -19,6 +19,7 @@ export async function createProgress(bookData:Book, page:number, time:number, do
         newProgress.status = "completed";
         newProgress.endDate = new Date();
     } else if (currentPage > 0) {
+
         // progreso normal
         newProgress.status = "reading";
     }
