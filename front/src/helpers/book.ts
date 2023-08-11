@@ -3,6 +3,7 @@ import {Book, BookWithProgress} from "../types/book";
 import {SerieWithProgress} from "../types/serie";
 
 export async function nextBook(book:Book):Promise<void> {
+    window.localStorage.removeItem(book._id);
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/next`);
 
     if (foundBook.status === "completed") {

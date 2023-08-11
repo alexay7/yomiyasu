@@ -54,6 +54,7 @@ function Reader():React.ReactElement {
         }
 
         if (!bookData || timer % 60 !== 0 || timer === 0) return;
+        window.localStorage.setItem(bookData._id, `${timer}`);
         void createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
     }, [currentPage, timer, bookData, reauth, readerSettings]);
 
@@ -83,8 +84,9 @@ function Reader():React.ReactElement {
         if (!isLoading && bookData) {
             let page = 1;
 
+            setTimer(bookProgress && bookProgress.time && bookProgress.time !== 0 ? bookProgress.time : parseInt(window.localStorage.getItem(bookData._id) || "0"));
+
             if (bookProgress && bookProgress.currentPage) {
-                setTimer(bookProgress.time || 0);
                 page = bookProgress.currentPage;
             }
 
