@@ -47,7 +47,7 @@ export class ReadprogressController {
 
     @Post()
     @ApiOkResponse({status:HttpStatus.OK})
-    async modifyOrCreateProgress(@Req() req:Request, @Body() progressDto:ProgressDto):Promise<ReadProgress | null> {
+    async modifyOrCreateProgress(@Req() req:Request, @Body() progressDto:ProgressDto, ignoreSerie?:boolean):Promise<ReadProgress | null> {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId: Types.ObjectId};
@@ -62,12 +62,13 @@ export class ReadprogressController {
 
         if (progressDto.status !== "unread") {
             // Si el progreso es avanzar la lectura, quitarlo de la lista de lectura si existe
-
-            await this.serieProgressService.createOrIncreaseBooks({
-                serie:foundBook.serie,
-                book:progressDto.book,
-                user:userId,
-                action:"add"});
+            if (!ignoreSerie) {
+                await this.serieProgressService.createOrIncreaseBooks({
+                    serie:foundBook.serie,
+                    book:progressDto.book,
+                    user:userId,
+                    action:"add"});
+            }
 
             const foundReadList = await this.readListService.findSerieInReadList(userId, foundBook?.serie);
       
@@ -75,11 +76,13 @@ export class ReadprogressController {
                 await this.readListService.removeSerieWithId(foundReadList._id);
             }
         } else {
-            await this.serieProgressService.createOrIncreaseBooks({
-                serie:foundBook.serie,
-                book:progressDto.book,
-                user:userId,
-                action:"remove"});
+            if (!ignoreSerie) {
+                await this.serieProgressService.createOrIncreaseBooks({
+                    serie:foundBook.serie,
+                    book:progressDto.book,
+                    user:userId,
+                    action:"remove"});
+            }
         }
 
         if (!foundProgress || foundProgress.status === "completed") {
@@ -104,9 +107,17 @@ export class ReadprogressController {
     async setSerieAsRead(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serieId:Types.ObjectId) {
         const found = await this.booksService.getSerieBooks(serieId);
 
-        found.forEach(async(book)=>{
-            await this.modifyOrCreateProgress(req, {book:book._id, status:"completed", currentPage:book.pages, endDate:new Date()});
+        const promises = found.map(async(book)=>{
+            await this.modifyOrCreateProgress(req, {book:book._id, status:"completed", currentPage:book.pages, endDate:new Date()}, true);
         });
+
+        await Promise.all(promises);
+
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId: Types.ObjectId};
+
+        await this.serieProgressService.createOrModifySerieProgress(userId, serieId, found.map(x=>x._id));
 
         return {status:"OK"};
     }

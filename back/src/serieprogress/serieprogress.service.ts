@@ -12,6 +12,25 @@ export class SerieprogressService {
         @InjectModel(SerieProgress.name) private readonly serieProgressModel: Model<SerieProgress>
     ) {}
 
+    async createOrModifySerieProgress(user:Types.ObjectId, serie:Types.ObjectId, books:Types.ObjectId[]) {
+        const foundProgress = await this.serieProgressModel.findOne({
+            user:user,
+            serie:serie
+        });
+
+        if (foundProgress) {
+            return this.serieProgressModel.findByIdAndUpdate(foundProgress._id, {readBooks:books});
+        }
+
+        const createProgress:SerieProgress = {
+            serie,
+            user,
+            readBooks:books,
+            paused:false
+        };
+        return this.serieProgressModel.create(createProgress);
+    }
+
     async createOrIncreaseBooks(createSerieprogressDto: CreateOrModifySerieProgress) {
         const foundProgress = await this.serieProgressModel.findOne({
             user:createSerieprogressDto.user,
