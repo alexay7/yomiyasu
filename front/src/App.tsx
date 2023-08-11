@@ -49,10 +49,6 @@ export function App():React.ReactElement {
 
     const {loading} = useAuth();
 
-    if (loading) {
-        return <Loading/>;
-    }
-
     return (
         <ColorModeContext.Provider value={colorMode}>
             <ThemeProvider theme={theme}>
@@ -65,19 +61,21 @@ export function App():React.ReactElement {
                     ]}
                 >
                 </Helmet>
-                <Routes>
-                    <Route path="/login" element={<React.Suspense fallback={<Loading/>}><Login/></React.Suspense>}/>
-                    <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
-                        <Route index element={<React.Suspense fallback={<Loading/>}><Home/></React.Suspense>}/>
-                        <Route path="library" element={<React.Suspense fallback={<Loading/>}><Library/></React.Suspense>}/>
-                        <Route path="series/:id" element={<React.Suspense fallback={<Loading/>}><Serie/></React.Suspense>}/>
-                        <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
+                {loading ? <Loading/> : (
+                    <Routes>
+                        <Route path="/login" element={<React.Suspense fallback={<Loading/>}><Login/></React.Suspense>}/>
+                        <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
+                            <Route index element={<React.Suspense fallback={<Loading/>}><Home/></React.Suspense>}/>
+                            <Route path="library" element={<React.Suspense fallback={<Loading/>}><Library/></React.Suspense>}/>
+                            <Route path="series/:id" element={<React.Suspense fallback={<Loading/>}><Serie/></React.Suspense>}/>
+                            <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
+                            <Route path="*" element={<Navigate to="/app"/>}/>
+                        </Route>
+                        <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>
+                        <Route path="ankiexport" element={<Anki/>}/>
                         <Route path="*" element={<Navigate to="/app"/>}/>
-                    </Route>
-                    <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>
-                    <Route path="ankiexport" element={<Anki/>}/>
-                    <Route path="*" element={<Navigate to="/app"/>}/>
-                </Routes>
+                    </Routes>
+                )}
             </ThemeProvider>
         </ColorModeContext.Provider>
     );
