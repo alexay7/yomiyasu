@@ -126,6 +126,11 @@ export class SeriesService {
 
       // Como ordenar los resultados | ! = descendente
       if (query.sort) {
+          if (query.sort.includes("difficulty")) {
+              result.where({difficulty:{$exists:true}});
+              result.where({difficulty:{$ne:0}});
+          }
+
           if (query.sort.includes("!")) {
               result.sort({[query.sort.replace("!", "")]:"desc"});
           } else {
