@@ -10,7 +10,7 @@ export async function nextBook(book:Book):Promise<void> {
     }
 
     if (foundBook._id === "end") {
-        window.location.href = `/app/series/${book.serie}`;
+        window.location.href = `/app/series/${book.serie}?finished=true`;
         return;
     }
     window.location.href = `/reader/${foundBook._id}`;

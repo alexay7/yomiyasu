@@ -7,13 +7,13 @@ import {Button, Divider, IconButton} from "@mui/material";
 import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove} from "@mui/icons-material";
+import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove, Whatshot} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
 import {goBack, goTo} from "../../helpers/helpers";
 import {EditSerie} from "../../components/EditSerie/EditSerie";
 import {useAuth} from "../../contexts/AuthContext";
 import {Reviews} from "./components/Reviews";
-import {addToReadlist, removeFromReadlist} from "../../helpers/series";
+import {addToReadlist, getFlameColor, removeFromReadlist} from "../../helpers/series";
 import {Helmet} from "react-helmet";
 
 function Serie():React.ReactElement {
@@ -132,8 +132,16 @@ function Serie():React.ReactElement {
                                 )}
                                 <img loading="lazy" className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
                                 {serieData.difficulty > 0 && (
-                                    <div className="absolute top-0 left-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                                        <p className="border-2 border-primary border-solid rounded-md m-1 px-3 text-sm bg-white text-primary">{Math.round(serieData.difficulty)}</p>
+                                    <div className="absolute top-0 left-0 text-center font-semibold bg-white m-1 rounded-full">
+                                        <div className="relative z-20">
+                                            <Whatshot fontSize="large"
+                                                sx={{color:getFlameColor(serieData.difficulty)}}
+                                            />
+                                            <p className="absolute left-1/2 -translate-x-1/2 text-lg text-white"
+                                                style={{textShadow:"-1px 0 gray, 0 1px gray, 1px 0 gray, 0 -1px gray"}}
+                                            >{serieData.difficulty}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>

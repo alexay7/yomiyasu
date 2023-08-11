@@ -1,10 +1,11 @@
 import React, {useRef, useState} from "react";
 import {SerieWithProgress} from "../../types/serie";
-import {Fade, IconButton} from "@mui/material";
-import {Book} from "@mui/icons-material";
+import {Fade, IconButton, Tooltip} from "@mui/material";
+import {Book, Whatshot} from "@mui/icons-material";
 import {SerieSettings} from "./components/SerieSettings";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../helpers/helpers";
+import {getFlameColor} from "../../helpers/series";
 
 interface SerieComponentProps {
     serieData:SerieWithProgress
@@ -39,8 +40,10 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                     </div>
                 )}
                 {serieData.difficulty > 0 && (
-                    <div className="absolute top-0 left-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                        <p className="border-2 border-primary border-solid rounded-md m-1 px-3 text-sm bg-white text-primary">{Math.round(serieData.difficulty)}</p>
+                    <div className="absolute top-0 left-0 text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
+                        <Tooltip title={`Dificultad: ${serieData.difficulty}/10`}>
+                            <Whatshot fontSize="medium" sx={{color:getFlameColor(serieData.difficulty)}}/>
+                        </Tooltip>
                     </div>
                 )}
 

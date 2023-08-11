@@ -1,9 +1,9 @@
 import {api} from "../api/api";
 import {Book, BookProgress} from "../types/book";
 
-export async function createProgress(bookData:Book, page:number, time:number):Promise<void> {
+export async function createProgress(bookData:Book, page:number, time:number, doublePages:boolean):Promise<void> {
     let currentPage = page;
-    if (currentPage > bookData.pages) {
+    if (currentPage > bookData.pages || (currentPage === bookData.pages - 1 && doublePages)) {
         currentPage = bookData.pages;
     }
 

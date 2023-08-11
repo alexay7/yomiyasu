@@ -54,8 +54,8 @@ function Reader():React.ReactElement {
         }
 
         if (!bookData || timer % 60 !== 0 || timer === 0) return;
-        void createProgress(bookData, currentPage, timer);
-    }, [currentPage, timer, bookData, reauth]);
+        void createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
+    }, [currentPage, timer, bookData, reauth, readerSettings]);
 
     useEffect(()=>{
         if (siteSettings.autoCrono) {
@@ -101,7 +101,7 @@ function Reader():React.ReactElement {
         const handleBeforeUnload = async():Promise<void> => {
             // Save before leaving the page
             if (!bookData) return;
-            await createProgress(bookData, currentPage, timer);
+            await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
         };
 
         const handleOutFocus = ():void=>{
@@ -122,7 +122,7 @@ function Reader():React.ReactElement {
             window.removeEventListener("beforeunload", handleBeforeUnload);
             window.removeEventListener("visibilitychange", handleOutFocus);
         };
-    }, [bookData, currentPage, timer, timerOn, changedTab]);
+    }, [bookData, currentPage, timer, timerOn, changedTab, readerSettings]);
 
     useEffect(()=>{
         /**
@@ -162,7 +162,7 @@ function Reader():React.ReactElement {
                             void prevBook(bookData);
                             return;
                         }
-                        if (value === bookData.pages) {
+                        if (value >= bookData.pages) {
                             if (!confirm("¿Pasar al siguiente libro?")) return;
                             void nextBook(bookData);
                             return;
@@ -285,7 +285,7 @@ function Reader():React.ReactElement {
 
     // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {
-        iframe.current?.contentWindow?.postMessage({action:"setPage", page:newPage});
+        iframe.current?.contentWindow?.postMessage({action:"setPage", page:newPage - 1});
     }
 
     function closeSettingsMenu():void {
@@ -647,7 +647,7 @@ function Reader():React.ReactElement {
                             <div className="w-1/2 flex items-center gap-2 px-2">
                                 <Tooltip title="Volver atrás">
                                     <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer);
+                                        await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
                                         window.location.href = window.localStorage.getItem("origin") || "/app";
                                     }}
                                     >
@@ -696,7 +696,7 @@ function Reader():React.ReactElement {
                             <div className="justify-between flex items-center">
                                 <Tooltip title="It al libro anterior">
                                     <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer);
+                                        await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
                                         void prevBook(bookData);
                                     }}
                                     >
@@ -730,7 +730,7 @@ function Reader():React.ReactElement {
                                 </Tooltip>
                                 <Tooltip title="Ir al siguiente libro">
                                     <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer);
+                                        await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
                                         void nextBook(bookData);
                                     }}
                                     >

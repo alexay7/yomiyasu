@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, {Fragment, useState} from "react";
 import {PopupWindow} from "../../../components/PopupWindow/PopupWindow";
-import {FormControl, IconButton, InputLabel, MenuItem, Rating, Select, TextField} from "@mui/material";
-import {api} from "../../../api/api";
-import {Review, Serie, SerieWithProgress} from "../../../types/serie";
+import {IconButton, MenuItem, Rating, Select, TextField} from "@mui/material";
+import {Review, SerieWithProgress} from "../../../types/serie";
 import {toast} from "react-toastify";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {Add, Whatshot} from "@mui/icons-material";
+import {useSearchParams} from "react-router-dom";
+import {api} from "../../../api/api";
 
 interface EditSerieProps {
     serieData:SerieWithProgress;
@@ -26,9 +26,11 @@ function getLabelText(value: number):string {
 }
 
 export function ReviewForm(props:EditSerieProps):React.ReactElement {
-    const {serieData, handleClose} = props;
+    const {serieData} = props;
+
+    const [searchParams, setSearchParams] = useSearchParams();
     const {forceReload} = useGlobal();
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(searchParams.get("finished") ? true : false);
     const [difficulty, setDifficulty] = useState<number | null>(null);
     const [rating, setRating] = useState<number | null>(null);
     const [hoverRating, setHoverRating] = useState<number>(-1);
@@ -36,6 +38,7 @@ export function ReviewForm(props:EditSerieProps):React.ReactElement {
     const [comments, setComments] = useState("");
 
     function closePopup():void {
+        setSearchParams();
         setOpen(false);
     }
 
