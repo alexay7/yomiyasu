@@ -56,6 +56,7 @@ export class ReadprogressService {
         const pipe = await this.readProgressModel.aggregate()
             .match({user:new Types.ObjectId(user)})
             .match({status:"reading"})
+            .sort({lastUpdateDate:-1})
             .addFields({lastProgress: "$$ROOT"})
             .lookup({
                 from: "books",
