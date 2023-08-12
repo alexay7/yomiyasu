@@ -54,6 +54,22 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
         };
     }, [searchWord]);
 
+    function getWordThings(frequency:string | undefined, pitches:{position:number}[] | undefined):string {
+        let text = "";
+
+        if (pitches && pitches.length > 0) {
+            pitches.forEach((pitch)=>{
+                text += ` [${pitch.position}]`;
+            });
+        }
+
+        if (frequency) {
+            text += ` (freq: ${frequency})`;
+        }
+
+        return text;
+    }
+
     return (
         <Fragment>
             <Dialog className="select-none" hideBackdrop open={searchWord !== ""} onClose={(e, r)=>{
@@ -90,9 +106,9 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
                                                         <ExitToApp/>
                                                     </IconButton>
                                                     {definition.kanji.length > 0 ? (
-                                                        <h2 className="mb-1">{definition.kanji[0].text} <span className="text-xs align-top underline">{definition.frequency ? `(freq: ${definition.frequency})` : ""}</span></h2>
+                                                        <h2 className="mb-1">{definition.kanji[0].text} <span className="text-xs align-top underline">{getWordThings(definition.frequency, definition.pitches)}</span></h2>
                                                     ) : (
-                                                        <h2 className="mb-1">{definition.kana[0].text} <span className="text-xs align-top underline">{definition.frequency ? `(freq: ${definition.frequency})` : ""}</span></h2>
+                                                        <h2 className="mb-1">{definition.kana[0].text} <span className="text-xs align-top underline">{getWordThings(definition.frequency, definition.pitches)}</span></h2>
                                                     )}
                                                     {definition.kanji.length > 1 && (
                                                         <li className="flex gap-2">

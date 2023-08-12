@@ -10,6 +10,7 @@ import {promises as fs} from "fs";
 
 interface FreqWord extends Word {
     frequency?:string;
+    pitches?:{position:number}[]
 }
 
 export interface FreqDisplay {
@@ -23,6 +24,7 @@ export class DictionaryService {
   private db: levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>> | null = null; // Once resolved, db will hold the actual object.
   private loadingDb: boolean;
   private freqDict:Record<string, {reading:string, freq:string}[]>;
+  private pitchDict:Record<string, {reading:string, pitches:{position:number}[]}>;
 
   constructor() {
       this.dbPromise = this.setupDB();
@@ -36,6 +38,7 @@ export class DictionaryService {
           const newDefs:FreqWord[] = word.words;
           word.words.forEach((def: FreqWord) => {
               const name = def.kanji.length > 0 ? def.kanji[0].text : def.kana[0].text;
+              // Add frequency
               const frequency = this.freqDict[name];
               if (frequency) {
                   if (frequency.length === 1) {
@@ -47,6 +50,13 @@ export class DictionaryService {
                       }
                   }
               }
+
+              // Add pitch
+              const pitches = this.pitchDict[name];
+              if (pitches) {
+                  def.pitches = pitches.pitches;
+              }
+
               newDefs.push(def);
           });
           newWord.words = newDefs.filter((v, i, a)=>a.findIndex(x=>(x.id === v.id)) === i);
@@ -60,8 +70,11 @@ export class DictionaryService {
       this.loadingDb = true;
       const dictFolder = join(process.cwd(), "..", "dicts");
 
-      const rawdata = await fs.readFile(join(dictFolder, "frequency.json"), "utf-8");
-      this.freqDict = JSON.parse(rawdata);
+      const rawFreqData = await fs.readFile(join(dictFolder, "frequency.json"), "utf-8");
+      this.freqDict = JSON.parse(rawFreqData);
+
+      const rawPitchData = await fs.readFile(join(dictFolder, "pitch.json"), "utf-8");
+      this.pitchDict = JSON.parse(rawPitchData);
 
       const jmdictPromise = setupJmdict(join(dictFolder, "jmdict"), join(dictFolder, "jmdict-eng-3.5.0.json"));
       const {db} = await jmdictPromise;
