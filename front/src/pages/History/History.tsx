@@ -16,23 +16,24 @@ interface LogData {
     book:string,
     serie:string,
     status:string,
-    pages:number,
-    start:Date,
-    end:Date | undefined,
+    currentPage:number,
+    startDate:Date,
+    endDate:Date | undefined,
     time:number,
-    lastupdate:Date | undefined,
+    lastUpdateDate:Date | undefined,
     characters:number
 }
 
 function History():React.ReactElement {
     const [total, setTotal] = useState(0);
+    const [sortField, setSortField] = useState("!lastUpdateDate");
     const [paginationModel, setPaginationModel] = useState({
         pageSize: 25,
         page: 0
     });
 
-    const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", paginationModel], async()=>{
-        const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}`);
+    const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", paginationModel, sortField], async()=>{
+        const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}&sort=${sortField}`);
 
         setTotal(res.total);
 
@@ -45,11 +46,11 @@ function History():React.ReactElement {
                 book:progress.bookInfo.visibleName,
                 serie:progress.serieInfo.visibleName,
                 status:progress.status,
-                pages:progress.currentPage,
-                start:progress.startDate,
-                end:progress.endDate,
+                currentPage:progress.currentPage,
+                startDate:progress.startDate,
+                endDate:progress.endDate,
                 time:progress.time,
-                lastupdate:progress.lastUpdateDate,
+                lastUpdateDate:progress.lastUpdateDate,
                 characters:progress.bookInfo.pageChars && progress.bookInfo.pageChars.length >=
                     progress.currentPage ? progress.bookInfo.pageChars[progress.currentPage - 1] : 0
             });
@@ -95,51 +96,61 @@ function History():React.ReactElement {
         {
             field: "book",
             headerName: "Libro",
-            width: 300
+            width: 300,
+            filterable:false
         },
         {
             field: "serie",
             headerName: "Serie",
-            width: 300
+            width: 300,
+            filterable:false
         },
         {
             field: "status",
             headerName: "Estado",
-            width: 110
+            width: 110,
+            filterable:false
         },
         {
-            field: "pages",
+            field: "currentPage",
             headerName: "Páginas leídas",
-            width: 120
+            width: 120,
+            filterable:false
         },
         {
             field: "characters",
             headerName: "Caracteres leídos",
-            width: 120
-        },
-        {
-            field: "lastupdate",
-            headerName: "Última actualización",
-            width: 160,
-            valueFormatter:(params)=>new Date(params.value).toLocaleString()
-        },
-        {
-            field: "start",
-            headerName: "Fecha de comienzo",
-            width: 160,
-            valueFormatter:(params)=>new Date(params.value).toLocaleString()
-        },
-        {
-            field: "end",
-            headerName: "Fecha de finalización",
-            width: 170,
-            valueFormatter:(params)=>params.value ? new Date(params.value).toLocaleString() : ""
+            sortable:false,
+            width: 120,
+            filterable:false
         },
         {
             field: "time",
             headerName: "Tiempo",
             width: 120,
-            valueFormatter:(params)=>formatTime(params.value)
+            valueFormatter:(params)=>formatTime(params.value),
+            filterable:false
+        },
+        {
+            field: "lastUpdateDate",
+            headerName: "Última actualización",
+            width: 160,
+            valueFormatter:(params)=>new Date(params.value).toLocaleString(),
+            filterable:false
+        },
+        {
+            field: "startDate",
+            headerName: "Fecha de comienzo",
+            width: 160,
+            valueFormatter:(params)=>new Date(params.value).toLocaleString(),
+            filterable:false
+        },
+        {
+            field: "endDate",
+            headerName: "Fecha de finalización",
+            width: 170,
+            valueFormatter:(params)=>params.value ? new Date(params.value).toLocaleString() : "",
+            filterable:false
         }
     ];
 
@@ -152,7 +163,7 @@ function History():React.ReactElement {
             <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500">
                 <DataGrid rows={progressData} columns={columns} slots={{toolbar:GridToolbar}} onRowClick={(row)=>{
                     const rowData = row.row as LogData;
-                    let text = `.log manga ${rowData.pages} ${rowData.book}`;
+                    let text = `.log manga ${rowData.currentPage} ${rowData.book}`;
 
                     if (rowData.time > 59) {
                         text += `;${Math.floor(rowData.time / 60)}`;
@@ -166,13 +177,28 @@ function History():React.ReactElement {
                 }}
                 initialState={{
                     sorting:{
-                        sortModel:[{field:"lastupdate", sort:"desc"}]
+                        sortModel:[{field:"lastUpdateDate", sort:"desc"}]
                     }
                 }}
                 paginationModel={paginationModel}
                 paginationMode="server"
                 onPaginationModelChange={setPaginationModel}
                 rowCount={total}
+                sortingMode="server"
+                onSortModelChange={(m)=>{
+                    if (m && m.length > 0) {
+                        const [chosen] = m;
+
+                        let {field} = chosen;
+
+                        if (chosen.sort === "desc") {
+                            field = `!${field}`;
+                        }
+
+                        setSortField(field);
+                    }
+                }}
+                disableColumnFilter
                 />
             </div>
         </div>

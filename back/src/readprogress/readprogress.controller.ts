@@ -138,7 +138,7 @@ export class ReadprogressController {
 
     @Get("all")
     @ApiOkResponse({status:HttpStatus.OK})
-    async getAllReadProgress(@Req() req:Request, @Query("page") page:number, @Query("limit") limit:number) {
+    async getAllReadProgress(@Req() req:Request, @Query("page") page:number, @Query("limit") limit:number, @Query("sort") sort:string) {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
@@ -156,7 +156,11 @@ export class ReadprogressController {
             limit = 50;
         }
 
-        const response = await this.readprogressService.findUserProgresses(userId, page, limit);
+        if (!sort) {
+            sort = "!lastUpdateDate";
+        }
+
+        const response = await this.readprogressService.findUserProgresses(userId, page, limit, sort);
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 

@@ -24,14 +24,35 @@ export class ReadprogressService {
         return query;
     }
 
-    async findUserProgresses(user:Types.ObjectId, page:number, limit:number) {
+    async findUserProgresses(user:Types.ObjectId, page:number, limit:number, sort:string) {
         const result = this.readProgressModel.aggregate()
             .match({user:new Types.ObjectId(user), status:{$ne:"unread"}})
             .lookup({from:"books", localField:"book", foreignField:"_id", as:"bookInfo"})
             .unwind({path:"$bookInfo"})
             .lookup({from:"series", localField:"serie", foreignField:"_id", as:"serieInfo"})
-            .unwind({path:"$serieInfo"})
-            .sort({lastUpdateDate:-1});
+            .unwind({path:"$serieInfo"});
+      
+        if (sort === "book") {
+            if (sort.includes("!")) {
+                result.sort({"bookInfo._id":"desc"});
+            } else {
+                result.sort({"bookInfo._id":"asc"});
+            }
+        }
+        else if (sort === "serie") {
+            if (sort.includes("!")) {
+                result.sort({"serieInfo._id":"desc"});
+            } else {
+                result.sort({"serieInfo._id":"asc"});
+            }
+        }
+        else {
+            if (sort.includes("!")) {
+                result.sort({[sort.replace("!", "")]:"desc"});
+            } else {
+                result.sort({[sort]:"asc"});
+            }
+        }
 
         const count = await this.readProgressModel.aggregate(result.pipeline()).count("total");
 
