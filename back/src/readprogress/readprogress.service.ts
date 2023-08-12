@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {BadRequestException, Injectable} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {ReadProgress, ReadProgressStatus} from "./schemas/readprogress.schema";
 import {Model, Types} from "mongoose";
@@ -24,13 +24,23 @@ export class ReadprogressService {
         return query;
     }
 
-    findUserProgresses(user:Types.ObjectId) {
-        return this.readProgressModel.aggregate()
+    async findUserProgresses(user:Types.ObjectId, page:number, limit:number) {
+        const result = this.readProgressModel.aggregate()
             .match({user:new Types.ObjectId(user), status:{$ne:"unread"}})
             .lookup({from:"books", localField:"book", foreignField:"_id", as:"bookInfo"})
             .unwind({path:"$bookInfo"})
             .lookup({from:"series", localField:"serie", foreignField:"_id", as:"serieInfo"})
-            .unwind({path:"$serieInfo"});
+            .unwind({path:"$serieInfo"})
+            .sort({lastUpdateDate:-1});
+
+        const count = await this.readProgressModel.aggregate(result.pipeline()).count("total");
+
+        if (!count || count.length === 0) throw new BadRequestException();
+
+        const data = await result.skip((page - 1) * limit)
+            .limit(limit);
+
+        return {data, total:count[0].total};            
     }
 
     createReadProgress(createReadProgress:CreateReadProgress):Promise<ReadProgress> {

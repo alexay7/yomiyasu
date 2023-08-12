@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {UserProgress} from "../../types/user";
@@ -25,12 +25,20 @@ interface LogData {
 }
 
 function History():React.ReactElement {
-    const {data:progressData = [], refetch:refetchProgress} = useQuery("progresses", async()=>{
-        const res = await api.get<UserProgress[]>("readprogress/all");
+    const [total, setTotal] = useState(0);
+    const [paginationModel, setPaginationModel] = useState({
+        pageSize: 25,
+        page: 0
+    });
+
+    const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", paginationModel], async()=>{
+        const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}`);
+
+        setTotal(res.total);
 
         const rows:LogData[] = [];
 
-        res.forEach((progress)=>{
+        res.data.forEach((progress)=>{
             rows.push({
                 id:progress._id,
                 image:`/api/static/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`,
@@ -161,6 +169,10 @@ function History():React.ReactElement {
                         sortModel:[{field:"lastupdate", sort:"desc"}]
                     }
                 }}
+                paginationModel={paginationModel}
+                paginationMode="server"
+                onPaginationModelChange={setPaginationModel}
+                rowCount={total}
                 />
             </div>
         </div>
