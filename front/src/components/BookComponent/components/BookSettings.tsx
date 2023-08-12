@@ -108,7 +108,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Ir a la serie
                     </MenuItem>
                 )}
-                {!read && (
+                {(!read || (read && bookData.status === "reading")) && (
                     <MenuItem key="read" onClick={async()=>{
                         await markAsRead();
                         setRead(true);
