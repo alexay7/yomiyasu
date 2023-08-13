@@ -140,7 +140,11 @@ export class SeriesService {
 
       const countQuery = await this.seriesModel.find().merge(result).count();
 
-      const results = await result.skip((query.page - 1) * query.limit);
+      if (query.limit) {
+          result.skip((query.page - 1) * query.limit);
+      }
+
+      const results = await result;
 
       return {data:results, pages: Math.ceil(countQuery / query.limit)};
   }
