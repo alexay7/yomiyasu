@@ -12,6 +12,7 @@ import {LibrarySettings} from "./components/LibrarySettings";
 import {useAuth} from "../../contexts/AuthContext";
 import {LibraryFilter} from "./components/LibraryFilter";
 import {Helmet} from "react-helmet";
+import {LibraryRandom} from "./components/LibraryRandom";
 
 function Library():React.ReactElement {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +24,7 @@ function Library():React.ReactElement {
     const readprogress = searchParams.get("readprogress");
     const page = searchParams.get("page");
     const status = searchParams.get("status");
+    const readlist = searchParams.get("readlist");
     const {reloaded} = useGlobal();
     const {userData} = useAuth();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
@@ -69,6 +71,10 @@ function Library():React.ReactElement {
 
         if (status) {
             link += `status=${status}&`;
+        }
+
+        if (readlist) {
+            link += "readlist=true&";
         }
 
         link += `page=${page || "1"}&limit=25`;
@@ -128,6 +134,7 @@ function Library():React.ReactElement {
                     )}
                 </div>
                 <div className="flex items-center mx-4">
+                    <LibraryRandom/>
                     <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
                 </div>
             </div>

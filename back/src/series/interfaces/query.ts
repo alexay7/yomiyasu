@@ -12,6 +12,7 @@ export interface SeriesSearch {
     min?:string;
     max?:string;
     readprogress?:"completed" | "reading" | "unread";
+    readlist?:boolean;
 }
 
 export interface UpdateSerie extends UpdateSeriesDto {

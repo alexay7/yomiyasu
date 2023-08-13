@@ -1,4 +1,4 @@
-import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body, Inject, UseInterceptors} from "@nestjs/common";
+import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body, Inject, UseInterceptors, BadRequestException} from "@nestjs/common";
 import {SeriesService} from "./series.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
@@ -74,7 +74,11 @@ export class SeriesController {
 
         let seriesWithProgress = await Promise.all(promises);
 
-        if (seriesWithProgress.length > 0 && query.readprogress) {
+        if (seriesWithProgress.length > 0) {
+            if (query.readlist !== undefined) {
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.readlist === true);
+            }
+
             switch (query.readprogress) {
             case "completed": {
                 seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === 0);
@@ -88,12 +92,76 @@ export class SeriesController {
                 seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === x?.bookCount);
                 break;
             }
+            default:{
+                break;
+            }
             }
         }
 
         const response = {data:seriesWithProgress.filter((item) => item !== null).slice(0, query.limit), pages:foundSeries.pages};
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Get("random")
+    async getRandomSerie(@Req() req:Request, @Query() query:SeriesSearch) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const foundSeries = await this.seriesService.filterSeries(query);
+
+        const promises = foundSeries.data.map(async(serieElem)=>{
+            const serieBooks = await this.booksService.getSerieBooks(serieElem._id);
+            if (serieBooks.length === 0) return null;
+            const serieData = await this.serieProgressService.getSerieProgress(userId, serieElem, serieBooks);
+            const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
+
+            if (serieData) {
+                const serieWithProgress:SerieWithProgress = {
+                    ...serieElem.toObject(),
+                    readlist,
+                    ...serieData
+                };
+                
+                return serieWithProgress;
+            }
+
+            return null;
+        });
+
+        let seriesWithProgress = await Promise.all(promises);
+
+        if (seriesWithProgress.length > 0) {
+            seriesWithProgress = seriesWithProgress.filter(x=>x !== null);
+
+            if (query.readlist !== undefined) {
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.readlist === true);
+            }
+            switch (query.readprogress) {
+            case "completed": {
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === 0);
+                break;
+            }
+            case "reading":{
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks !== x?.bookCount && x?.unreadBooks && x.unreadBooks > 0);
+                break;
+            }
+            case "unread":{
+                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === x?.bookCount);
+                break;
+            }
+            default:{
+                break;
+            }
+            }
+        }
+
+        const response = seriesWithProgress[Math.floor(Math.random() * seriesWithProgress.length)];
+
+        if (!response) throw new BadRequestException();
 
         return response;
     }

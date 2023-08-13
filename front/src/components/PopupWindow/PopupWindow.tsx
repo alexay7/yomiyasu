@@ -7,7 +7,8 @@ interface PopupWindowProps {
     open:boolean;
     closePopup:()=>void;
     children:React.JSX.Element;
-    onSubmit?:(e:React.FormEvent<HTMLFormElement>)=>void
+    onSubmit?:(e:React.FormEvent<HTMLFormElement>)=>void,
+    customSaveButton?:string;
 }
 
 const Transition = forwardRef((
@@ -20,7 +21,7 @@ const Transition = forwardRef((
 });
 
 export function PopupWindow(props:PopupWindowProps):React.ReactElement {
-    const {title, open, closePopup, children, onSubmit} = props;
+    const {title, open, closePopup, children, onSubmit, customSaveButton} = props;
 
     return (
         <Dialog scroll="paper" fullWidth={true} open={open} onClose={closePopup} keepMounted TransitionComponent={Transition}>
@@ -33,7 +34,7 @@ export function PopupWindow(props:PopupWindowProps):React.ReactElement {
                 <DialogActions>
                     <Button color="inherit" onClick={closePopup}>Cerrar</Button>
                     {onSubmit && (
-                        <Button type="submit">Guardar cambios</Button>
+                        <Button type="submit">{customSaveButton ? customSaveButton : "Guardar cambios"}</Button>
                     )}
                 </DialogActions>
             </form>
