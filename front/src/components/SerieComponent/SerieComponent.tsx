@@ -42,7 +42,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 )}
                 {serieData.difficulty > 0 && (
                     <div className="absolute top-0 left-0 text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
-                        <Tooltip title={`Dificultad: ${serieData.difficulty}/10`}>
+                        <Tooltip title={`Dificultad: ${serieData.difficulty.toFixed(1)}/10`}>
                             <Whatshot fontSize="medium" sx={{color:getFlameColor(serieData.difficulty)}}/>
                         </Tooltip>
                     </div>

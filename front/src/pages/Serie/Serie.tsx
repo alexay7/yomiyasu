@@ -143,7 +143,7 @@ function Serie():React.ReactElement {
                                             />
                                             <p className="absolute left-1/2 -translate-x-1/2 text-lg text-white"
                                                 style={{textShadow:"-1px 0 gray, 0 1px gray, 1px 0 gray, 0 -1px gray"}}
-                                            >{serieData.difficulty}
+                                            >{serieData.difficulty.toFixed(1)}
                                             </p>
                                         </div>
                                     </div>
