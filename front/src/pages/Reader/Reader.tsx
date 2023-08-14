@@ -659,7 +659,7 @@ function Reader():React.ReactElement {
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
-                                <StopWatchMenu timer={timer} setTimer={setTimer}
+                                <StopWatchMenu bookData={bookData} timer={timer} setTimer={setTimer}
                                     timerOn={timerOn} setTimerOn={setTimerOn}
                                 />
                                 {/* <IconButton>

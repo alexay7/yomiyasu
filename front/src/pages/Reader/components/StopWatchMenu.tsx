@@ -2,9 +2,12 @@ import {Timer, TimerOff} from "@mui/icons-material";
 import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
 import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
+import {createProgress} from "../../../helpers/progress";
+import {Book} from "../../../types/book";
 
 
 interface StopWatchMenuProps {
+    bookData:Book;
     timer:number;
     setTimer:(v:React.SetStateAction<number>)=>void;
     timerOn:boolean;
@@ -12,7 +15,7 @@ interface StopWatchMenuProps {
 }
 
 export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
-    const {timer, setTimer, timerOn, setTimerOn} = props;
+    const {timer, setTimer, timerOn, setTimerOn, bookData} = props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
@@ -32,6 +35,8 @@ export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
     }
 
     function resetTimer():void {
+        void createProgress(bookData, undefined, 1);
+        window.localStorage.removeItem(bookData._id);
         setTimer(0);
     }
 
