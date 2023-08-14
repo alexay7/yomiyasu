@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable} from "@nestjs/common";
+import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {ReadProgress, ReadProgressStatus} from "./schemas/readprogress.schema";
 import {Model, Types} from "mongoose";
@@ -6,12 +6,14 @@ import {
     CreateReadProgress,
     UpdateReadProgress
 } from "./interfaces/readprogress.interface";
+import {SerieprogressService} from "../serieprogress/serieprogress.service";
 
 @Injectable()
 export class ReadprogressService {
     constructor(
         @InjectModel(ReadProgress.name)
-        private readonly readProgressModel: Model<ReadProgress>
+        private readonly readProgressModel: Model<ReadProgress>,
+        private readonly seriesProgressService:SerieprogressService
     ) {}
 
     findProgressByBookAndUser(book:Types.ObjectId, user:Types.ObjectId, status?:ReadProgressStatus):Promise<ReadProgress | null> {
@@ -99,6 +101,16 @@ export class ReadprogressService {
     }
 
     async deleteReadProgress(id:Types.ObjectId, user:Types.ObjectId) {
+        const foundProgress = await this.readProgressModel.findById(id);
+
+        if (!foundProgress) throw new NotFoundException();
+
+        const totalReads = await this.readProgressModel.count({user, book:foundProgress?.book});
+
+        if (totalReads === 1) {
+            await this.seriesProgressService.createOrIncreaseBooks({book:foundProgress.book, user, action:"remove", serie:foundProgress.serie});
+        }
+
         return this.readProgressModel.findOneAndDelete({_id:id, user});
     }
 

@@ -35,7 +35,7 @@ export interface Book {
 export interface BookProgress {
     book:string,
     time?:number,
-    currentPage:number,
+    currentPage?:number,
     startDate?:Date,
     endDate?:Date,
     status:"unread" | "reading" | "completed"

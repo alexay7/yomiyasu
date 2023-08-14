@@ -52,7 +52,21 @@ export function SearchAutocomplete():React.ReactElement {
     return (
         <Autocomplete options={[...foundSeries, ...foundBooks]}
             renderOption={(props, option)=>(
-                <Box component="li" sx={{"& > img": {mr: 2, flexShrink: 0}}} {...props}>
+                <Box component="li" sx={{"& > img": {mr: 2, flexShrink: 0}}} {...props}
+                    onMouseDown={(e)=>{
+                        if (e.button === 1) {
+                            if (option.type === "book") {
+                                if (siteSettings.openHTML) {
+                                    window.open(`/api/static/${option.seriePath}/${option.path}.html`, "_href");
+                                    return;
+                                }
+                                window.open(`/reader/${option._id}`, "_href");
+                            } else {
+                                window.open(`/app/series/${option._id}`, "_href");
+                            }
+                        }
+                    }}
+                >
                     <img loading="lazy" width="50" src={`/api/static/${getThumbnail(option)}`} alt={option.visibleName} />
                     <p className="w-2/3 flex-grow">{option.visibleName}</p>
                 </Box>
