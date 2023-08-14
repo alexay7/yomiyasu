@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {useQuery, useQueryClient} from "react-query";
 import {useNavigate, useParams} from "react-router-dom";
 import {api} from "../../api/api";
-import {FullSerie, SerieWithProgress} from "../../types/serie";
+import {FullSerie} from "../../types/serie";
 import {Button, Divider, IconButton} from "@mui/material";
 import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
@@ -23,11 +23,13 @@ function Serie():React.ReactElement {
     const [readMore, setReadMore] = useState(false);
     const [textOverflows, setTextOverflows] = useState(false);
     const queryClient = useQueryClient();
+    const [unreadBooks, setUnreadBooks] = useState(0);
 
     const overflowingText = useRef<HTMLParagraphElement | null>(null);
 
     const {data:serieData, refetch:serieRefetch} = useQuery(`serie-${id}`, async()=>{
         const response = await api.get<FullSerie>(`series/${id}`);
+        setUnreadBooks(response.unreadBooks);
         return response;
     }, {refetchOnWindowFocus:false});
 
@@ -59,10 +61,11 @@ function Serie():React.ReactElement {
         }
     }, [booksRefetch, serieRefetch, reloaded]);
 
-    function getReadButtonText(auxData:SerieWithProgress):string {
-        if (auxData.unreadBooks === 0) return "Leer de nuevo";
+    function getReadButtonText():string {
+        if (!serieData) return "";
+        if (unreadBooks === 0) return "Leer de nuevo";
 
-        if (auxData.unreadBooks === auxData.bookCount) return "Empezar a leer";
+        if (unreadBooks === serieData.bookCount) return "Empezar a leer";
 
         return "Seguir leyendo";
     }
@@ -90,7 +93,7 @@ function Serie():React.ReactElement {
                     </IconButton>
                     {serieData && (
                         <div className="flex gap-4 items-center w-full">
-                            <SerieSettings serieData={serieData}/>
+                            <SerieSettings serieData={serieData} unreadBooks={unreadBooks} setUnreadBooks={setUnreadBooks}/>
                             <p className="dark:text-white text-2xl max-w-[50%] overflow-hidden text-ellipsis whitespace-nowrap">{serieData.visibleName}</p>
                             <p className="text-white px-3 py-1 bg-[#555555] rounded-md font-semibold">{serieData.bookCount}</p>
                         </div>
@@ -126,9 +129,9 @@ function Serie():React.ReactElement {
                     <div className="flex gap-8 flex-col lg:flex-row">
                         <div className="flex flex-col items-center sm:items-start sm:flex-row w-full gap-8">
                             <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
-                                {serieData.unreadBooks > 0 && (
+                                {unreadBooks > 0 && (
                                     <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                                        <p className={`p-2 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{serieData.unreadBooks}</p>
+                                        <p className={`p-2 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{unreadBooks}</p>
                                     </div>
                                 )}
                                 <img loading="lazy" className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
@@ -155,7 +158,7 @@ function Serie():React.ReactElement {
                                 <p className="text py-4 pt-2 text-sm">{getCharacterCount()}</p>
                                 {serieBooks && serieBooks.length > 0 && (
                                     <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={()=>{
-                                        if (serieData.unreadBooks === 0) {
+                                        if (unreadBooks === 0) {
                                             if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
                                         }
                                         let bookId = 0;
@@ -167,7 +170,7 @@ function Serie():React.ReactElement {
                                         });
                                         goTo(navigate, `/reader/${serieBooks[bookId]._id}`);
                                     }}
-                                    >{getReadButtonText(serieData)}
+                                    >{getReadButtonText()}
                                     </Button>
                                 )}
                                 {serieData.summary && (
@@ -210,7 +213,7 @@ function Serie():React.ReactElement {
                     <Divider/>
                     <ul className="flex flex-wrap gap-4 py-4">
                         {serieBooks && serieBooks.length > 0 && serieBooks.map((book)=>(
-                            <BookComponent key={book._id} bookData={book} insideSerie/>
+                            <BookComponent key={book._id} bookData={book} insideSerie forceRead={unreadBooks === 0}/>
                         ))}
                     </ul>
                 </div>

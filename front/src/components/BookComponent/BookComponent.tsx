@@ -12,14 +12,21 @@ import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 interface BookComponentProps {
     bookData:BookWithProgress,
     insideSerie?:boolean;
+    forceRead?:boolean;
 }
 
 export function BookComponent(props:BookComponentProps):React.ReactElement {
-    const {bookData, insideSerie} = props;
+    const {bookData, insideSerie, forceRead} = props;
     const {siteSettings} = useSettings();
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
     const [read, setRead] = useState(bookData.status && bookData.status !== "unread");
+
+    useEffect(()=>{
+        if (forceRead) {
+            setRead(true);
+        }
+    }, [forceRead]);
 
     const navigate = useNavigate();
     const thumbnailUrl = `/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}`;

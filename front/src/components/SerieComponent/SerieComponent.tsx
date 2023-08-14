@@ -15,6 +15,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
     const {serieData} = props;
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
+    const [unreadBooks, setUnreadBooks] = useState(serieData.unreadBooks);
 
     const navigate = useNavigate();
 
@@ -34,9 +35,9 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                     <img loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
-                {serieData.unreadBooks > 0 && (
+                {unreadBooks > 0 && (
                     <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                        <p className={`p-1 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{serieData.unreadBooks}</p>
+                        <p className={`p-1 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{unreadBooks}</p>
                     </div>
                 )}
                 {serieData.difficulty > 0 && (
@@ -64,7 +65,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 </a>
                 <div className="flex items-center justify-between">
                     <p className="dark:text-gray-300 text-sm lg:text-xs">{serieData.bookCount} libros</p>
-                    <SerieSettings serieData={serieData}/>
+                    <SerieSettings serieData={serieData} unreadBooks={unreadBooks} setUnreadBooks={setUnreadBooks}/>
                 </div>
             </div>
         </div>

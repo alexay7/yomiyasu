@@ -11,10 +11,12 @@ import {api} from "../../../api/api";
 
 interface SerieSettingsProps {
     serieData:SerieWithProgress;
+    unreadBooks:number;
+    setUnreadBooks:(v:React.SetStateAction<number>)=>void
 }
 
 export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
-    const {serieData} = props;
+    const {serieData, unreadBooks, setUnreadBooks} = props;
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -35,6 +37,7 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
     async function markAsRead():Promise<void> {
         await api.post<unknown, {status:string}>(`readprogress/${serieData._id}`, {});
         forceReload("all");
+        setUnreadBooks(0);
     }
 
     async function pauseSerie():Promise<void> {
@@ -79,7 +82,7 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                         Pausar serie
                     </MenuItem>
                 )}
-                {serieData.unreadBooks > 0 && (
+                {unreadBooks > 0 && (
                     <MenuItem
                         onClick={()=>{
                             void markAsRead();
@@ -93,7 +96,7 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                 {userData?.admin && (
                     <MenuItem key="automatic" onClick={setNames}>Aplicar nombres automáticos</MenuItem>
                 )}
-                {serieData.unreadBooks !== 0 && (
+                {unreadBooks !== 0 && (
                     <div>
                         {serieData.readlist ? (
                             <MenuItem key="readlist" onClick={()=>{
