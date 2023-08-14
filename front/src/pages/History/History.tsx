@@ -14,6 +14,7 @@ interface LogData {
     id:string,
     image:string,
     book:string,
+    bookId:string,
     serie:string,
     status:string,
     currentPage:number,
@@ -42,6 +43,7 @@ function History():React.ReactElement {
         res.data.forEach((progress)=>{
             rows.push({
                 id:progress._id,
+                bookId:progress.bookInfo._id,
                 image:`/api/static/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`,
                 book:progress.bookInfo.visibleName,
                 serie:progress.serieInfo.visibleName,
@@ -78,6 +80,7 @@ function History():React.ReactElement {
             renderCell:(params)=>(
                 <IconButton color="error" onClick={()=>{
                     if (confirm("¿Seguro que quieres borrar el progreso?")) {
+                        window.localStorage.removeItem(params.row.bookId);
                         void deleteProgress(params.value);
                     }
                 }}
