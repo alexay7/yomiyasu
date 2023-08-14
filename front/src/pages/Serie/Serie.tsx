@@ -193,7 +193,15 @@ function Serie():React.ReactElement {
                                 <p className="w-[14rem] text-sm">GÉNEROS</p>
                                 <ul className="list-none flex gap-2 text-xs">
                                     {serieData.genres.map((genre)=>(
-                                        <Button onClick={()=>goTo(navigate, `/app/library?genre=${genre}`)} className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={genre}>{genre}</Button>
+                                        <Button onClick={()=>goTo(navigate, `/app/library?genre=${genre}`)}
+                                            onMouseDown={(e)=>{
+                                                if (e.button === 1) {
+                                                    window.open(`/app/library?genre=${genre}`, "_blank")?.focus();
+                                                }
+                                            }}
+                                            className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={genre}
+                                        >{genre}
+                                        </Button>
                                     ))}
                                 </ul>
                             </div>
@@ -204,7 +212,15 @@ function Serie():React.ReactElement {
                                 <p className="w-[14rem] text-sm">AUTORES</p>
                                 <ul className="list-none flex gap-2 text-xs">
                                     {serieData.authors.map((author)=>(
-                                        <Button onClick={()=>goTo(navigate, `/app/library?author=${author}`)} className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={author}>{author}</Button>
+                                        <Button onClick={()=>goTo(navigate, `/app/library?author=${author}`)}
+                                            onMouseDown={(e)=>{
+                                                if (e.button === 1) {
+                                                    window.open(`/app/library?author=${author}`, "_blank")?.focus();
+                                                }
+                                            }}
+                                            className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={author}
+                                        >{author}
+                                        </Button>
                                     ))}
                                 </ul>
                             </div>

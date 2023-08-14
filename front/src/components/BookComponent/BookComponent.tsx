@@ -48,7 +48,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
         }
     }, [bookData, read]);
 
-    function goToBook():void {
+    function goToBook(mouse?:boolean):void {
         if (siteSettings.openHTML) {
             let settings = defaultSets() as {backgroundColor:string};
             const prevSettings = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`);
@@ -59,11 +59,19 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
             window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(settings));
 
+            if (mouse) {
+                window.open(`/api/static/${bookData.seriePath}/${bookData.path}.html`, "_blank")?.focus();
+                return;
+            }
             window.location.href = `/api/static/${bookData.seriePath}/${bookData.path}.html`;
             return;
         }
         if (read && bookData.status === "completed") {
             if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+        }
+        if (mouse) {
+            window.open(`/reader/${bookData._id}`, "_blank")?.focus();
+            return;
         }
         goTo(navigate, `/reader/${bookData._id}`);
     }
