@@ -86,8 +86,8 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
                         <MenuItem value="!sortName">Nombre (Z -&gt; A)</MenuItem>
                         <MenuItem value="!bookCount">Más volúmenes</MenuItem>
                         <MenuItem value="bookCount">Menos volúmenes</MenuItem>
-                        <MenuItem value="lastModifiedDate">Más recientes</MenuItem>
-                        <MenuItem value="!lastModifiedDate">Más antiguos</MenuItem>
+                        <MenuItem value="lastModifiedDate">Más antiguos</MenuItem>
+                        <MenuItem value="!lastModifiedDate">Más recientes</MenuItem>
                         <MenuItem value="difficulty">Más fáciles</MenuItem>
                         <MenuItem value="!difficulty">Más difíciles</MenuItem>
                     </Select>
