@@ -123,7 +123,7 @@ export class SeriesController {
 
             if (serieData) {
                 const serieWithProgress:SerieWithProgress = {
-                    ...serieElem.toObject(),
+                    ...serieElem,
                     readlist,
                     ...serieData
                 };
