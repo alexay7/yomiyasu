@@ -1,6 +1,5 @@
 import {HttpAdapterHost, NestFactory} from "@nestjs/core";
 import {AppModule} from "./app.module";
-import {ValidationPipe} from "@nestjs/common";
 import {join} from "path";
 import {NestExpressApplication} from "@nestjs/platform-express";
 import * as cookieParser from "cookie-parser";
@@ -20,10 +19,6 @@ async function bootstrap() {
     const corsOptions = {};
 
     app.enableCors(corsOptions);
-
-    // Pasa el filtro de validación a todas las peticiones con body
-    // En caso de que exista un parámetro fuera de la whitelist, no se pasará
-    app.useGlobalPipes(new ValidationPipe({whitelist: true, transform: true}));
 
     // Hace pasar todas las excepciones por un mismo filtro
     const {httpAdapter} = app.get(HttpAdapterHost);
