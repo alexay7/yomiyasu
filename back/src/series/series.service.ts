@@ -136,7 +136,7 @@ export class SeriesService {
           }
       }
 
-      const countQuery = await this.seriesModel.find().merge(result).count();
+      const countQuery = await this.seriesModel.aggregate(result.pipeline()).count("total");
 
       if (query.limit && query.page) {
           result.skip((query.page - 1) * query.limit);
@@ -172,7 +172,7 @@ export class SeriesService {
 
       const results = await result;
 
-      return {data:results, pages: Math.ceil(countQuery / (query.limit || 1))};
+      return {data:results, pages: Math.ceil(countQuery[0].total / (query.limit || 1))};
   }
 
   async getArtistsAndGenres() {
