@@ -4,7 +4,7 @@ import {InjectModel} from "@nestjs/mongoose";
 import {Model, Types} from "mongoose";
 import {CreateOrModifySerieProgress} from "./interfaces/serieprogress";
 import {Book} from "../books/schemas/book.schema";
-import {Serie} from "../series/schemas/series.schema";
+import {FullSerie} from "../series/interfaces/serieWithProgress";
 
 @Injectable()
 export class SerieprogressService {
@@ -67,7 +67,7 @@ export class SerieprogressService {
         return this.serieProgressModel.findOneAndUpdate({user, serie}, {paused:false}, {new:true});
     }
 
-    async getSerieProgress(user:Types.ObjectId, serieData:Serie, serieBooks:Book[]) {
+    getSerieProgress(serieData:FullSerie, serieBooks:Book[]) {
         const result: {
             unreadBooks:number,
             thumbnailPath:string,
@@ -82,27 +82,24 @@ export class SerieprogressService {
             paused:false
         };
 
-        const serieProgress = await this.serieProgressModel.aggregate()
-            .match({user:new Types.ObjectId(user), serie:new Types.ObjectId(serieData._id)});
+        const serieProgress = serieData.serieprogress;
 
-        if (serieProgress.length === 0) {
+        if (!serieProgress) {
             return result;
         }
 
-        const foundProgress = serieProgress[0] as SerieProgress;
-
-        if (foundProgress.paused) {
+        if (serieProgress.paused) {
             result.paused = true;
             return result;
         }
 
-        if (foundProgress.readBooks.length === serieBooks.length) {
+        if (serieProgress.readBooks.length === serieBooks.length) {
             result.unreadBooks = 0;
             return result;
         }
 
         const unreadBooks = serieBooks.filter(
-            x=>foundProgress.readBooks.findIndex(
+            x=>serieProgress.readBooks.findIndex(
                 y=>y._id.equals(x._id as Types.ObjectId)
             ) === -1
         );

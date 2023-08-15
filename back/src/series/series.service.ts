@@ -86,49 +86,47 @@ export class SeriesService {
       return this.seriesModel.findByIdAndUpdate(id, {$inc:{bookCount:1}});
   }
 
-  async filterSeries(query:SeriesSearch) {
-      const result = this.seriesModel.find().collation({locale: "es"});
+  async filterSeries(user:Types.ObjectId, query:SeriesSearch) {
+      const result = this.seriesModel.aggregate().collation({locale: "es"});
 
       if (query.author) {
-          result.where({authors:{$in:[query.author]}});
+          result.match({authors:{$in:[query.author]}});
       }
 
       if (query.genre) {
-          result.where({genres:{$in:[query.genre]}});
+          result.match({genres:{$in:[query.genre]}});
       }
 
       if (query.name) {
-          const regex = new RegExp("^" + query.name.replace(/\s+/g, ".*"), "i");
-          result.where({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
+          const regex = new RegExp(query.name.replace(/\s+/g, ".*"), "i");
+          result.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
       }
 
-      if ((query.min && query.min !== "0")) {
-          const min = query.min || "0";
-          result.where({difficulty:{$gt:parseInt(min) - 1}});
+      if ((query.min && query.min !== 0)) {
+          result.match({difficulty:{$gt:query.min - 1}});
       }
 
-      if (query.max && query.max !== "10") {
-          const max = query.max || "0";
-          result.where({difficulty:{$lt:parseInt(max) + 1}});
+      if (query.max && query.max !== 10) {
+          result.match({difficulty:{$lt:query.max + 1}});
       }
 
       if (query.firstLetter) {
           if (query.firstLetter === "SPECIAL") {
-              result.where({"sortName":{$regex:"^[^a-zA-Z]", $options:"i"}});
+              result.match({"sortName":{$regex:"^[^a-zA-Z]", $options:"i"}});
           } else {
-              result.where({"sortName": {$regex: "^" + query.firstLetter, $options: "i"}});
+              result.match({"sortName": {$regex: "^" + query.firstLetter, $options: "i"}});
           }
       }
 
       if (query.status) {
-          result.where({status:query.status});
+          result.match({status:query.status});
       }
 
       // Como ordenar los resultados | ! = descendente
       if (query.sort) {
           if (query.sort.includes("difficulty")) {
-              result.where({difficulty:{$exists:true}});
-              result.where({difficulty:{$ne:0}});
+              result.match({difficulty:{$exists:true}});
+              result.match({difficulty:{$ne:0}});
           }
 
           if (query.sort.includes("!")) {
@@ -140,13 +138,41 @@ export class SeriesService {
 
       const countQuery = await this.seriesModel.find().merge(result).count();
 
-      if (query.limit) {
+      if (query.limit && query.page) {
           result.skip((query.page - 1) * query.limit);
       }
 
+      //   Si la query no tiene que ver con el progreso o la lista de lectura, hacer el corte ya
+      if (!query.readprogress && !query.readlist && query.limit) {
+          result.limit(query.limit);
+      }
+
+      // Se obtienen los progresos del usuario
+      result.lookup({
+          from:"serieprogresses",
+          let: {serie_id: "$_id"},
+          as:"serieprogress",
+          pipeline:[
+              {"$match":{$expr:{$eq:["$$serie_id", "$serie"]}}},
+              {"$match":{"user":new Types.ObjectId(user)}}
+          ]
+      }).unwind({path:"$serieprogress", preserveNullAndEmptyArrays:true});
+
+
+      // Se obtienen las listas de lectura del usuario
+      result.lookup({
+          from:"readlists",
+          let: {serie_id: "$_id"},
+          as:"seriereadlist",
+          pipeline:[
+              {"$match":{$expr:{$eq:["$$serie_id", "$serie"]}}},
+              {"$match":{"user":new Types.ObjectId(user)}}
+          ]
+      }).unwind({path:"$seriereadlist", preserveNullAndEmptyArrays:true});
+
       const results = await result;
 
-      return {data:results, pages: Math.ceil(countQuery / query.limit)};
+      return {data:results, pages: Math.ceil(countQuery / (query.limit || 1))};
   }
 
   async getArtistsAndGenres() {
@@ -176,14 +202,12 @@ export class SeriesService {
               pipe.match({status:query.status});
           }
           
-          if ((query.min && query.min !== "0")) {
-              const min = query.min || "0";
-              pipe.match({difficulty:{$gt:parseInt(min) - 1}});
+          if ((query.min && query.min !== 0)) {
+              pipe.match({difficulty:{$gt:query.min - 1}});
           }
   
-          if (query.max && query.max !== "10") {
-              const max = query.max || "0";
-              pipe.match({difficulty:{$lt:parseInt(max) + 1}});
+          if (query.max && query.max !== 10) {
+              pipe.match({difficulty:{$lt:query.max + 1}});
           }
       }
       pipe.project({

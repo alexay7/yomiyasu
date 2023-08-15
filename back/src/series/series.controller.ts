@@ -51,17 +51,19 @@ export class SeriesController {
             query.limit = 25;
         }
 
-        const foundSeries = await this.seriesService.filterSeries(query);
+        const foundSeries = await this.seriesService.filterSeries(userId, query);
 
         const promises = foundSeries.data.map(async(serieElem)=>{
             const serieBooks = await this.booksService.getSerieBooks(serieElem._id);
+
             if (serieBooks.length === 0) return null;
-            const serieData = await this.serieProgressService.getSerieProgress(userId, serieElem, serieBooks);
-            const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
+
+            const serieData = this.serieProgressService.getSerieProgress(serieElem, serieBooks);
+            const readlist = serieElem.seriereadlist;
 
             if (serieData) {
                 const serieWithProgress:SerieWithProgress = {
-                    ...serieElem.toObject(),
+                    ...serieElem,
                     readlist,
                     ...serieData
                 };
@@ -111,12 +113,12 @@ export class SeriesController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
-        const foundSeries = await this.seriesService.filterSeries(query);
+        const foundSeries = await this.seriesService.filterSeries(userId, query);
 
         const promises = foundSeries.data.map(async(serieElem)=>{
             const serieBooks = await this.booksService.getSerieBooks(serieElem._id);
             if (serieBooks.length === 0) return null;
-            const serieData = await this.serieProgressService.getSerieProgress(userId, serieElem, serieBooks);
+            const serieData = this.serieProgressService.getSerieProgress(serieElem, serieBooks);
             const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
 
             if (serieData) {

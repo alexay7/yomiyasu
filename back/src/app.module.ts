@@ -1,4 +1,4 @@
-import {Module} from "@nestjs/common";
+import {Module, ValidationPipe} from "@nestjs/common";
 import {AppController} from "./app.controller";
 import {AppService} from "./app.service";
 import {AuthModule} from "./auth/auth.module";
@@ -18,7 +18,7 @@ import {ReviewsModule} from "./reviews/reviews.module";
 import {BullModule} from "@nestjs/bull";
 import {ScanWorker} from "./queue/scan-library.job";
 import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
-import {APP_GUARD} from "@nestjs/core";
+import {APP_GUARD, APP_PIPE} from "@nestjs/core";
 import {redisStore} from "cache-manager-redis-yet";
 import {SerieprogressModule} from "./serieprogress/serieprogress.module";
 
@@ -65,6 +65,14 @@ import {SerieprogressModule} from "./serieprogress/serieprogress.module";
         {
             provide: APP_GUARD,
             useClass: ThrottlerGuard
+        },
+        {
+            provide: APP_PIPE,
+            useValue: new ValidationPipe({
+                whitelist:true,
+                transform: true,
+                transformOptions: {enableImplicitConversion: true}
+            })
         }
     ]
 })
