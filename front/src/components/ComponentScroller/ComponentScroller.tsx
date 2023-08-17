@@ -30,9 +30,9 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
         return ()=>{
             window.removeEventListener("resize", setRight);
         };
-    }, [ulRef, components]);
+    }, [ulRef, components, left]);
 
-    function scrollRight():void {
+    function scrollToRight():void {
         if (!ulRef || !ulRef.current) return;
 
         ulRef.current.scrollBy({left:document.body.clientWidth, behavior:"smooth"});
@@ -44,7 +44,7 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
         }, 300);
     }
 
-    function scrollLeft():void {
+    function scrollToLeft():void {
         if (!ulRef || !ulRef.current) return;
 
         ulRef.current.scrollBy({left:-document.body.clientWidth, behavior:"smooth"});
@@ -61,16 +61,21 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
             <div className="flex items-center justify-between">
                 <h2>{title}</h2>
                 <div className="flex items-center">
-                    <IconButton onClick={scrollLeft} disabled={left === 0}>
+                    <IconButton onClick={scrollToLeft} disabled={left === 0}>
                         <ArrowLeft/>
                     </IconButton>
-                    <IconButton onClick={scrollRight} disabled={maxRight}>
+                    <IconButton onClick={scrollToRight} disabled={maxRight}>
                         <ArrowRight/>
                     </IconButton>
                 </div>
             </div>
             {type === "books" ? (
-                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4">
+                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4" onScroll={(e)=>{
+                    const {scrollLeft} = e.target as HTMLElement;
+
+                    setLeft(scrollLeft);
+                }}
+                >
                     {components?.map((book)=>(
                         <BookComponent key={book._id} bookData={book as BookWithProgress}/>
                     ))}
