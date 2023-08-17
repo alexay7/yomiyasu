@@ -29,7 +29,7 @@ function TableroScroller():React.ReactElement {
     if (!tableroData || tableroData.length === 0) return <></>;
 
     return (
-        <ComponentScroller type="books" title="Tu tablero" components={tableroData}/>
+        <ComponentScroller type="books" title="Tu tablero" components={tableroData} deck/>
     );
 }
 
