@@ -104,6 +104,12 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         goTo(navigate, `/app/series/${bookData.serie}`);
                         handleClose();
                     }}
+                    onMouseDown={(e)=>{
+                        if (e.button === 1) {
+                            e.preventDefault();
+                            window.open(`/app/series/${bookData.serie}`, "_blank")?.focus();
+                        }
+                    }}
                     >
                         Ir a la serie
                     </MenuItem>
