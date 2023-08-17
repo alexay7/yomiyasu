@@ -100,7 +100,13 @@ export class SeriesController {
             }
         }
 
-        const response = {data:seriesWithProgress.filter((item) => item !== null).slice(0, query.limit), pages:foundSeries.pages};
+        let skip = 0;
+
+        if (query.readprogress || query.readlist) {
+            skip = (query.page - 1) * query.limit;
+        }
+
+        const response = {data:seriesWithProgress.filter((item) => item !== null).slice(skip, query.limit + skip), pages:Math.ceil(seriesWithProgress.length / query.limit)};
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 
