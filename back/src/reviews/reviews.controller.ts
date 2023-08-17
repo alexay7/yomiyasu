@@ -1,4 +1,4 @@
-import {Controller, Post, Body, Req, UseGuards, UnauthorizedException, Param, Delete} from "@nestjs/common";
+import {Controller, Post, Body, Req, UseGuards, UnauthorizedException, Param, Delete, BadRequestException, NotFoundException} from "@nestjs/common";
 import {ReviewsService} from "./reviews.service";
 import {CreateReviewDto} from "./dto/create-review.dto";
 import {Review} from "./schemas/review.schema";
@@ -27,11 +27,15 @@ export class ReviewsController {
             ...createReviewDto
         };
 
+        const response = await this.reviewsService.create(newReview);
+
+        if (!response) throw new BadRequestException();
+
         const difficulty = await this.reviewsService.getSerieDifficulty(createReviewDto.serie);
 
         await this.seriesService.editSerie(createReviewDto.serie, {difficulty});
 
-        return this.reviewsService.create(newReview);
+        return response;
     }
 
     @Delete(":id")
@@ -40,6 +44,18 @@ export class ReviewsController {
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
-        return this.reviewsService.removeReview(userId, reviewId);
+        const foundReview = await this.reviewsService.findById(reviewId);
+
+        if (!foundReview) throw new NotFoundException();
+
+        const response = await this.reviewsService.removeReview(userId, reviewId);
+
+        if (!response || ! foundReview) throw new BadRequestException();
+
+        const difficulty = await this.reviewsService.getSerieDifficulty(foundReview.serie);
+
+        await this.seriesService.editSerie(foundReview.serie, {difficulty:difficulty || 0});
+
+        return response;
     }
 }
