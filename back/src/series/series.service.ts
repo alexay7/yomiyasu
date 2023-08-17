@@ -138,13 +138,12 @@ export class SeriesService {
 
       const countQuery = await this.seriesModel.aggregate(result.pipeline()).count("total");
 
-      if (query.limit && query.page) {
-          result.skip((query.page - 1) * query.limit);
-      }
-
       //   Si la query no tiene que ver con el progreso o la lista de lectura, hacer el corte ya
       if (!query.readprogress && !query.readlist && query.limit) {
           result.limit(query.limit);
+          if (query.limit && query.page) {
+              result.skip((query.page - 1) * query.limit);
+          }
       }
 
       // Se obtienen los progresos del usuario
