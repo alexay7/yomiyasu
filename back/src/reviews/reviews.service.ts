@@ -15,6 +15,10 @@ export class ReviewsService {
         return this.reviewModel.find({serie});
     }
 
+    async findById(id:Types.ObjectId) {
+        return this.reviewModel.findById(id);
+    }
+
     async getSerieDifficulty(serie:Types.ObjectId) {
         const pipe = await this.reviewModel.aggregate()
             .match({serie:new Types.ObjectId(serie)})
