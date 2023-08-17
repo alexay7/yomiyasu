@@ -20,6 +20,9 @@ export class SerieProgress {
 
     @Prop({type:Boolean, default:false})
     paused:boolean;
+
+    @Prop({type:Date, default:new Date()})
+    lastUpdate:Date;
 }
 
 export const SerieProgressSchema = SchemaFactory.createForClass(SerieProgress);
