@@ -9,11 +9,12 @@ import {SerieComponent} from "../SerieComponent/SerieComponent";
 interface ComponentScrollerProps {
     title:string;
     components:BookWithProgress[] | SerieWithProgress[];
-    type:"books" | "series"
+    type:"books" | "series";
+    deck?:boolean;
 }
 
 export function ComponentScroller(props:ComponentScrollerProps):React.ReactElement {
-    const {title, components, type} = props;
+    const {title, components, type, deck} = props;
     const ulRef = useRef<HTMLUListElement>(null);
     const [left, setLeft] = useState(0);
     const [maxRight, setMaxRight] = useState(!ulRef);
@@ -72,7 +73,7 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
             {type === "books" ? (
                 <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4">
                     {components?.map((book)=>(
-                        <BookComponent key={book._id} bookData={book as BookWithProgress}/>
+                        <BookComponent key={book._id} bookData={book as BookWithProgress} deck={deck}/>
                     ))}
                 </ul>
             ) : (

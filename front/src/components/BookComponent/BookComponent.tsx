@@ -13,10 +13,11 @@ interface BookComponentProps {
     bookData:BookWithProgress,
     insideSerie?:boolean;
     forceRead?:boolean;
+    deck?:boolean;
 }
 
 export function BookComponent(props:BookComponentProps):React.ReactElement {
-    const {bookData, insideSerie, forceRead} = props;
+    const {bookData, insideSerie, forceRead, deck} = props;
     const {siteSettings} = useSettings();
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
@@ -143,7 +144,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 </a>
                 <div className="flex items-center justify-between text-sm">
                     <p className="dark:text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
-                    <BookSettings bookData={bookData} insideSerie={insideSerie} read={read} setRead={setRead}/>
+                    <BookSettings bookData={bookData} insideSerie={insideSerie} read={read} setRead={setRead} deck={deck}/>
                 </div>
             </div>
         </div>

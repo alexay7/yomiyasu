@@ -15,11 +15,12 @@ interface BookSettingsProps {
     bookData:BookWithProgress;
     insideSerie?:boolean;
     read:boolean;
-    setRead:(v:React.SetStateAction<boolean>)=>void
+    setRead:(v:React.SetStateAction<boolean>)=>void;
+    deck?:boolean;
 }
 
 export function BookSettings(props:BookSettingsProps):React.ReactElement {
-    const {bookData, insideSerie, read, setRead} = props;
+    const {bookData, insideSerie, read, setRead, deck} = props;
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -73,6 +74,11 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
         }
     }
 
+    async function pauseSerie():Promise<void> {
+        await api.post<unknown, {status:string}>(`serieprogress/pause/${  bookData.serie  }`, {});
+        forceReload("all");
+    }
+
     return (
         <div className="">
             <IconButton className="text-center" onClick={(e)=>{
@@ -84,6 +90,14 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             <Menu id="long-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
+                {deck && (
+                    <MenuItem onClick={()=>{
+                        void pauseSerie();
+                    }}
+                    >
+                        Pausar serie
+                    </MenuItem>
+                )}
                 {userData?.admin && (
                     [
                         <EditBook key="edit" bookData={bookData}/>,
