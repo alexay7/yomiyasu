@@ -182,7 +182,7 @@ export class ReadprogressController {
         const series:FullSerieProgress[] = await this.serieProgressService.getUserSeriesProgress(userId);
         const readingSeries = (await this.readprogressService.getReadingSeries(userId)).map(x=>x.serie.toString());
 
-        const returnBooks:Book[] = [];
+        const returnBooks:{book:Book, date:Date}[] = [];
 
         series.forEach((serie)=>{
             if (serie.readBooks.length === 0 || serie.readBooks.length === serie.serieBooks.length || serie.paused || 
@@ -200,12 +200,17 @@ export class ReadprogressController {
                 }
             });
 
-            returnBooks.push(unreadBooks[0]);
+            returnBooks.push({book:unreadBooks[0], date:serie.lastUpdate});
+        });
+
+        returnBooks.sort((a, b)=>{
+            if (!a.date || !b.date) return 0;
+            return b.date.getTime() - a.date.getTime();
         });
 
         await this.cacheManager.set(`${userId}-${req.url}`, returnBooks);
 
-        return returnBooks;
+        return returnBooks.map((v)=>v.book);
     }
 
     @Get("reading")

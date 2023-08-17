@@ -26,7 +26,8 @@ export class SerieprogressService {
             serie,
             user,
             readBooks:books,
-            paused:false
+            paused:false,
+            lastUpdate:new Date()
         };
         return this.serieProgressModel.create(createProgress);
     }
@@ -39,16 +40,17 @@ export class SerieprogressService {
 
         if (foundProgress) {
             if (createSerieprogressDto.action === "add") {
-                return this.serieProgressModel.findByIdAndUpdate(foundProgress._id, {$addToSet:{readBooks:new Types.ObjectId(createSerieprogressDto.book)}});
+                return this.serieProgressModel.findByIdAndUpdate(foundProgress._id, {$addToSet:{readBooks:new Types.ObjectId(createSerieprogressDto.book)}, $set:{lastUpdate:new Date()}});
             } else {
-                return this.serieProgressModel.findByIdAndUpdate(foundProgress._id, {$pull:{readBooks:new Types.ObjectId(createSerieprogressDto.book)}});
+                return this.serieProgressModel.findByIdAndUpdate(foundProgress._id, {$pull:{readBooks:new Types.ObjectId(createSerieprogressDto.book)}, $set:{lastUpdate:new Date()}});
             }
         }
 
         const createProgress:SerieProgress = {
             ...createSerieprogressDto,
             readBooks:createSerieprogressDto.action === "add" ? [new Types.ObjectId(createSerieprogressDto.book)] : [],
-            paused:false
+            paused:false,
+            lastUpdate:new Date()
         };
         return this.serieProgressModel.create(createProgress);
     }
