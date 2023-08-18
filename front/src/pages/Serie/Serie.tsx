@@ -137,7 +137,7 @@ function Serie():React.ReactElement {
                                 <img loading="lazy" className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
                                 {serieData.difficulty > 0 && (
                                     <div className="absolute top-0 left-0 text-center font-semibold bg-white m-1 rounded-full">
-                                        <div className="relative z-20">
+                                        <div className="relative">
                                             <Whatshot fontSize="large"
                                                 sx={{color:getFlameColor(serieData.difficulty)}}
                                             />
