@@ -54,20 +54,15 @@ export class SeriesController {
 
         const foundSeries = await this.seriesService.filterSeries(userId, query);
 
-        const seriesWithProgress = [];
-        let processedCount = 0;
+        let seriesWithProgress = [];
         let skip = 0;
         let pages = foundSeries.pages;
 
         if (query.readprogress || query.readlist) {
             skip = (query.page - 1) * query.limit;
-            pages = Math.ceil(seriesWithProgress.length / query.limit);
         }
 
         for (const serie of foundSeries.data) {
-            if ((query.readprogress || query.readlist) && (processedCount >= query.limit)) {
-                break; // Ya alcanzamos el límite, detenemos el proceso
-            }
 
             const serieBooks = await this.booksService.getSerieBooks(serie._id);
 
@@ -88,15 +83,15 @@ export class SeriesController {
                         (query.readprogress === "reading" && ((serieData.unreadBooks !== serieWithProgress.bookCount) && (serieData.unreadBooks && serieData.unreadBooks > 0))) ||
                         (query.readprogress === "unread" && serieData.unreadBooks === serieWithProgress.bookCount) ||
                         (!query.readlist && !query.readprogress)) {
-                        if (skip > 0) {
-                            skip -= 1;
-                        } else {
-                            seriesWithProgress.push(serieWithProgress);
-                            processedCount++;
-                        }
+                        seriesWithProgress.push(serieWithProgress);
                     }
                 }
             }
+        }
+
+        if (query.readprogress || query.readlist) {
+            pages = Math.ceil(seriesWithProgress.length / query.limit);
+            seriesWithProgress = seriesWithProgress.slice(skip, skip + query.limit);
         }
 
         const response = {data:seriesWithProgress, pages};
