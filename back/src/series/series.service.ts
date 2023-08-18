@@ -130,9 +130,9 @@ export class SeriesService {
           }
 
           if (query.sort.includes("!")) {
-              result.sort({[query.sort.replace("!", "")]:"desc"});
+              result.sort({[query.sort.replace("!", "")]:"desc", _id:-1});
           } else {
-              result.sort({[query.sort]:"asc"});
+              result.sort({[query.sort]:"asc", _id:-1});
           }
       }
 
