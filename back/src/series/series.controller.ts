@@ -39,6 +39,7 @@ export class SeriesController {
         const {userId} = req.user as {userId:Types.ObjectId};
 
         const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+
         if (cached) {
             return cached;
         }
@@ -53,53 +54,8 @@ export class SeriesController {
 
         const foundSeries = await this.seriesService.filterSeries(userId, query);
 
-        const promises = foundSeries.data.map(async(serieElem)=>{
-            const serieBooks = await this.booksService.getSerieBooks(serieElem._id);
-
-            if (serieBooks.length === 0) return null;
-
-            const serieData = this.serieProgressService.getSerieProgress(serieElem, serieBooks);
-            const readlist = serieElem.seriereadlist;
-
-            if (serieData) {
-                const serieWithProgress:SerieWithProgress = {
-                    ...serieElem,
-                    readlist,
-                    ...serieData
-                };
-                
-                return serieWithProgress;
-            }
-
-            return null;
-        });
-
-        let seriesWithProgress = await Promise.all(promises);
-
-        if (seriesWithProgress.length > 0) {
-            if (query.readlist !== undefined) {
-                seriesWithProgress = seriesWithProgress.filter(x=>x?.readlist === true);
-            }
-
-            switch (query.readprogress) {
-            case "completed": {
-                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === 0);
-                break;
-            }
-            case "reading":{
-                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks !== x?.bookCount && x?.unreadBooks && x.unreadBooks > 0);
-                break;
-            }
-            case "unread":{
-                seriesWithProgress = seriesWithProgress.filter(x=>x?.unreadBooks === x?.bookCount);
-                break;
-            }
-            default:{
-                break;
-            }
-            }
-        }
-
+        const seriesWithProgress = [];
+        let processedCount = 0;
         let skip = 0;
         let pages = foundSeries.pages;
 
@@ -108,7 +64,42 @@ export class SeriesController {
             pages = Math.ceil(seriesWithProgress.length / query.limit);
         }
 
-        const response = {data:seriesWithProgress.filter((item) => item !== null).slice(skip, query.limit + skip), pages};
+        for (const serie of foundSeries.data) {
+            if ((query.readprogress || query.readlist) && (processedCount >= query.limit)) {
+                break; // Ya alcanzamos el límite, detenemos el proceso
+            }
+
+            const serieBooks = await this.booksService.getSerieBooks(serie._id);
+
+            if (serieBooks.length > 0) {
+
+                const serieData = this.serieProgressService.getSerieProgress(serie, serieBooks);
+                const readlist = serie.seriereadlist;
+
+                if (serieData) {
+                    const serieWithProgress:SerieWithProgress = {
+                        ...serie,
+                        readlist,
+                        ...serieData
+                    };
+                
+                    if ((query.readlist && readlist) || 
+                        (query.readprogress === "completed" && serieData.unreadBooks === 0) ||
+                        (query.readprogress === "reading" && ((serieData.unreadBooks !== serieWithProgress.bookCount) && (serieData.unreadBooks && serieData.unreadBooks > 0))) ||
+                        (query.readprogress === "unread" && serieData.unreadBooks === serieWithProgress.bookCount) ||
+                        (!query.readlist && !query.readprogress)) {
+                        if (skip > 0) {
+                            skip -= 1;
+                        } else {
+                            seriesWithProgress.push(serieWithProgress);
+                            processedCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        const response = {data:seriesWithProgress, pages};
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 

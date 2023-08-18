@@ -87,7 +87,7 @@ export class SeriesService {
   }
 
   async filterSeries(user:Types.ObjectId, query:SeriesSearch) {
-      const result = this.seriesModel.aggregate().collation({locale: "es"});
+      const result = this.seriesModel.aggregate().collation({locale: "es"}).match({bookCount:{$gt:0}});
 
       if (query.author) {
           result.match({authors:{$in:[query.author]}});
@@ -140,10 +140,10 @@ export class SeriesService {
 
       //   Si la query no tiene que ver con el progreso o la lista de lectura, hacer el corte ya
       if (!query.readprogress && !query.readlist && query.limit) {
-          result.limit(query.limit);
           if (query.limit && query.page) {
               result.skip((query.page - 1) * query.limit);
           }
+          result.limit(query.limit);
       }
 
       // Se obtienen los progresos del usuario
