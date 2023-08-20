@@ -10,8 +10,8 @@ import {toast} from "react-toastify";
 export function LibraryRandom():React.ReactElement {
     const [open, setOpen] = useState(false);
     const [difficulty, setDifficulty] = useState<number[]>([0, 10]);
-    const [genre, setGenre] = useState("");
-    const [author, setAuthor] = useState("");
+    const [genre, setGenre] = useState<string | null>(null);
+    const [author, setAuthor] = useState<string | null>(null);
     const [status, setStatus] = useState("");
     const [readProgress, setReadProgress] = useState("all");
     const [readlist, setReadlist] = useState<boolean>(false);
@@ -111,7 +111,7 @@ export function LibraryRandom():React.ReactElement {
                                 fullWidth
                                 value={genre}
                                 onChange={(e, v)=>{
-                                    setGenre(v || "");
+                                    setGenre(v || null);
                                 }}
                                 renderInput={(params)=>(
                                     <TextField
@@ -129,7 +129,7 @@ export function LibraryRandom():React.ReactElement {
                                 fullWidth
                                 value={author}
                                 onChange={(e, v)=>{
-                                    setAuthor(v || "");
+                                    setAuthor(v || null);
                                 }}
                                 renderInput={(params)=>(
                                     <TextField

@@ -3,9 +3,9 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Alphabet, SeriesFilter} from "../../types/serie";
 import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
-import {IconButton, Pagination, Tooltip} from "@mui/material";
+import {IconButton, Menu, MenuItem, Pagination, Tooltip} from "@mui/material";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import {ArrowBack, RestorePage} from "@mui/icons-material";
+import {ArrowBack, DashboardCustomize, RestorePage} from "@mui/icons-material";
 import {goBack} from "../../helpers/helpers";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {LibrarySettings} from "./components/LibrarySettings";
@@ -25,14 +25,17 @@ function Library():React.ReactElement {
     const page = searchParams.get("page");
     const status = searchParams.get("status");
     const readlist = searchParams.get("readlist");
+    const limit = window.localStorage.getItem("limit");
     const {reloaded} = useGlobal();
     const {userData} = useAuth();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
     const [currentPage, setCurrentPage] = useState(parseInt(page || "1"));
+    const [elements, setElements] = useState(limit || "25");
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const navigate = useNavigate();
 
-    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading} = useQuery(["seriesData", selectedLetter, currentPage], async()=>{
+    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading} = useQuery(["seriesData", selectedLetter, currentPage, elements], async()=>{
         let link = "series?";
 
         if (selectedLetter !== "ALL") {
@@ -77,7 +80,7 @@ function Library():React.ReactElement {
             link += "readlist=true&";
         }
 
-        link += `page=${page || "1"}&limit=25`;
+        link += `page=${page || "1"}&limit=${elements}`;
 
         return api.get<SeriesFilter>(link);
     }, {refetchOnWindowFocus:false});
@@ -117,6 +120,18 @@ function Library():React.ReactElement {
         void refetchBooks();
     }, [refetchAlphabet, refetchSeries, reloaded, searchParams]);
 
+    useEffect(()=>{
+        window.localStorage.setItem("limit", elements);
+    }, [elements]);
+
+    function handleClick(event: React.MouseEvent<HTMLElement>):void {
+        setAnchorEl(event.currentTarget);
+    }
+
+    function handleClose():void {
+        setAnchorEl(null);
+    }
+
     return (
         <div className="dark:bg-[#121212] overflow-x-hidden pb-4">
             <Helmet>
@@ -134,6 +149,46 @@ function Library():React.ReactElement {
                     )}
                 </div>
                 <div className="flex items-center mx-4">
+                    <div className="">
+                        <IconButton className="text-center" onClick={(e)=>{
+                            handleClick(e);
+                        }}
+                        >
+                            <DashboardCustomize/>
+                        </IconButton>
+                        <Menu id="long-menu" anchorEl={anchorEl}
+                            open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
+                        >
+                            <MenuItem selected={elements === "10"} onClick={()=>{
+                                setElements("10");
+                                handleClose();
+                            }}
+                            >
+                                10
+                            </MenuItem>
+                            <MenuItem selected={elements === "25"} onClick={()=>{
+                                setElements("25");
+                                handleClose();
+                            }}
+                            >
+                                25
+                            </MenuItem>
+                            <MenuItem selected={elements === "50"} onClick={()=>{
+                                setElements("50");
+                                handleClose();
+                            }}
+                            >
+                                50
+                            </MenuItem>
+                            <MenuItem selected={elements === "100"} onClick={()=>{
+                                setElements("100");
+                                handleClose();
+                            }}
+                            >
+                                100
+                            </MenuItem>
+                        </Menu>
+                    </div>
                     <LibraryRandom/>
                     <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
                 </div>
