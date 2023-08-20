@@ -208,9 +208,11 @@ export class ReadprogressController {
             return b.date.getTime() - a.date.getTime();
         });
 
-        await this.cacheManager.set(`${userId}-${req.url}`, returnBooks);
+        const result = returnBooks.map((v)=>v.book);
 
-        return returnBooks.map((v)=>v.book);
+        await this.cacheManager.set(`${userId}-${req.url}`, result);
+
+        return result;
     }
 
     @Get("reading")

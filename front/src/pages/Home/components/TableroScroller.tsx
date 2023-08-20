@@ -14,9 +14,7 @@ function TableroScroller():React.ReactElement {
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {
-            await Promise.all([
-                tableroRefetch()
-            ]);
+            await tableroRefetch();
         }
 
         if (reloaded && reloaded !== "reviews") {
