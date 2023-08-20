@@ -20,7 +20,7 @@ export function LibraryFilter(props:LibraryFilterProps):React.ReactElement {
     const [author, setAuthor] = useState(searchParams.get("author") || null);
     const [status, setStatus] = useState(searchParams.get("status") || "");
     const [readProgress, setReadProgress] = useState<string>(searchParams.get("readprogress") || "all");
-    const [readlist, setReadlist] = useState<boolean>(false);
+    const [readlist, setReadlist] = useState<boolean>(searchParams.get("readlist") ? true : false);
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
         return api.get<{genres:string[], authors:string[]}>("series/genresAndArtists");

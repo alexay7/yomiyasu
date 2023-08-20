@@ -1,4 +1,4 @@
-import {IsNumber, IsString} from "class-validator";
+import {IsBooleanString, IsNumber, IsString} from "class-validator";
 import {UpdateSeriesDto} from "../dto/update-series.dto";
 import {Type} from "class-transformer";
 import {PartialType} from "@nestjs/mapped-types";
@@ -41,7 +41,7 @@ class SeriesSearchT {
     @IsString()
     readprogress?:"completed" | "reading" | "unread";
 
-    @Type(()=>Boolean)
+    @IsBooleanString()
     readlist?:boolean;
 }
 
