@@ -208,7 +208,7 @@ export class ReadprogressController {
             return b.date.getTime() - a.date.getTime();
         });
 
-        const result = returnBooks.map((v)=>v.book);
+        const result = returnBooks.map((v)=>v.book).filter(x=>x !== undefined);
 
         await this.cacheManager.set(`${userId}-${req.url}`, result);
 
