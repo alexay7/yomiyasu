@@ -1,5 +1,5 @@
 # Build step #1: build the React front end
-FROM node as build-step
+FROM node:slim as build-step
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
