@@ -3,7 +3,7 @@ import {useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
-import {IconButton, Slider, Tooltip} from "@mui/material";
+import {IconButton, ThemeProvider, Tooltip, createTheme} from "@mui/material";
 import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
@@ -17,6 +17,12 @@ import {Helmet} from "react-helmet";
 import {formatTime} from "../../helpers/helpers";
 import {useAuth} from "../../contexts/AuthContext";
 import {getCookie} from "../../helpers/cookies";
+import "./styles.css";
+import {InversedSlider} from "./components/InversedSlider";
+
+const theme = createTheme({
+    direction: "rtl"
+});
 
 function Reader():React.ReactElement {
     const {id} = useParams();
@@ -713,15 +719,17 @@ function Reader():React.ReactElement {
                                         <SkipPrevious/>
                                     </IconButton>
                                 </Tooltip>
-                                <p>{currentPage}</p>
+                                <p>{readerSettings.r2l ? bookData.pages : currentPage}</p>
                             </div>
-                            <Slider className="mx-4" min={1} max={bookData.pages} value={currentPage} onChange={(e, v)=>{
-                                setPage(v as number);
-                            }}
-                            step={doublePages ? 2 : 1}
-                            />
+                            <ThemeProvider theme={readerSettings.r2l ? theme : {}}>
+                                <InversedSlider marks track={readerSettings ? "inverted" : "normal"} className="mx-4" min={1} max={bookData.pages} value={currentPage} onChange={(e, v)=>{
+                                    setPage(v as number);
+                                }}
+                                step={doublePages ? 2 : 1}
+                                />
+                            </ThemeProvider>
                             <div className="justify-between flex items-center">
-                                <p>{bookData?.pages}</p>
+                                <p>{!readerSettings.r2l ? bookData.pages : currentPage}</p>
                                 <Tooltip title="Ir a la última página">
                                     <IconButton  onClick={()=>{
                                         setPage(bookData.pages);
