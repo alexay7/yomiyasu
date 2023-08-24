@@ -27,6 +27,7 @@ export class BooksService {
 
       // Si no se quiere filtrar por estado, aplicar los límites antes de hacer la operación
       if (query.sort) {
+          aggregate.match({[query.sort.replace("!", "")]:{$exists:true}});
           if (query.sort.includes("!")) {
               aggregate.sort({[query.sort.replace("!", "")]:"desc"});
           } else {
