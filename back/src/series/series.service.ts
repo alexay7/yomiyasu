@@ -83,7 +83,7 @@ export class SeriesService {
   }
 
   async increaseBookCount(id:Types.ObjectId) {
-      return this.seriesModel.findByIdAndUpdate(id, {$inc:{bookCount:1}});
+      return this.seriesModel.findByIdAndUpdate(id, {$inc:{bookCount:1}, $set:{lastModifiedDate:new Date()}});
   }
 
   async filterSeries(user:Types.ObjectId, query:SeriesSearch) {
