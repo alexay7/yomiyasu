@@ -76,7 +76,8 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     const defaultSiteSettings:SiteConfig = {
         openHTML:false,
         bookView:"pages",
-        autoCrono:true
+        autoCrono:true,
+        antispoilers:false
     };
 
     const rawSiteSettings = window.localStorage.getItem("site");

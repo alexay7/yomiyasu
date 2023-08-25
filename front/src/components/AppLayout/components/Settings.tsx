@@ -57,6 +57,15 @@ export function Settings():React.ReactElement {
                         />
                     } label="Iniciar cronómetro automáticamente al abrir libro"
                     />
+                    <FormControlLabel className="select-none" control={
+                        <Checkbox checked={siteSettings.antispoilers} onChange={(e, c)=>{
+                            setSiteSettings((prev)=>{
+                                return {...prev, antispoilers:c};
+                            });
+                        }}
+                        />
+                    } label="Filtro anti-spoilers"
+                    />
                 </div>
             </PopupWindow>
             <Dialog open={openWarning} onClose={()=>setOpenWarning(false)}>

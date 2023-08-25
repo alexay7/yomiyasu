@@ -23,4 +23,5 @@ export interface SiteConfig {
     openHTML:boolean;
     bookView:"characters" | "pages" | "both" | "remainingchars" | "remainingpages" | "remainingtime";
     autoCrono:boolean;
+    antispoilers:boolean;
 }

@@ -14,10 +14,11 @@ interface BookComponentProps {
     insideSerie?:boolean;
     forceRead?:boolean;
     deck?:boolean;
+    blurred?:boolean;
 }
 
 export function BookComponent(props:BookComponentProps):React.ReactElement {
-    const {bookData, insideSerie, forceRead, deck} = props;
+    const {bookData, insideSerie, forceRead, deck, blurred} = props;
     const {siteSettings} = useSettings();
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
@@ -119,7 +120,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
+                    <img className={blurred && siteSettings.antispoilers ? "blur" : ""} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {!read && (
