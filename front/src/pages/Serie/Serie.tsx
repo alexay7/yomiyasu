@@ -228,7 +228,6 @@ function Serie():React.ReactElement {
                     </div>
                     <Divider/>
                     <ul className="flex flex-wrap gap-4 py-4">
-                        <p>{serieData.bookCount - unreadBooks}</p>
                         {serieBooks && serieBooks.length > 0 && serieBooks.map((book, i)=>(
                             <BookComponent key={book._id} bookData={book} insideSerie forceRead={unreadBooks === 0}
                                 blurred={(serieData.bookCount - unreadBooks) < i}
