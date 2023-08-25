@@ -98,9 +98,9 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             }
             case "remainingtime":{
                 if (!bookData.pageChars || !bookData.lastProgress || !bookData.characters) return `${bookData.characters} caracteres`;
-                const speed = bookData.pageChars[bookData.lastProgress.currentPage] / bookData.lastProgress.time / 60;
+                const speed = bookData.pageChars[bookData.lastProgress.currentPage] / bookData.lastProgress.time;
                 const charsLeft = bookData.characters - bookData.pageChars[bookData.lastProgress.currentPage];
-                return `${formatTime(charsLeft / speed)}`;
+                return `${formatTime(charsLeft / (speed === 0 ? 1 : speed))}`;
             }
             default:{
                 return `${bookData.pages} páginas`;
