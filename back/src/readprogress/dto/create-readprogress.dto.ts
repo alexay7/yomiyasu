@@ -29,4 +29,8 @@ export class ProgressDto {
   @IsString()
   @IsEnum(["unread", "reading", "completed"])
   status: ReadProgressStatus;
+
+  @IsNumber()
+  @IsOptional()
+  characters?:number;
 }

@@ -108,7 +108,7 @@ export class ReadprogressController {
         const found = await this.booksService.getSerieBooks(serieId);
 
         const promises = found.map(async(book)=>{
-            await this.modifyOrCreateProgress(req, {book:book._id, status:"completed", currentPage:book.pages, endDate:new Date()}, true);
+            await this.modifyOrCreateProgress(req, {book:book._id, status:"completed", currentPage:book.pages, characters:book.characters, endDate:new Date()}, true);
         });
 
         await Promise.all(promises);
@@ -227,6 +227,42 @@ export class ReadprogressController {
         }
 
         const response = await this.readprogressService.getReadingBooks(userId);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Get("mystats")
+    async getMyStats(@Req() req:Request) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getUserStats(userId);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Get("mygraphs")
+    async getMyGraphs(@Req() req:Request) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getGraphStats(userId);
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 

@@ -27,7 +27,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
         return api.get<{genres:string[], authors:string[]}>("series/genresAndArtists");
-    }, {refetchOnWindowFocus:false, enabled:open});
+    }, {enabled:open});
 
     function closePopup():void {
         setOpen(false);

@@ -10,7 +10,7 @@ function ReadLaterScroller():React.ReactElement {
     const {data:readlist, refetch:readlistRefetch} = useQuery("readlist", async()=> {
         const res = await api.get<SerieWithProgress[]>("series/readlist");
         return res;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

@@ -83,7 +83,7 @@ function Library():React.ReactElement {
         link += `page=${page || "1"}&limit=${elements}`;
 
         return api.get<SeriesFilter>(link);
-    }, {refetchOnWindowFocus:false});
+    });
 
     const {data:alphabet, refetch:refetchAlphabet} = useQuery("alphabet", async()=>{
         let link = "series/alphabet?";
@@ -109,7 +109,7 @@ function Library():React.ReactElement {
         }
 
         return api.get<Alphabet[]>(link);
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

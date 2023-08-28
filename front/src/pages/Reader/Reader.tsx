@@ -45,12 +45,12 @@ function Reader():React.ReactElement {
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
         return res;
-    }, {refetchOnWindowFocus:false});
+    });
 
     const {data:bookProgress, isLoading} = useQuery(`progress-${id}`, async()=>{
         const res = await api.get<BookProgress>(`readprogress?book=${id}&status=reading`);
         return res;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         const logged = getCookie("logged");
@@ -61,7 +61,8 @@ function Reader():React.ReactElement {
 
         if (!bookData || timer % 60 !== 0 || timer === 0) return;
         window.localStorage.setItem(bookData._id, `${timer}`);
-        void createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
+        void createProgress(bookData, currentPage, timer, bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0,
+            !readerSettings.singlePageView);
     }, [currentPage, timer, bookData, reauth, readerSettings]);
 
     useEffect(()=>{
@@ -109,7 +110,8 @@ function Reader():React.ReactElement {
         const handleBeforeUnload = async():Promise<void> => {
             // Save before leaving the page
             if (!bookData) return;
-            await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
+            await createProgress(bookData, currentPage, timer, bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0,
+                !readerSettings.singlePageView);
         };
 
         const handleOutFocus = ():void=>{
@@ -655,7 +657,8 @@ function Reader():React.ReactElement {
                             <div className="w-1/2 flex items-center gap-2 px-2">
                                 <Tooltip title="Volver atrás">
                                     <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
+                                        await createProgress(bookData, currentPage, timer,
+                                            bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                         window.location.href = window.localStorage.getItem("origin") || "/app";
                                     }}
                                     >
@@ -704,7 +707,8 @@ function Reader():React.ReactElement {
                             <div className="justify-between flex items-center">
                                 <Tooltip title="It al libro anterior">
                                     <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
+                                        await createProgress(bookData, currentPage, timer,
+                                            bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                         void prevBook(bookData);
                                     }}
                                     >
@@ -740,7 +744,8 @@ function Reader():React.ReactElement {
                                 </Tooltip>
                                 <Tooltip title="Ir al siguiente libro">
                                     <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer, !readerSettings.singlePageView);
+                                        await createProgress(bookData, currentPage, timer,
+                                            bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                         void nextBook(bookData);
                                     }}
                                     >

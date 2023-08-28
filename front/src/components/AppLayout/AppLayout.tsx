@@ -1,4 +1,4 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart} from "@mui/icons-material";
 import {Divider, IconButton, useTheme} from "@mui/material";
 import React, {useContext, useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
@@ -57,6 +57,7 @@ export function AppLayout():React.ReactElement {
                         <LateralListItem toggleMenu={toggleMenu} text="Biblioteca" link="/app/library" Icon={Book}/>
                         <Divider className="my-4"/>
                         <LateralListItem toggleMenu={toggleMenu} text="Historial" link="/app/history" Icon={History}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Estadísticas" link="/app/profile" Icon={PieChart}/>
                         <AccountSettings/>
                         <Settings/>
                         {userData?.admin && (
@@ -66,12 +67,10 @@ export function AppLayout():React.ReactElement {
                         <Divider/>
                         {theme.palette.mode === "dark" ? (
                             <LateralListItem toggleMenu={toggleMenu} text="Activar modo claro" Icon={LightMode} onClick={()=>{
-                                if (confirm("¿Estás seguro? Esta acción puede causar daños irreversibles a tu visión.")) {
-                                    document.documentElement.classList.remove("dark");
-                                    window.localStorage.setItem("color-theme", "light");
-                                    document.documentElement.style.backgroundColor = "white";
-                                    toggleColorMode();
-                                }
+                                document.documentElement.classList.remove("dark");
+                                window.localStorage.setItem("color-theme", "light");
+                                document.documentElement.style.backgroundColor = "white";
+                                toggleColorMode();
                             }}
                             />
                         ) : (

@@ -45,6 +45,9 @@ export class ReadProgress {
 
   @Prop({type: Boolean, default: false})
   paused: boolean;
+
+  @Prop({type:Number, default:0})
+  characters:number;
 }
 
 export const ReadProgressSchema = SchemaFactory.createForClass(ReadProgress);

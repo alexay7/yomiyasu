@@ -10,7 +10,7 @@ function NewSeriesScroller():React.ReactElement {
     const {data:newSeries, refetch:newSeriesRefetch} = useQuery("newseries", async()=> {
         const res = await api.get<SeriesFilter>("series?sort=!_id&limit=15");
         return res.data;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

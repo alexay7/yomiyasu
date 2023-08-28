@@ -11,7 +11,7 @@ function NewBooksScroller():React.ReactElement {
     const {data:recentBooks, refetch:recentRefetch, isLoading} = useQuery("recentbooks", async()=> {
         const res = await api.get<BookWithProgress[]>("books?sort=!_id&limit=15");
         return res;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

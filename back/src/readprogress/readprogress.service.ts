@@ -121,4 +121,87 @@ export class ReadprogressService {
     async getReadingSeries(user:Types.ObjectId) {
         return this.readProgressModel.find({user, status:"reading"});
     }
+
+    async getUserStats(user:Types.ObjectId) {
+        const res = await this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user)})
+            .group({
+                _id: null,
+                totalBooks: {
+                    $sum: {
+                        $cond: [{$ne: ["$status", "unread"]}, 1, 0]
+                    }
+                },
+                totalUniqueSeries: {$addToSet: "$serie"},
+                totalPagesRead: {
+                    $sum: "$currentPage"
+                },
+                totalTimeRead: {
+                    $sum: "$time"
+                },
+                totalCharacters: {
+                    $sum: "$characters"
+                }})
+            .project(
+                {
+                    _id: 0,
+                    totalBooks: 1,
+                    totalSeries: {$size: "$totalUniqueSeries"},
+                    totalPagesRead: 1,
+                    totalCharacters:1,
+                    totalTimeRead: {
+                        $divide: ["$totalTimeRead", 60] // Convert seconds to minutes
+                    }
+                }
+            );
+
+        if (res) {
+            return res[0];
+        }
+        return {};
+    }
+
+    async getGraphStats(user:Types.ObjectId) {
+        const res = await this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user)})
+            .group({
+                _id: {
+                    year: {$year: "$startDate"},
+                    month: {$month: "$startDate"}
+                },
+                totalCharacters: {$sum: "$characters"},
+                totalTime: {$sum: "$time"}
+            })
+            .addFields(
+                {
+                    meanReadSpeed: {
+                        $cond: [
+                            {$gt: ["$totalTime", 0]},
+                            {$multiply:[{$divide: ["$totalCharacters", "$totalTime"]}, 3600]},
+                            0 // Avoid division by zero, set meanReadSpeed to 0
+                        ]
+                    }
+                }
+            )
+            .addFields({
+                totalHours: {
+                    $cond: [
+                        {$gt: ["$totalTime", 0]},
+                        {$divide: ["$totalTime", 60]}, // 3600 seconds in an hour
+                        0 // Avoid division by zero, set totalHours to 0
+                    ]
+                }
+            })
+            .sort(
+                {
+                    "_id.year": 1,
+                    "_id.month": 1
+                }
+            );
+
+        if (res) {
+            return res.filter(x=>x._id.year !== null);
+        }
+        return {};
+    }
 }

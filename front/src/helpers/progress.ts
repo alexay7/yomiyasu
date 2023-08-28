@@ -1,7 +1,7 @@
 import {api} from "../api/api";
 import {Book, BookProgress} from "../types/book";
 
-export async function createProgress(bookData:Book, page?:number, time?:number, doublePages?:boolean):Promise<void> {
+export async function createProgress(bookData:Book, page?:number, time?:number, characters?:number, doublePages?:boolean):Promise<void> {
     let currentPage = page;
     if (currentPage) {
         if (currentPage > bookData.pages || (currentPage === bookData.pages - 1 && doublePages)) {
@@ -13,7 +13,8 @@ export async function createProgress(bookData:Book, page?:number, time?:number, 
         book:bookData._id,
         time,
         currentPage:currentPage,
-        status:"unread"
+        status:"unread",
+        characters:characters
     };
 
     if (currentPage) {

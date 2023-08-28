@@ -10,7 +10,7 @@ function ProgressScroller():React.ReactElement {
     const {data:progresoData, refetch:progressRefetch} = useQuery("progreso", async()=> {
         const res = await api.get<BookWithProgress[]>("readprogress/reading");
         return res;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

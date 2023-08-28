@@ -1,6 +1,6 @@
 {
   "name": "tfgfront",
-  "version": "0.3.10",
+  "version": "0.4.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -19,9 +19,11 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@types/react-helmet": "^6.1.6",
+    "chart.js": "^4.4.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.9",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
     "react-intersection-observer": "^9.5.2",

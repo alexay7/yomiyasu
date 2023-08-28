@@ -7,6 +7,7 @@ import {Loading} from "./pages/Loading/Loading";
 import {Helmet} from "react-helmet";
 import {ThemeProvider, createTheme, responsiveFontSizes} from "@mui/material";
 import {ColorModeContext} from "./contexts/ColorModeContext";
+import Stats from "./pages/Stats/Stats";
 
 const Login = lazy(() => import("./pages/Login/Login"));
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -69,6 +70,7 @@ export function App():React.ReactElement {
                             <Route path="library" element={<React.Suspense fallback={<Loading/>}><Library/></React.Suspense>}/>
                             <Route path="series/:id" element={<React.Suspense fallback={<Loading/>}><Serie/></React.Suspense>}/>
                             <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
+                            <Route path="profile" element={<React.Suspense fallback={<Loading/>}><Stats/></React.Suspense>}/>
                             <Route path="*" element={<Navigate to="/app"/>}/>
                         </Route>
                         <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>

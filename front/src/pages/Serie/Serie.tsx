@@ -31,12 +31,12 @@ function Serie():React.ReactElement {
         const response = await api.get<FullSerie>(`series/${id}`);
         setUnreadBooks(response.unreadBooks);
         return response;
-    }, {refetchOnWindowFocus:false});
+    });
 
     const {data:serieBooks, refetch:booksRefetch} = useQuery(`books-serie-${id}`, async()=>{
         const response = await api.get<BookWithProgress[]>(`books?serie=${id}&sort=sortName`);
         return response;
-    }, {refetchOnWindowFocus:false});
+    });
 
     const navigate = useNavigate();
 

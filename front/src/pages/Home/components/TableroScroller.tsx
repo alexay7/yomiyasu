@@ -10,7 +10,7 @@ function TableroScroller():React.ReactElement {
     const {data:tableroData, refetch:tableroRefetch} = useQuery("tablero", async()=> {
         const res = await api.get<BookWithProgress[]>("readprogress/tablero");
         return res;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

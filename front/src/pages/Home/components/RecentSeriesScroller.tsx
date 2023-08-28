@@ -10,7 +10,7 @@ function RecentSeriesScroller():React.ReactElement {
     const {data:recentSeries, refetch:recentSeriesRefetch} = useQuery("recentseries", async()=> {
         const res = await api.get<SeriesFilter>("series?sort=!lastModifiedDate&limit=15");
         return res.data;
-    }, {refetchOnWindowFocus:false});
+    });
 
     useEffect(()=>{
         async function refetchBooks():Promise<void> {

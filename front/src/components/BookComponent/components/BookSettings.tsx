@@ -40,7 +40,8 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             book:bookData._id,
             currentPage:bookData.pages,
             status:"completed",
-            endDate:new Date()
+            endDate:new Date(),
+            characters:bookData.characters
         }
         );
         if (response) {
@@ -52,7 +53,8 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
         const response = await api.post<BookProgress, Book>("readprogress", {
             book:bookData._id,
             currentPage:0,
-            status:"unread"
+            status:"unread",
+            characters:0
         }
         );
         if (response) {

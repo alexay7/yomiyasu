@@ -107,3 +107,9 @@ iframe{
 .blurred-exit-done {
   opacity: 0!important;
 }
+
+canvas
+{
+    width: 100% !important;
+    height: 100% !important;
+}

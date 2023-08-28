@@ -59,7 +59,7 @@ function History():React.ReactElement {
         });
 
         return rows;
-    }, {refetchOnWindowFocus:false});
+    });
 
     async function deleteProgress(id:string):Promise<void> {
         const res = await api.delete<BookProgress>(`readprogress/${id}`);

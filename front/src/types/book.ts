@@ -38,7 +38,8 @@ export interface BookProgress {
     currentPage?:number,
     startDate?:Date,
     endDate?:Date,
-    status:"unread" | "reading" | "completed"
+    status:"unread" | "reading" | "completed",
+    characters?:number
 }
 
 export interface BooksFilter {
