@@ -163,7 +163,7 @@ export class ReadprogressService {
 
     async getGraphStats(user:Types.ObjectId) {
         const res = await this.readProgressModel.aggregate()
-            .match({user:new Types.ObjectId(user)})
+            .match({user:new Types.ObjectId(user), time:{$gt:0}})
             .group({
                 _id: {
                     year: {$year: "$startDate"},
