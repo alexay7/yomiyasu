@@ -187,7 +187,7 @@ export class ReadprogressService {
                 totalHours: {
                     $cond: [
                         {$gt: ["$totalTime", 0]},
-                        {$divide: ["$totalTime", 60]}, // 3600 seconds in an hour
+                        {$divide: ["$totalTime", 3600]}, // 3600 seconds in an hour
                         0 // Avoid division by zero, set totalHours to 0
                     ]
                 }
