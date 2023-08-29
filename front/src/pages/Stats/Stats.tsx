@@ -23,7 +23,7 @@ function Stats():React.ReactElement {
             const speedGraph = graphData.map((x)=>{
                 return {month:`${x._id.month}-${x._id.year}`, speed:Math.floor(x.meanReadSpeed)};
             });
-            return {hoursGraph, speedGraph};
+            return {hoursGraph:hoursGraph.filter((x)=>x.totalHours > 0), speedGraph:speedGraph.filter((x)=>x.speed > 0)};
         }
     });
 

@@ -7,7 +7,6 @@ import {Loading} from "./pages/Loading/Loading";
 import {Helmet} from "react-helmet";
 import {ThemeProvider, createTheme, responsiveFontSizes} from "@mui/material";
 import {ColorModeContext} from "./contexts/ColorModeContext";
-import Stats from "./pages/Stats/Stats";
 
 const Login = lazy(() => import("./pages/Login/Login"));
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -16,6 +15,7 @@ const Serie = lazy(() => import("./pages/Serie/Serie"));
 const History = lazy(() => import("./pages/History/History"));
 const Reader = lazy(() => import("./pages/Reader/Reader"));
 const Anki = lazy(() => import("./pages/Anki/Anki"));
+const Stats = lazy(() => import("./pages/Stats/Stats"));
 
 export function App():React.ReactElement {
     const [mode, setMode] = useState<"dark" | "light">("dark");
