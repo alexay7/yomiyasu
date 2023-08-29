@@ -124,7 +124,7 @@ export class ReadprogressService {
 
     async getUserStats(user:Types.ObjectId) {
         const res = await this.readProgressModel.aggregate()
-            .match({user:new Types.ObjectId(user)})
+            .match({user:new Types.ObjectId(user), status:{$ne:"unread"}})
             .group({
                 _id: null,
                 totalBooks: {
