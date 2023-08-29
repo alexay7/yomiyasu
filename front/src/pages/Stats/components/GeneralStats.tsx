@@ -22,14 +22,14 @@ function GeneralStats():React.ReactElement {
 
     function formatTimeText(minutes?:number):string {
         if (!minutes) {
-            return "minutos leídos";
+            return "Minutos leídos";
         }
         // Minutos
         if (minutes < 60) {
-            return "minutos leídos";
+            return "Minutos leídos";
         }
 
-        return "horas leídas";
+        return "Horas leídas";
     }
 
     return (
