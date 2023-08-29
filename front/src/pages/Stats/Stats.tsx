@@ -15,15 +15,15 @@ function Stats():React.ReactElement {
         if (res) {
             const hoursGraph = res.map((x)=>{
                 return {month:`${x._id.month}-${x._id.year}`, totalHours:Math.floor(x.totalHours)};
-            });
-            let graphData = res;
-            if (graphData.length === 1) {
-                graphData = graphData.concat(res);
-            }
-            const speedGraph = graphData.map((x)=>{
+            }).filter((x)=>x.totalHours > 0);
+            let speedGraph = res.map((x)=>{
                 return {month:`${x._id.month}-${x._id.year}`, speed:Math.floor(x.meanReadSpeed)};
-            });
-            return {hoursGraph:hoursGraph.filter((x)=>x.totalHours > 0), speedGraph:speedGraph.filter((x)=>x.speed > 0)};
+            }).filter((x)=>x.speed > 0);
+
+            if (speedGraph.length === 1) {
+                speedGraph = speedGraph.concat(speedGraph);
+            }
+            return {hoursGraph:hoursGraph, speedGraph:speedGraph};
         }
     });
 
