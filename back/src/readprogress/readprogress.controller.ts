@@ -269,6 +269,24 @@ export class ReadprogressController {
         return response;
     }
 
+    @Get("serie/:serieId/speed")
+    async getSerieSpeed(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serie:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getSerieSpeed(userId, serie);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
     @Patch("serie/:serieId/pause")
     async pauseSerie(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serie:Types.ObjectId) {
         if (!req.user) throw new UnauthorizedException();

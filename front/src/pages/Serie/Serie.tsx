@@ -3,11 +3,11 @@ import {useQuery, useQueryClient} from "react-query";
 import {useNavigate, useParams} from "react-router-dom";
 import {api} from "../../api/api";
 import {FullSerie} from "../../types/serie";
-import {Button, Divider, IconButton} from "@mui/material";
+import {Accordion, AccordionDetails, AccordionSummary, Button, Divider, IconButton} from "@mui/material";
 import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove, Whatshot} from "@mui/icons-material";
+import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove, ExpandMore, Whatshot} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
 import {goBack, goTo} from "../../helpers/helpers";
 import {EditSerie} from "../../components/EditSerie/EditSerie";
@@ -15,6 +15,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import {Reviews} from "./components/Reviews";
 import {addToReadlist, getFlameColor, removeFromReadlist} from "../../helpers/series";
 import {Helmet} from "react-helmet";
+import SpeedGraph from "./components/SpeedGraph";
 
 function Serie():React.ReactElement {
     const {id} = useParams();
@@ -227,6 +228,18 @@ function Serie():React.ReactElement {
                         )}
                     </div>
                     <Divider/>
+                    {id && serieData.unreadBooks !== serieData.bookCount && serieBooks && (
+                        <Accordion TransitionProps={{unmountOnExit: true}}>
+                            <AccordionSummary expandIcon={<ExpandMore/>}>
+                                <p>Tu velocidad de lectura</p>
+                            </AccordionSummary>
+                            <AccordionDetails className="max-w-[1000px]">
+                                <div className="py-4">
+                                    <SpeedGraph serieId={id} books={serieBooks}/>
+                                </div>
+                            </AccordionDetails>
+                        </Accordion>
+                    )}
                     <ul className="flex flex-wrap gap-4 py-4">
                         {serieBooks && serieBooks.length > 0 && serieBooks.map((book, i)=>(
                             <BookComponent key={book._id} bookData={book} insideSerie forceRead={unreadBooks === 0}

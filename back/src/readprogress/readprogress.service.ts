@@ -204,4 +204,18 @@ export class ReadprogressService {
         }
         return {};
     }
+
+    async getSerieSpeed(user:Types.ObjectId, serie:Types.ObjectId) {
+        const res = await this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user), time:{$gt:0}, characters:{$gt:0}, serie:new Types.ObjectId(serie)})
+            .addFields(
+                {
+                    meanReadSpeed: {
+                        $multiply:[{$divide: ["$characters", "$time"]}, 3600]
+                    }
+                }
+            )
+            .sort({endDate:1});
+        return res;
+    }
 }
