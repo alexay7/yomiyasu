@@ -33,6 +33,7 @@ export interface Book {
 }
 
 export interface BookProgress {
+    _id?:string,
     book:string,
     time?:number,
     currentPage?:number,

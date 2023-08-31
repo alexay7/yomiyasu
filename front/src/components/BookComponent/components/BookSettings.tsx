@@ -10,6 +10,7 @@ import {goTo} from "../../../helpers/helpers";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 import {EditBook} from "../../EditBook/EditBook";
 import {BookInfo} from "../../BookInfo/BookInfo";
+import {EditProgress} from "./BookProgresses/BookProgresses";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -99,6 +100,9 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                     >
                         Pausar serie
                     </MenuItem>
+                )}
+                {bookData.lastProgress && (
+                    <EditProgress key="editprogress" bookData={bookData}/>
                 )}
                 {userData?.admin && (
                     [

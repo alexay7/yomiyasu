@@ -1,10 +1,11 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {Line} from "react-chartjs-2";
 import {Chart as ChartJS, ChartData, Point, LinearScale, CategoryScale, PointElement, LineElement, Title, Legend, Filler, Tooltip} from "chart.js";
 import {useTheme} from "@mui/material";
 import {Book} from "../../../types/book";
+import {useGlobal} from "../../../contexts/GlobalContext";
 
 ChartJS.register(LinearScale, CategoryScale, PointElement, LineElement, Title, Legend, Filler, Tooltip);
 
@@ -15,11 +16,18 @@ interface SpeedGraphProps {
 
 function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const {serieId, books} = props;
+    const {reloaded} = useGlobal();
 
-    const {data:serieSpeed = []} = useQuery(`serie-${serieId}-speed`, async()=>{
+    const {data:serieSpeed = [], refetch} = useQuery(`serie-${serieId}-speed`, async()=>{
         const response = await api.get<{book:string, meanReadSpeed:number, startDate:string}[]>(`readprogress/serie/${serieId}/speed`);
         return response;
     });
+
+    useEffect(()=>{
+        if (reloaded === "all") {
+            void refetch();
+        }
+    }, [reloaded, refetch]);
 
     const theme = useTheme();
 

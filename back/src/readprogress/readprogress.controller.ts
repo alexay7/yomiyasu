@@ -32,6 +32,7 @@ import {Cache} from "cache-manager";
 import {SerieprogressService} from "../serieprogress/serieprogress.service";
 import {FullSerieProgress} from "../serieprogress/interfaces/serieprogress";
 import {Book} from "../books/schemas/book.schema";
+import {UpdateReadProgressDto} from "./dto/update-readprogress.dto";
 
 @Controller("readprogress")
 @ApiTags("Progresos de Lectura")
@@ -285,6 +286,33 @@ export class ReadprogressController {
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 
         return response;
+    }
+
+    @Get("book/:bookId")
+    async getBookProgress(@Req() req:Request, @Param("bookId", ParseObjectIdPipe) book:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getBookProgresses(userId, book);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Patch(":progressId")
+    async editProgress(@Req() req:Request, @Param("progressId", ParseObjectIdPipe) progress:Types.ObjectId, @Body() progressDto:UpdateReadProgressDto) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        return this.readprogressService.modifyReadProgress(progress, progressDto, userId);
     }
 
     @Patch("serie/:serieId/pause")
