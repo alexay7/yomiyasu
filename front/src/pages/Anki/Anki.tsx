@@ -108,8 +108,8 @@ function Anki():React.ReactElement {
             version:6,
             params:{
                 note:{
-                    "deckName": "A. 語彙::勉強",
-                    "modelName": "Migaku Japanese Sentence",
+                    "deckName": deck,
+                    "modelName": note,
                     "fields": {
                         [wordField]: word,
                         [readingField]: reading,
