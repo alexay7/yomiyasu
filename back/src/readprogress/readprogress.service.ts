@@ -173,8 +173,8 @@ export class ReadprogressService {
             .match({user:new Types.ObjectId(user), time:{$gt:0}})
             .group({
                 _id: {
-                    year: {$year: "$startDate"},
-                    month: {$month: "$startDate"}
+                    year: {$year: "$endDate"},
+                    month: {$month: "$endDate"}
                 },
                 totalCharacters: {$sum: "$characters"},
                 totalTime: {$sum: "$time"}
