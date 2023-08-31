@@ -19,7 +19,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
     const {forceReload} = useGlobal();
     const [startDate, setStartDate] = useState<Dayjs | null>(dayjs(progressDetails.startDate || null));
     const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(progressDetails.endDate || null));
-    const [time, setTime] = useState(progressDetails.time || 0);
+    const [time, setTime] = useState((progressDetails.time || 0) / 60);
     const [characters, setCharacters] = useState(progressDetails.characters || 0);
     const [pages, setPages] = useState(progressDetails.currentPage || 0);
     const [status, setStatus] = useState(progressDetails.status);
@@ -36,7 +36,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
             startDate:startDate.toDate(),
             endDate:endDate?.toDate(),
             characters,
-            time,
+            time:time * 60,
             currentPage:pages,
             status
         };
@@ -74,7 +74,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
                 </Select>
             </FormControl>
             <TextField type="number" required onChange={(e)=>setTime(parseInt(e.target.value))}
-                value={time} fullWidth variant="filled" label="Tiempo en segundos"
+                value={time} fullWidth variant="filled" label="Tiempo en minutos"
             />
             <TextField type="number" required onChange={(e)=>setCharacters(parseInt(e.target.value))}
                 value={characters} fullWidth variant="filled" label="Número de caracteres leídos"
