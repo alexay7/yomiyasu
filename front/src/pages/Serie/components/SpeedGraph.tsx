@@ -19,7 +19,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const {reloaded} = useGlobal();
 
     const {data:serieSpeed = [], refetch} = useQuery(`serie-${serieId}-speed`, async()=>{
-        const response = await api.get<{book:string, meanReadSpeed:number, startDate:string}[]>(`readprogress/serie/${serieId}/speed`);
+        const response = await api.get<{book:string, meanReadSpeed:number, endDate:string}[]>(`readprogress/serie/${serieId}/speed`);
         return response;
     });
 
@@ -32,7 +32,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const theme = useTheme();
 
     const chartData:ChartData<"line", (number | Point | null)[], unknown> = {
-        labels: serieSpeed.map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.startDate).toLocaleDateString("es")}`),
+        labels: serieSpeed.map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.endDate).toLocaleDateString("es")}`),
         datasets: [
             {
                 label: "Velocidad",

@@ -18,7 +18,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
     const {progressDetails, closeAccordion, refetch} = props;
     const {forceReload} = useGlobal();
     const [startDate, setStartDate] = useState<Dayjs | null>(dayjs(progressDetails.startDate || null));
-    const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(progressDetails.startDate || null));
+    const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(progressDetails.endDate || null));
     const [time, setTime] = useState(progressDetails.time || 0);
     const [characters, setCharacters] = useState(progressDetails.characters || 0);
     const [pages, setPages] = useState(progressDetails.currentPage || 0);
