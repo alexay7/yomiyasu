@@ -55,7 +55,7 @@ export class ReadprogressController {
 
         const foundProgress = await this.readprogressService.findProgressByBookAndUser(progressDto.book, userId);
 
-        if (progressDto.status !== "reading" && foundProgress?.status === progressDto.status) return null;
+        if (progressDto.status !== "reading" && foundProgress?.status === progressDto.status) return foundProgress;
 
         const foundBook = await this.booksService.findById(progressDto.book);
 
