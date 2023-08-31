@@ -6,7 +6,7 @@ interface PopupWindowProps {
     title:string;
     open:boolean;
     closePopup:()=>void;
-    children:React.JSX.Element;
+    children:React.ReactNode;
     onSubmit?:(e:React.FormEvent<HTMLFormElement>)=>void,
     customSaveButton?:string;
 }
@@ -26,18 +26,31 @@ export function PopupWindow(props:PopupWindowProps):React.ReactElement {
     return (
         <Dialog scroll="paper" fullWidth={true} open={open} onClose={closePopup} keepMounted TransitionComponent={Transition}>
             <DialogTitle>{title}</DialogTitle>
-            <form onSubmit={onSubmit}>
-                <Divider/>
-                <DialogContent>
-                    {children}
-                </DialogContent>
-                <DialogActions>
-                    <Button color="inherit" onClick={closePopup}>Cerrar</Button>
-                    {onSubmit && (
+            {onSubmit ? (
+                <form onSubmit={onSubmit}>
+                    <Divider/>
+                    <DialogContent>
+                        {children}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color="inherit" onClick={closePopup}>Cerrar</Button>
                         <Button type="submit">{customSaveButton ? customSaveButton : "Guardar cambios"}</Button>
-                    )}
-                </DialogActions>
-            </form>
+                    </DialogActions>
+                </form>
+            ) : (
+                <div>
+                    <Divider/>
+                    <DialogContent>
+                        {children}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button color="inherit" onClick={closePopup}>Cerrar</Button>
+                        {onSubmit && (
+                            <Button type="submit">{customSaveButton ? customSaveButton : "Guardar cambios"}</Button>
+                        )}
+                    </DialogActions>
+                </div>
+            )}
         </Dialog>
     );
 }

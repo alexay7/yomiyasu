@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, NotFoundException} from "@nestjs/common";
+import {BadRequestException, ForbiddenException, Injectable, NotFoundException} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {ReadProgress, ReadProgressStatus} from "./schemas/readprogress.schema";
 import {Model, Types} from "mongoose";
@@ -70,7 +70,14 @@ export class ReadprogressService {
         return this.readProgressModel.create(createReadProgress);
     }
 
-    modifyReadProgress(id:Types.ObjectId, updateReadProgress:UpdateReadProgress):Promise<ReadProgress | null> {
+    async modifyReadProgress(id:Types.ObjectId, updateReadProgress:UpdateReadProgress, user?:Types.ObjectId):Promise<ReadProgress | null> {
+        if (user) {
+            const foundProgress = await this.readProgressModel.findById(id);
+
+            if (!foundProgress?.user.equals(user)) {
+                throw new ForbiddenException();
+            }
+        }
 
         return this.readProgressModel.findByIdAndUpdate(id, updateReadProgress, {new:true});
     }
@@ -217,5 +224,9 @@ export class ReadprogressService {
             )
             .sort({endDate:1});
         return res;
+    }
+
+    async getBookProgresses(user:Types.ObjectId, book:Types.ObjectId) {
+        return this.readProgressModel.find({user, book});
     }
 }
