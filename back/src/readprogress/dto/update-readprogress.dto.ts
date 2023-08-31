@@ -9,13 +9,14 @@ export class UpdateReadProgressDto {
     @IsNumber()
     @IsOptional()
     currentPage?: number;
+
+    @IsNumber()
+    @IsOptional()
+    characters?: number;
   
     @IsDateString()
     @IsOptional()
     startDate?: Date;
-  
-    @IsDateString()
-    @IsOptional()
   
     @IsDateString()
     @IsOptional()
