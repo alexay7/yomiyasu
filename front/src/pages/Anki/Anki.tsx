@@ -42,15 +42,7 @@ function Anki():React.ReactElement {
 
     const ankiUrl = "http://localhost:8765";
 
-    const {refetch} = useQuery("connect", async()=>{
-        setConnect(false);
-        const res = await fetch(ankiUrl);
-        if (res) {
-            setConnect(true);
-        }
-    }, {refetchOnWindowFocus:false});
-
-    const {data:userDecks} = useQuery("decks", async()=>{
+    const {data:userDecks, refetch:refetchDecks} = useQuery("decks", async()=>{
         const body = {
             action:"deckNames"
         };
@@ -62,7 +54,7 @@ function Anki():React.ReactElement {
         return [];
     }, {refetchOnWindowFocus:false});
 
-    const {data:modelFields} = useQuery(["fields", note], async()=>{
+    const {data:modelFields, refetch:refetchFields} = useQuery(["fields", note], async()=>{
         const body = {
             action:"modelFieldNames",
             params:{
@@ -79,7 +71,7 @@ function Anki():React.ReactElement {
         return [];
     }, {refetchOnWindowFocus:false});
 
-    const {data:userModels} = useQuery("models", async()=>{
+    const {data:userModels, refetch:refetchModels} = useQuery("models", async()=>{
         const body = {
             action:"modelNames"
         };
@@ -87,6 +79,17 @@ function Anki():React.ReactElement {
         const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
         if (res) {
             return await res.json() as string[];
+        }
+    }, {refetchOnWindowFocus:false});
+
+    const {refetch} = useQuery("connect", async()=>{
+        setConnect(false);
+        const res = await fetch(ankiUrl);
+        if (res) {
+            setConnect(true);
+            await refetchDecks();
+            await refetchModels();
+            await refetchFields();
         }
     }, {refetchOnWindowFocus:false});
 
@@ -146,6 +149,7 @@ function Anki():React.ReactElement {
 
         const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
         if (res) {
+            console.log(res);
             const resJson = await res.json() as {result:number, error:string};
             if (resJson.result && resJson.result !== 0) {
                 toast.success("La carta se ha creado con éxito");
