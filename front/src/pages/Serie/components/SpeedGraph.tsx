@@ -66,14 +66,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
                 grace:"10%"
             },
             x: {
-                ticks: {
-                    color: theme.palette.mode === "dark" ? "white" : "black"
-                },
-                title: {
-                    display: true,
-                    text: "Volúmenes",
-                    color:theme.palette.mode === "dark" ? "white" : "black"
-                }
+                display:false
             }
         },
         elements:{
