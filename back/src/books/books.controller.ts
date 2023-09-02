@@ -128,7 +128,7 @@ export class BooksController {
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
         if (bookIndex + 1 === serieBooks.length) {
-            return {id:"end"};
+            return {_id:"end"};
         }
 
         return serieBooks[bookIndex + 1];
@@ -149,7 +149,7 @@ export class BooksController {
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
         if (bookIndex === 0) {
-            return {id:"start"};
+            return {_id:"start"};
         }
 
         return serieBooks[bookIndex - 1];
