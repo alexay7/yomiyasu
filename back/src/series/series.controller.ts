@@ -320,7 +320,7 @@ export class SeriesController {
         try {
         // Crear un archivo ZIP
             const folderPath = sourceFolderPath;
-            const zipFileName = `${foundSerie.visibleName}.zip`;
+            const zipFileName = `${foundSerie.sortName}.zip`;
             const zipFilePath = path.join(__dirname, "..", "..", "..", "exterior", zipFileName);
   
             // Create a write stream to the zip file
