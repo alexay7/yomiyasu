@@ -63,22 +63,28 @@ export class AppService {
           // Escanea directorios y archivos html
           items.forEach((item) => {
               const itemPath = join(mainFolderPath, item);
-              const stat = fs.statSync(itemPath);
+              const isZipFile = item.endsWith(".zip");
+              if (isZipFile) {
+                  fs.unlinkSync(itemPath); // Delete the .zip file
+              }
+              else {
+                  const stat = fs.statSync(itemPath);
 
-              if (stat.isDirectory()) {
-                  existingFolders.push(item);
+                  if (stat.isDirectory()) {
+                      existingFolders.push(item);
 
-                  const subItems = fs.readdirSync(itemPath);
-                  const existingBooksInSubfolder = subItems.filter(
-                      (subItem) => extname(subItem) === ".html"
-                  );
-                  existingBooksInSubfolder.forEach((foundBook) => {
-                      existingBooks.push({
-                          seriePath: item,
-                          bookName: foundBook.replace(".html", ""),
-                          bookPath: join(itemPath, foundBook)
+                      const subItems = fs.readdirSync(itemPath);
+                      const existingBooksInSubfolder = subItems.filter(
+                          (subItem) => extname(subItem) === ".html"
+                      );
+                      existingBooksInSubfolder.forEach((foundBook) => {
+                          existingBooks.push({
+                              seriePath: item,
+                              bookName: foundBook.replace(".html", ""),
+                              bookPath: join(itemPath, foundBook)
+                          });
                       });
-                  });
+                  }
               }
           });
 

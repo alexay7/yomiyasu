@@ -3,11 +3,11 @@ import {useQuery, useQueryClient} from "react-query";
 import {useNavigate, useParams} from "react-router-dom";
 import {api} from "../../api/api";
 import {FullSerie} from "../../types/serie";
-import {Accordion, AccordionDetails, AccordionSummary, Button, Divider, IconButton} from "@mui/material";
+import {Accordion, AccordionDetails, AccordionSummary, Button, Divider, IconButton, Tooltip} from "@mui/material";
 import {BookComponent} from "../../components/BookComponent/BookComponent";
 import {BookWithProgress} from "../../types/book";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove, ExpandMore, Whatshot} from "@mui/icons-material";
+import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove, Download, ExpandMore, Whatshot} from "@mui/icons-material";
 import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
 import {goBack, goTo} from "../../helpers/helpers";
 import {EditSerie} from "../../components/EditSerie/EditSerie";
@@ -102,22 +102,34 @@ function Serie():React.ReactElement {
                 </div>
                 {serieData && (
                     <div className="flex items-center mx-4 flex-shrink-0 justify-end">
+                        <Tooltip title="Descargar serie">
+                            <IconButton onClick={()=>{
+                                window.open(`/api/series/${serieData._id}/download`);
+                            }}
+                            >
+                                <Download/>
+                            </IconButton>
+                        </Tooltip>
                         {!serieData?.readlist ? (
-                            <IconButton onClick={async()=>{
-                                await addToReadlist(serieData._id, serieData.visibleName);
-                                queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:true});
-                            }}
-                            >
-                                <BookmarkAdd/>
-                            </IconButton>
+                            <Tooltip title="Añadir a &quot;Leer más tarder&quot;">
+                                <IconButton onClick={async()=>{
+                                    await addToReadlist(serieData._id, serieData.visibleName);
+                                    queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:true});
+                                }}
+                                >
+                                    <BookmarkAdd/>
+                                </IconButton>
+                            </Tooltip>
                         ) : (
-                            <IconButton onClick={async()=>{
-                                await removeFromReadlist(serieData._id, serieData.visibleName);
-                                queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:false});
-                            }}
-                            >
-                                <BookmarkRemove/>
-                            </IconButton>
+                            <Tooltip title="Quitar de &quot;Leer más tarder&quot;">
+                                <IconButton onClick={async()=>{
+                                    await removeFromReadlist(serieData._id, serieData.visibleName);
+                                    queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:false});
+                                }}
+                                >
+                                    <BookmarkRemove/>
+                                </IconButton>
+                            </Tooltip>
                         )}
                         {userData?.admin && (
                             <EditSerie circleIcon serieData={serieData}/>
