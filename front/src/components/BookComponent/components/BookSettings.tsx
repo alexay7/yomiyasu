@@ -174,6 +174,12 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                             Añadir serie a &quot;Leer más tarde&quot;
                         </MenuItem>
                     )}
+                    <MenuItem onClick={()=>{
+                        window.open(`/api/books/${bookData._id}/download`);
+                    }}
+                    >
+                        Descargar Libro
+                    </MenuItem>
                 </div>
                 <BookInfo bookdata={bookData}/>
             </Menu>

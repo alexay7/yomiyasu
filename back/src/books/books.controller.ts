@@ -1,6 +1,6 @@
-import {Controller, Get, Inject, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors} from "@nestjs/common";
+import {Controller, Get, Inject, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors, Res, BadRequestException, StreamableFile, InternalServerErrorException} from "@nestjs/common";
 import {BooksService} from "./books.service";
-import {Request} from "express";
+import {Request, Response} from "express";
 import {Types} from "mongoose";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
 import {SearchQuery, UpdateBook} from "./interfaces/query";
@@ -13,6 +13,9 @@ import {getCharacterCount} from "./helpers/helpers";
 import {join} from "path";
 import {CacheInterceptor, CacheTTL, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
+import * as path from "path";
+import * as archiver from "archiver";
+import * as fs from "fs-extra";
 
 @Controller("books")
 @ApiTags("Libros")
@@ -153,5 +156,58 @@ export class BooksController {
         }
 
         return serieBooks[bookIndex - 1];
+    }
+
+    @Get(":bookId/download")
+    async downloadZip(@Res({passthrough:true}) res:Response, @Param("bookId", ParseObjectIdPipe) book:Types.ObjectId) {
+        
+        const foundBook = await this.booksService.findById(book);
+
+        if (!foundBook?.seriePath || !foundBook.path) throw new BadRequestException();
+
+        const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", foundBook?.seriePath);
+
+        try {
+        // Crear un archivo ZIP
+            const folderPath = path.join(sourceFolderPath, foundBook?.imagesFolder);
+            const zipFileName = `${foundBook.sortName}.zip`;
+            const zipFilePath = path.join(__dirname, "..", "..", "..", "exterior", zipFileName);
+  
+            // Create a write stream to the zip file
+            const output = fs.createWriteStream(zipFilePath);
+  
+            // Create a new archiver instance
+            const archive = archiver("zip", {
+                zlib: {level: 9} // Compression level (0-9)
+            });
+  
+            // Pipe the archive to the output stream
+            archive.pipe(output);
+  
+            // Add the entire folder to the archive
+            archive.directory(folderPath, foundBook.imagesFolder);
+            archive.file(path.join(sourceFolderPath, foundBook.path + ".html"), {name:foundBook.path + ".html"});
+  
+            // Finalize the archive
+            await archive.finalize();
+  
+            // Set the response headers
+            res.setHeader("Content-Type", "application/zip");
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename=${zipFileName}`
+            );
+  
+            const readStream = fs.createReadStream(zipFilePath);
+
+            readStream.on("close", async()=>{
+                await fs.unlink(zipFilePath);
+            });
+
+            return new StreamableFile(readStream);
+        } catch (error) {
+            console.error("Error al crear y enviar el archivo ZIP:", error);
+            throw new InternalServerErrorException();
+        }
     }
 }
