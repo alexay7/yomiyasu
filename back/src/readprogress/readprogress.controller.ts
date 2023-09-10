@@ -33,6 +33,7 @@ import {SerieprogressService} from "../serieprogress/serieprogress.service";
 import {FullSerieProgress} from "../serieprogress/interfaces/serieprogress";
 import {Book} from "../books/schemas/book.schema";
 import {UpdateReadProgressDto} from "./dto/update-readprogress.dto";
+import {isNumberString} from "class-validator";
 
 @Controller("readprogress")
 @ApiTags("Progresos de Lectura")
@@ -300,6 +301,44 @@ export class ReadprogressController {
         }
 
         const response = await this.readprogressService.getBookProgresses(userId, book);
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Get("streak/:year/:month")
+    async getMonthStreak(@Req() req:Request, @Param("month") month:string, @Param("year") year:string) {
+        if (!isNumberString(month) || !isNumberString(year)) throw new BadRequestException();
+
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getMonthStreak(userId, parseInt(year), parseInt(month));
+
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Get("logs/:year/:month/:day")
+    async getDayLogs(@Req() req:Request, @Param("day") day:string, @Param("month") month:string, @Param("year") year:string) {
+        if (!isNumberString(month) || !isNumberString(year) || !isNumberString(day)) throw new BadRequestException();
+
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const response = await this.readprogressService.getDayLogs(userId, parseInt(year), parseInt(month), parseInt(day));
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 
