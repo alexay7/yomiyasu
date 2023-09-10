@@ -8,10 +8,12 @@ interface LateralListItemProps extends LiHTMLAttributes<HTMLLIElement> {
     link?:string;
     Icon:React.ElementType;
     toggleMenu?:()=>void;
+    category?:boolean;
+    sub?:boolean;
 }
 
 export function LateralListItem(props:LateralListItemProps):React.ReactElement {
-    const {text, link, Icon, toggleMenu, className, ...moreProps} = props;
+    const {text, link, Icon, toggleMenu, className, category, sub, ...moreProps} = props;
 
     const navigate = useNavigate();
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
@@ -19,7 +21,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
     let backColor = "dark:hover:bg-[#444444] hover:bg-gray-200";
 
     let active = false;
-    if (window.location.pathname === link) active = true;
+    if (!category && window.location.pathname === link) active = true;
 
     if (active) backColor = "dark:bg-[#666666] dark:hover:bg-[#666666] bg-gray-200 hover:bg-gray-200";
 
@@ -34,7 +36,7 @@ export function LateralListItem(props:LateralListItemProps):React.ReactElement {
             }}
             {...moreProps}
         >
-            <div className="w-1/3 flex justify-center">
+            <div className={`w-1/3 flex justify-center ${sub ? "pl-6" : ""}`}>
                 <Icon/>
             </div>
             <p className="w-2/3">{text}</p>

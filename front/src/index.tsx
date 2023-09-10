@@ -11,6 +11,7 @@ import {SettingsProvider} from "./contexts/SettingsContext";
 import {GlobalProvider} from "./contexts/GlobalContext";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import "dayjs/locale/es";
 
 const root = createRoot(
     document.getElementById("root") as HTMLElement
@@ -20,7 +21,7 @@ const queryClient = new QueryClient();
 
 root.render(
     <React.StrictMode>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
             <QueryClientProvider client={queryClient}>
                 <GlobalProvider>
                     <AuthProvider>

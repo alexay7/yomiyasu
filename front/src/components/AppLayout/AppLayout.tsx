@@ -1,6 +1,6 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List} from "@mui/icons-material";
 import {Divider, IconButton, useTheme} from "@mui/material";
-import React, {useContext, useEffect, useState} from "react";
+import React, {Fragment, useContext, useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
 import {CSSTransition} from "react-transition-group";
 import "./styles.css";
@@ -56,7 +56,11 @@ export function AppLayout():React.ReactElement {
                         <LateralListItem toggleMenu={toggleMenu} text="Inicio" link="/app" Icon={Home}/>
                         <LateralListItem toggleMenu={toggleMenu} text="Biblioteca" link="/app/library" Icon={Book}/>
                         <Divider className="my-4"/>
-                        <LateralListItem toggleMenu={toggleMenu} text="Historial" link="/app/history" Icon={History}/>
+                        <LateralListItem category toggleMenu={toggleMenu} text="Historial" link="/app/history" Icon={History}/>
+                        <Fragment>
+                            <LateralListItem sub toggleMenu={toggleMenu} text="Lista" link="/app/history" Icon={List}/>
+                            <LateralListItem sub toggleMenu={toggleMenu} text="Calendario" link="/app/calendar" Icon={CalendarMonth}/>
+                        </Fragment>
                         <LateralListItem toggleMenu={toggleMenu} text="Estadísticas" link="/app/profile" Icon={PieChart}/>
                         <AccountSettings/>
                         <Settings/>

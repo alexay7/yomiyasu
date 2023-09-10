@@ -5,6 +5,7 @@ import GeneralStats from "./components/GeneralStats";
 import {useAuth} from "../../contexts/AuthContext";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
+import {Helmet} from "react-helmet";
 
 function Stats():React.ReactElement {
     const {userData} = useAuth();
@@ -29,6 +30,9 @@ function Stats():React.ReactElement {
 
     return (
         <div className="flex flex-col w-full dark:bg-[#121212] gap-8 py-8">
+            <Helmet>
+                <title>YomiYasu - Estadísticas</title>
+            </Helmet>
             <div className="flex flex-col w-3/4 mx-auto gap-8 items-start">
                 <h1 className="dark:text-white">Estadísticas de {userData?.username}</h1>
                 <GeneralStats/>

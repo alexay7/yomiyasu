@@ -229,4 +229,74 @@ export class ReadprogressService {
     async getBookProgresses(user:Types.ObjectId, book:Types.ObjectId) {
         return this.readProgressModel.find({user, book});
     }
+
+    async getDayLogs(user:Types.ObjectId, year:number, month:number, day:number) {
+        const result = this.readProgressModel.aggregate([
+            {
+                $match: {
+                    user:new Types.ObjectId(user)
+                }
+            },
+            {
+                $addFields: {
+                    day: {$dayOfMonth: "$lastUpdateDate"},
+                    month: {$month: "$lastUpdateDate"},
+                    year: {$year: "$lastUpdateDate"}
+                }
+            },
+            {
+                $match: {
+                    day: day,
+                    month: month,
+                    year: year
+                }
+            }
+        ]);
+
+        result.lookup({from:"books", localField:"book", foreignField:"_id", as:"bookInfo"})
+            .unwind({path:"$bookInfo"})
+            .lookup({from:"series", localField:"serie", foreignField:"_id", as:"serieInfo"})
+            .unwind({path:"$serieInfo"});
+
+        return result;
+    }
+
+    async getMonthStreak(user:Types.ObjectId, year:number, month:number) {
+        const startOfMonth = new Date(year, month);
+        startOfMonth.setDate(1);
+        const endOfMonth = new Date(year, month);
+        endOfMonth.setMonth(endOfMonth.getMonth() + 1, 0);
+
+        const aggregationResult = await this.readProgressModel.aggregate([
+            {
+                $match: {
+                    user:new Types.ObjectId(user),
+                    lastUpdateDate: {
+                        $gte: startOfMonth,
+                        $lte: endOfMonth
+                    }
+                }
+            },
+            {
+                $project: {
+                    dayOfMonth: {$dayOfMonth: "$lastUpdateDate"}
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    days: {$addToSet: "$dayOfMonth"}
+                }
+            }
+        ]);
+
+        if (aggregationResult.length > 0) {
+            return (aggregationResult[0].days as string[]).sort((a, b)=>{
+                if (a < b) return -1;
+                return 1;
+            });
+        } else {
+            return [];
+        }
+    }
 }
