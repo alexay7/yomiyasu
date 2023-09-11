@@ -284,17 +284,17 @@ export class ReadprogressService {
             },
             {
                 $group: {
-                    _id: null,
-                    days: {$addToSet: "$dayOfMonth"}
+                    _id: "$dayOfMonth",
+                    count: {$sum: 1}
                 }
             }
         ]);
 
         if (aggregationResult.length > 0) {
-            return (aggregationResult[0].days as string[]).sort((a, b)=>{
-                if (a < b) return -1;
-                return 1;
-            });
+            return aggregationResult.map(({_id, count}) => ({
+                dayOfMonth: _id,
+                count
+            })).sort((a, b) => a.dayOfMonth - b.dayOfMonth);
         } else {
             return [];
         }

@@ -698,17 +698,17 @@ function Reader():React.ReactElement {
                         onLoad={injectCustomScript}
                     />
                     {!showToolBar && isTabletOrMobile && (
-                        <div className="fixed bottom-0 flex justify-between items-center w-full py-2">
+                        <div className="fixed bottom-0 flex justify-around items-center w-full py-2 opacity-70">
                             <IconButton onClick={()=>{
                                 iframe.current?.contentWindow?.postMessage({action:"goLeft"});
-                            }}
+                            }} className="w-1/3"
                             >
                                 <ArrowBackIosNew className="stroke-gray-600 stroke-1"/>
                             </IconButton>
                             <p className="text-white font-semibold text-lg" style={{textShadow:"-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black"}}>{currentPage} / {bookData.pages}</p>
                             <IconButton onClick={()=>{
                                 iframe.current?.contentWindow?.postMessage({action:"goRight"});
-                            }}
+                            }} className="w-1/3"
                             >
                                 <ArrowForwardIos className="stroke-gray-600 stroke-1"/>
                             </IconButton>

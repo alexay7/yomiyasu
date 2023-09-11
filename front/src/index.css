@@ -136,3 +136,14 @@ canvas
 .MuiPickersCalendarHeader-root{
   margin-bottom: 18px!important;
 }
+
+.MuiPickersDay-root{
+  margin:0!important;
+}
+
+.MuiPickersDay-root.Mui-selected{
+  background: transparent!important;
+  font-weight: 600;
+  border:2px solid var(--primary-color);
+  color: white!important;
+}
