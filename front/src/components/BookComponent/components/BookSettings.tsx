@@ -93,6 +93,12 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
             <Menu id="long-menu" keepMounted anchorEl={anchorEl}
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
+                <MenuItem onClick={()=>{
+                    goTo(navigate, `/reader/${bookData._id}?private=true`);
+                }}
+                >
+                    Leer en incógnito
+                </MenuItem>
                 {deck && (
                     <MenuItem onClick={()=>{
                         void pauseSerie();
