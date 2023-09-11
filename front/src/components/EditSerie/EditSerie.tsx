@@ -90,7 +90,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                             <MenuItem value="PUBLISHING">En progreso</MenuItem>
                         </Select>
                     </FormControl>
-                    <Autocomplete onChange={(e, v)=>setGenres(v)} value={genres} fullWidth freeSolo multiple
+                    <Autocomplete onChange={(e, v: readonly string[])=>setGenres(Array.from(v))}  value={genres} fullWidth freeSolo multiple
                         renderInput={(params)=>(
                             <TextField
                                 {...params}
@@ -100,7 +100,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                         )}
                         options={genresAndArtists.genres}
                     />
-                    <Autocomplete onChange={(e, v)=>setAuthors(v)} value={authors} fullWidth freeSolo multiple
+                    <Autocomplete onChange={(e, v: readonly string[])=>setAuthors(Array.from(v))}  value={authors} fullWidth freeSolo multiple
                         renderInput={(params)=>(
                             <TextField
                                 {...params}
