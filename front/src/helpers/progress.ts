@@ -2,6 +2,11 @@ import {api} from "../api/api";
 import {Book, BookProgress} from "../types/book";
 
 export async function createProgress(bookData:Book, page?:number, time?:number, characters?:number, doublePages?:boolean):Promise<void> {
+    const paramsString = window.location.search;
+    const searchParams = new URLSearchParams(paramsString);
+
+    if (searchParams.has("private")) return;
+
     let currentPage = page;
     if (currentPage) {
         if (currentPage > bookData.pages || (currentPage === bookData.pages - 1 && doublePages)) {
