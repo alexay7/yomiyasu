@@ -4,7 +4,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {IconButton, ThemeProvider, Tooltip, createTheme} from "@mui/material";
-import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight} from "@mui/icons-material";
+import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight, ArrowBackIosNew, ArrowForwardIos} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
@@ -19,6 +19,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import {getCookie} from "../../helpers/cookies";
 import "./styles.css";
 import {InversedSlider} from "./components/InversedSlider";
+import {useMediaQuery} from "react-responsive";
 
 const theme = createTheme({
     direction: "rtl"
@@ -41,6 +42,8 @@ function Reader():React.ReactElement {
     const [searchWord, setSearchWord] = useState("");
     const [changedTab, setChangedTab] = useState(false);
     const [showTimeLeft, setShowTimeLeft] = useState(false);
+
+    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
     const {data:bookData} = useQuery("book", async()=> {
         const res = await api.get<Book>(`books/${id}`);
@@ -476,6 +479,7 @@ function Reader():React.ReactElement {
                 document.getElementById('showMenuA').style.display="none";
                 document.body.style.backgroundColor = "black";
 
+                ${readerSettings.scrollChange ? `
                 // Permite pasar de página con swipes
                 var touchStart = null;
                 var touchEnd = null;
@@ -500,7 +504,7 @@ function Reader():React.ReactElement {
                     }else if(isRightSwipe){
                         inputLeft();
                     }
-                });
+                });` : ""}
 
                 /**
                  * Reemplaza la función de pasar de página por una que, además de
@@ -693,6 +697,23 @@ function Reader():React.ReactElement {
                         className="w-full measure"
                         onLoad={injectCustomScript}
                     />
+                    {!showToolBar && isTabletOrMobile && (
+                        <div className="fixed bottom-0 flex justify-between items-center w-full py-2">
+                            <IconButton onClick={()=>{
+                                iframe.current?.contentWindow?.postMessage({action:"goLeft"});
+                            }}
+                            >
+                                <ArrowBackIosNew className="stroke-gray-600 stroke-1"/>
+                            </IconButton>
+                            <p className="text-white font-semibold text-lg" style={{textShadow:"-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black"}}>{currentPage} / {bookData.pages}</p>
+                            <IconButton onClick={()=>{
+                                iframe.current?.contentWindow?.postMessage({action:"goRight"});
+                            }}
+                            >
+                                <ArrowForwardIos className="stroke-gray-600 stroke-1"/>
+                            </IconButton>
+                        </div>
+                    )}
                     {showToolBar && (
                         <div className="dark:bg-[#272727] bg-white h-[5vh] w-full dark:text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                             {bookData.pageChars && (

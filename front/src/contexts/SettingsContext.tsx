@@ -54,7 +54,8 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
         toggleOCRTextBoxes:true,
         panAndZoom:!isTabletOrMobile, // Si el usuario está usando móvil es más cómodo no usar el zoom
         nativeDictionary:true,
-        dictionaryVersion:"word"
+        dictionaryVersion:"word",
+        scrollChange:true
     };
 
     const rawUserSettings = window.localStorage.getItem("reader");
@@ -70,6 +71,10 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
 
         if (userSettings.dictionaryVersion === undefined) {
             userSettings.dictionaryVersion = "word";
+        }
+
+        if (userSettings.dictionaryVersion === undefined) {
+            userSettings.scrollChange = true;
         }
     }
 
@@ -90,6 +95,7 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     const [siteSettings, setSiteSettings] = useState<SiteConfig>(auxSiteSettings || defaultSiteSettings);
 
     useEffect(()=>{
+        console.log(readerSettings);
         window.localStorage.setItem("reader", JSON.stringify(readerSettings));
     }, [readerSettings]);
 

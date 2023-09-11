@@ -131,6 +131,13 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         window.location.reload();
     }
 
+    function setScrollChange():void {
+        setReaderSettings((prev)=>{
+            return ({...prev, scrollChange:!prev.scrollChange});
+        });
+        window.location.reload();
+    }
+
     return (
         <>
             <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
@@ -166,6 +173,11 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     </div>
                                 </SettingsItem>
                             )}
+                            <SettingsItem className="dark:text-white" label="Activar scroll para cambiar de página" childrenId="scroll">
+                                <div className="flex justify-end">
+                                    <Checkbox id="scroll" onClick={setScrollChange} checked={readerSettings.scrollChange}/>
+                                </div>
+                            </SettingsItem>
                         </div>
                         <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
