@@ -6,6 +6,7 @@ import {Chart as ChartJS, ChartData, Point, LinearScale, CategoryScale, PointEle
 import {useTheme} from "@mui/material";
 import {Book} from "../../../types/book";
 import {useGlobal} from "../../../contexts/GlobalContext";
+import {formatTime} from "../../../helpers/helpers";
 
 ChartJS.register(LinearScale, CategoryScale, PointElement, LineElement, Title, Legend, Filler, Tooltip);
 
@@ -19,8 +20,8 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const {reloaded} = useGlobal();
 
     const {data:serieSpeed = [], refetch} = useQuery(`serie-${serieId}-speed`, async()=>{
-        const response = await api.get<{book:string, meanReadSpeed:number, endDate:string}[]>(`readprogress/serie/${serieId}/speed`);
-        return response.filter((x)=>x.endDate !== undefined);
+        const response = await api.get<{book:string, meanReadSpeed:number, endDate:string, time:number}[]>(`readprogress/serie/${serieId}/speed`);
+        return response;
     });
 
     useEffect(()=>{
@@ -32,11 +33,11 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const theme = useTheme();
 
     const chartData:ChartData<"line", (number | Point | null)[], unknown> = {
-        labels: serieSpeed.map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.endDate).toLocaleDateString("es")}`),
+        labels: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.endDate).toLocaleDateString("es")}`),
         datasets: [
             {
                 label: "Velocidad",
-                data: serieSpeed.map((item) => item.meanReadSpeed),
+                data: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => item.meanReadSpeed),
                 fill: true,
                 borderColor: "#24B14D",
                 backgroundColor: "#24b14c39",
@@ -57,6 +58,14 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
             return `ha aumentado un ${difference}%`;
         }
         return `ha disminuido un ${difference * -1}%`;
+    }
+
+    function calculateTime():number {
+        let totalTime = 0;
+        serieSpeed.forEach((x)=>{
+            totalTime += x.time;
+        });
+        return totalTime;
     }
 
     const chartOptions  = {
@@ -90,7 +99,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     return (
         <div className="h-52 flex flex-col gap-2">
             {serieSpeed && serieSpeed.length > 0 && (
-                <p className="text-xs">Tu velocidad <span className="text-primary font-semibold">{calculateSpeed()}</span> desde que empezaste esta serie</p>
+                <p className="text-xs">Tu velocidad <span className="text-primary font-semibold">{calculateSpeed()}</span> desde que empezaste esta serie. Has pasado {formatTime(calculateTime())} leyendo esta serie.</p>
             )}
             <Line data={chartData} options={{...chartOptions, plugins:{tooltip:{mode:"index", intersect:false}}}} />
         </div>
