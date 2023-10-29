@@ -20,7 +20,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
 
     const {data:serieSpeed = [], refetch} = useQuery(`serie-${serieId}-speed`, async()=>{
         const response = await api.get<{book:string, meanReadSpeed:number, endDate:string}[]>(`readprogress/serie/${serieId}/speed`);
-        return response;
+        return response.filter((x)=>x.endDate !== undefined);
     });
 
     useEffect(()=>{
