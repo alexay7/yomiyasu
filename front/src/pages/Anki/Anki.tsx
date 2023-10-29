@@ -149,7 +149,6 @@ function Anki():React.ReactElement {
 
         const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
         if (res) {
-            console.log(res);
             const resJson = await res.json() as {result:number, error:string};
             if (resJson.result && resJson.result !== 0) {
                 toast.success("La carta se ha creado con éxito");

@@ -21,6 +21,7 @@ function History():React.ReactElement {
         const rows:LogData[] = [];
 
         res.data.forEach((progress)=>{
+            console.log(progress);
             rows.push({
                 id:progress._id,
                 bookId:progress.bookInfo._id,
@@ -33,8 +34,7 @@ function History():React.ReactElement {
                 endDate:progress.endDate,
                 time:progress.time,
                 lastUpdateDate:progress.lastUpdateDate,
-                characters:progress.bookInfo.pageChars && progress.bookInfo.pageChars.length >=
-                    progress.currentPage ? progress.bookInfo.pageChars[progress.currentPage - 1] : 0
+                characters:progress.characters || 0
             });
         });
 

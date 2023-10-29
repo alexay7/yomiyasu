@@ -21,8 +21,6 @@ export async function nextBook(book:Book):Promise<void> {
 export async function prevBook(book:Book):Promise<void> {
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/prev`);
 
-    console.log(foundBook);
-
     if (foundBook.status === "completed") {
         if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
     }

@@ -95,7 +95,6 @@ export function SettingsProvider(props:ContextProps):React.ReactElement {
     const [siteSettings, setSiteSettings] = useState<SiteConfig>(auxSiteSettings || defaultSiteSettings);
 
     useEffect(()=>{
-        console.log(readerSettings);
         window.localStorage.setItem("reader", JSON.stringify(readerSettings));
     }, [readerSettings]);
 
