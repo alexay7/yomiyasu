@@ -43,4 +43,5 @@ export interface UserProgress {
     endDate?:Date;
     bookInfo:Book;
     serieInfo:Serie;
+    characters?:number;
 }
