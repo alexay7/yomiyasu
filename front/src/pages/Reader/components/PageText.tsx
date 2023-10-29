@@ -127,10 +127,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
                                                 <ul className="flex flex-col gap-2">
                                                     {koma.map((text, k)=>(
                                                         <li key={`${i}-${j}-${k}`} className="flex gap-2">
-                                                            ・
-                                                            {text.map((p)=>(
-                                                                <p key={p}>{p}</p>
-                                                            ))}
+                                                            ・  <p>{text.join("")}</p>
                                                         </li>
                                                     ))}
                                                 </ul>
