@@ -7,8 +7,11 @@ import {SeriesFilter} from "../../../types/serie";
 
 function RecentSeriesScroller():React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:recentSeries, refetch:recentSeriesRefetch} = useQuery("recentseries", async()=> {
+    const {data:recentSeries = [], refetch:recentSeriesRefetch} = useQuery("recentseries", async()=> {
         const res = await api.get<SeriesFilter>("series?sort=!lastModifiedDate&limit=15");
+
+        if (!res) return [];
+
         return res.data;
     });
 

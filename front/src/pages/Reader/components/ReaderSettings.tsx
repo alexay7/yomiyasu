@@ -1,9 +1,10 @@
-import React, {LiHTMLAttributes} from "react";
+import React, {LiHTMLAttributes, useEffect} from "react";
 import "./style.css";
 import {CSSTransition} from "react-transition-group";
 import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/material";
 import {Close} from "@mui/icons-material";
 import {useSettings} from "../../../contexts/SettingsContext";
+import {toast} from "react-toastify";
 
 interface SettingsItemProps extends LiHTMLAttributes<HTMLLIElement> {
     label:string;
@@ -137,6 +138,51 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         });
         window.location.reload();
     }
+
+    useEffect(()=>{
+        function handleKeyDown(e:KeyboardEvent):void {
+            switch (e.key) {
+                case "m":{
+                    const zooms = ["fit to screen", "fit to width", "original size", "keep zoom level"];
+                    const zoomIndex = zooms.indexOf(readerSettings.defaultZoomMode);
+                    const newZoom = zoomIndex < 3 ? zooms[zoomIndex + 1] : zooms[0];
+                    iframeWindow.postMessage({action:"setSettings", property:"defaultZoom", value:newZoom});
+                    setReaderSettings((prev)=>{
+                        return ({...prev, defaultZoomMode:newZoom as "fit to screen" | "fit to width" | "original size" | "keep zoom level"});
+                    });
+                    toast.success(`Nuevo modo de zoom: ${newZoom}`);
+                    break;
+                }
+                case "d":{
+                    iframeWindow.postMessage({action:"setSettings", property:"doublePage"});
+                    toast.success(`Double paginación ${readerSettings.singlePageView ? "activada" : "desactivada"}`);
+                    setReaderSettings((prev)=>{
+                        return ({...prev, singlePageView:!prev.singlePageView});
+                    });
+                    break;
+                }
+                case "z":{
+                    if (readerSettings.panAndZoom) {
+                        iframeWindow.postMessage({action:"setSettings", property:"disableZoom"});
+                        toast.success("Zoom&Pan desactivado");
+                    } else {
+                        iframeWindow.postMessage({action:"setSettings", property:"enableZoom"});
+                        toast.success("Zoom&Pan activado");
+                    }
+                    setReaderSettings((prev)=>{
+                        return ({...prev, panAndZoom:!prev.panAndZoom});
+                    });
+                    break;
+                }
+            }
+        }
+
+        addEventListener("keydown", handleKeyDown);
+
+        return ()=>{
+            removeEventListener("keydown", handleKeyDown);
+        };
+    }, [iframeWindow, readerSettings, setReaderSettings]);
 
     return (
         <>

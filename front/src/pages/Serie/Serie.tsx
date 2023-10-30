@@ -30,8 +30,11 @@ function Serie():React.ReactElement {
 
     const {data:serieData, refetch:serieRefetch} = useQuery(`serie-${id}`, async()=>{
         const response = await api.get<FullSerie>(`series/${id}`);
-        setUnreadBooks(response.unreadBooks);
-        return response;
+
+        if (response) {
+            setUnreadBooks(response.unreadBooks);
+            return response;
+        }
     });
 
     const {data:serieBooks, refetch:booksRefetch} = useQuery(`books-serie-${id}`, async()=>{

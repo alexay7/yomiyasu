@@ -56,6 +56,9 @@ export function EditBook(props:EditBookProps):React.ReactElement {
 
     async function getDefaultName():Promise<void> {
         const res = await api.get<{name:string}>(`books/${bookData._id}/defaultname`);
+
+        if (!res) return;
+
         if (res.name) {
             setName(res.name);
         }

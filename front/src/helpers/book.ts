@@ -6,6 +6,8 @@ export async function nextBook(book:Book):Promise<void> {
     window.localStorage.removeItem(book._id);
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/next`);
 
+    if (!foundBook) return;
+
     if (foundBook.status === "completed") {
         if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
     }
@@ -20,6 +22,8 @@ export async function nextBook(book:Book):Promise<void> {
 
 export async function prevBook(book:Book):Promise<void> {
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/prev`);
+
+    if (!foundBook) return;
 
     if (foundBook.status === "completed") {
         if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;

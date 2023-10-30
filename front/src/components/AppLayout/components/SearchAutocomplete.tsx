@@ -23,6 +23,9 @@ export function SearchAutocomplete():React.ReactElement {
                 return;
             }
             const res = await api.get<SeriesFilter>(`series?name=${searchQuery}&limit=5&page=1&sort=sortName`);
+
+            if (!res) return;
+
             setFoundSeries(res.data);
         }
         async function getBooks():Promise<void> {
@@ -31,6 +34,9 @@ export function SearchAutocomplete():React.ReactElement {
                 return;
             }
             const res = await api.get<BookWithProgress[]>(`books?name=${searchQuery}&limit=10&page=1&sort=sortName`);
+
+            if (!res) return;
+
             setFoundBooks(res);
         }
 

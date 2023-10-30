@@ -20,6 +20,7 @@ const History = lazy(() => import("./pages/History/pages/History"));
 const Reader = lazy(() => import("./pages/Reader/Reader"));
 const Anki = lazy(() => import("./pages/Anki/Anki"));
 const Stats = lazy(() => import("./pages/Stats/Stats"));
+const Admin = lazy(() => import("./pages/Admin/Admin"));
 
 export function App():React.ReactElement {
     const [mode, setMode] = useState<"dark" | "light">("dark");
@@ -78,6 +79,7 @@ export function App():React.ReactElement {
                             <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
                             <Route path="profile" element={<React.Suspense fallback={<Loading/>}><Stats/></React.Suspense>}/>
                             <Route path="calendar" element={<React.Suspense fallback={<Loading/>}><Calendar/></React.Suspense>}/>
+                            <Route path="admin" element={<React.Suspense fallback={<Loading/>}><Admin/></React.Suspense>}/>
                             <Route path="*" element={<Navigate to="/app"/>}/>
                         </Route>
                         <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>

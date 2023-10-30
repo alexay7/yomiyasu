@@ -60,8 +60,15 @@ export class AuthController {
     }
 
     @Post("signup")
+    @UseGuards(JwtAuthGuard)
     @ApiOkResponse({status:HttpStatus.CREATED})
-    async signup( @Body() createUserDto: CreateUserDto) {
+    async signup(@Req()req:Request, @Body() createUserDto: CreateUserDto) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+        
         const authResult = await this.authService.signUp(createUserDto);
 
         return authResult;

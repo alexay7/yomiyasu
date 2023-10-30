@@ -1,5 +1,5 @@
 import {MoreVert} from "@mui/icons-material";
-import {IconButton, Menu, MenuItem} from "@mui/material";
+import {Button, IconButton, Menu, MenuItem} from "@mui/material";
 import React, {useState} from "react";
 import {useAuth} from "../../../contexts/AuthContext";
 import {Book, BookProgress, BookWithProgress} from "../../../types/book";
@@ -11,6 +11,7 @@ import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 import {EditBook} from "../../EditBook/EditBook";
 import {BookInfo} from "../../BookInfo/BookInfo";
 import {EditProgress} from "./BookProgresses/BookProgresses";
+import {toast} from "react-toastify";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -36,15 +37,45 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
         setAnchorEl(null);
     }
 
+    async function markAsReadPages(final:boolean):Promise<void> {
+        const body:BookProgress = {
+            book:bookData._id,
+            status:"completed",
+            endDate:new Date(),
+            currentPage:final ? bookData.pages : undefined,
+            characters:final ? bookData.characters : undefined
+        };
+
+        const response = await api.post<BookProgress | undefined, Book>("readprogress", body);
+        if (response) {
+            forceReload("serie");
+        }
+    }
+
     async function markAsRead():Promise<void> {
-        const response = await api.post<BookProgress, Book>("readprogress", {
+        let body:BookProgress | undefined = undefined;
+
+        if (bookData.lastProgress?.status === "reading") {
+            toast.info(
+                <div className="flex flex-col gap-4">
+                    <p>¿Hasta que página marcar el volumen como leído?</p>
+                    <div className="flex justify-evenly">
+                        <Button variant="outlined" onClick={()=>markAsReadPages(false)}>Pág {bookData.lastProgress.currentPage}</Button>
+                        <Button variant="outlined" onClick={()=>markAsReadPages(true)}>Pág {bookData.pages}</Button>
+                    </div>
+                </div>
+            );
+            return;
+        }
+        body = {
             book:bookData._id,
             currentPage:bookData.pages,
             status:"completed",
             endDate:new Date(),
             characters:bookData.characters
-        }
-        );
+        };
+
+        const response = await api.post<BookProgress | undefined, Book>("readprogress", body);
         if (response) {
             forceReload("serie");
         }

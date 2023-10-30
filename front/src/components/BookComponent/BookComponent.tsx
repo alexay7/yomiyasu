@@ -39,7 +39,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 lastProgressRef.current.style.width = "0%";
                 return;
             }
-            if (read && bookData.status === "unread") {
+            if ((read && bookData.status === "unread") || bookData.status === "completed") {
                 lastProgressRef.current.style.width = "100%";
                 return;
             }

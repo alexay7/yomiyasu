@@ -29,11 +29,19 @@ export class UsersService {
         return this.userModel.findById(id);
     }
 
+    async getUsers() {
+        return this.userModel.find({}, {refreshToken:0, password:0});
+    }
+
     async findByUsernameOrEmail(usernameOrEmail: string): Promise<UserDocument | null> {
         if (isEmail(usernameOrEmail)) {
             return this.userModel.findOne({email:usernameOrEmail});
         }
         return this.userModel.findOne({username:usernameOrEmail});
+    }
+
+    async changeUserRole(userId:Types.ObjectId, admin:boolean) {
+        return this.userModel.findByIdAndUpdate(userId, {admin});
     }
 
     async update(
@@ -60,5 +68,9 @@ export class UsersService {
         }
 
         return this.userModel.findByIdAndUpdate(id, query, {new: true});
+    }
+
+    async deleteUser(userId:Types.ObjectId) {
+        return this.userModel.findByIdAndDelete(userId);
     }
 }

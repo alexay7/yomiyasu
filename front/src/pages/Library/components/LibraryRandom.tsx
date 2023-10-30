@@ -57,6 +57,8 @@ export function LibraryRandom():React.ReactElement {
         try {
             const res = await api.get<SerieWithProgress>(link);
 
+            if (!res) return;
+
             window.location.href = `/app/series/${res._id}`;
         } catch {
             toast.error("Ninguna serie coincide con los filtros indicados");

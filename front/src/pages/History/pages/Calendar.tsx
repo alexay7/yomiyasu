@@ -20,7 +20,7 @@ function Calendar():React.ReactElement {
         if (!selectedStreak) return [];
         const res = await api.get<{dayOfMonth:number, count:number}[]>(`readprogress/streak/${selectedStreak.year}/${selectedStreak.month}`);
 
-        if (res.length === 0) {
+        if (!res || res.length === 0) {
             setMax(0);
             setTotal(0);
             return [];
@@ -66,7 +66,7 @@ function Calendar():React.ReactElement {
         if (!selectedDay) return [];
         const res = await api.get<UserProgress[]>(`readprogress/logs/${selectedDay.year()}/${selectedDay.month() + 1}/${selectedDay.date()}`);
 
-        if (res.length === 0) return [];
+        if (!res || res.length === 0) return [];
 
         const rows:LogData[] = [];
 

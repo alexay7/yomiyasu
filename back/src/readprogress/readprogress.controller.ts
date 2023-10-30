@@ -102,7 +102,12 @@ export class ReadprogressController {
         }
 
         // Se ha encontrado un proceso con estado de reading o unread, se actualizan los datos
-        return this.readprogressService.modifyReadProgress(foundProgress._id as Types.ObjectId, {...progressDto, lastUpdateDate:new Date()});
+        const updatedProgress:Partial<ReadProgress> = {
+            ...progressDto,
+            characters:progressDto.characters ? progressDto.characters : foundProgress.characters,
+            currentPage:progressDto.currentPage ? progressDto.currentPage : foundProgress.currentPage
+        };
+        return this.readprogressService.modifyReadProgress(foundProgress._id as Types.ObjectId, {...updatedProgress, lastUpdateDate:new Date()});
     }
 
     @Post(":serieId")

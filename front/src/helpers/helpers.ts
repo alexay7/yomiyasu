@@ -22,6 +22,9 @@ export function formatTime(seconds: number): string {
 export async function checkRefreshToken():Promise<RefreshResponse> {
     const uuid = window.localStorage.getItem("uuid");
     const response = await api.post<{uuid: string}, RefreshResponse>("auth/refresh", {uuid:uuid || ""});
+
+    if (!response) return {status:"fail", uuid:""};
+
     setCookie("logged", "true", 2);
     return response;
 }

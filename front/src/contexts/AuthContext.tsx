@@ -37,10 +37,7 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
         const body = {username, email, password};
         try {
             const response = await api.post<RegisterUser, AuthResponse>("auth/signup", body);
-            setUserData(response.user);
 
-            // El backend ha generado un uuid para este dispositivo, guardarlo en el localstorage para refrescar el token
-            window.localStorage.setItem("uuid", response.uuid);
             return response;
         } catch (e) {
             setLoading(false);
@@ -56,6 +53,12 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
 
         try {
             const response = await api.post<LoginUser, AuthResponse>("auth/login", body);
+
+            if (!response) {
+                setLoading(false);
+                return;
+            }
+
             setUserData(response.user);
             setLoggedIn(true);
             setLoading(false);
@@ -93,8 +96,13 @@ export function AuthProvider(props:ContextProps):React.ReactElement {
          * Este useEffect se encarga de validar el estado de autenticación del usuario cada vez que
          * abra/recargue la página
          */
-        async function checkAccessToken():Promise<LoggedUser> {
+        async function checkAccessToken():Promise<LoggedUser | undefined> {
             const response = await api.get<LoggedUser>("auth/me");
+
+            if (!response) {
+                return;
+            }
+
             setCookie("logged", "true", 2);
             return response;
         }

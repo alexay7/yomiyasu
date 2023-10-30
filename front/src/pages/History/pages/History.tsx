@@ -16,6 +16,8 @@ function History():React.ReactElement {
     const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", paginationModel, sortField], async()=>{
         const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}&sort=${sortField}`);
 
+        if (!res) return [];
+
         setTotal(res.total);
 
         const rows:LogData[] = [];

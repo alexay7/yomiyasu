@@ -65,7 +65,7 @@ export function AppLayout():React.ReactElement {
                         <AccountSettings/>
                         <Settings/>
                         {userData?.admin && (
-                            <LateralListItem toggleMenu={toggleMenu} text="Configuración" link="/app/config" Icon={AdminPanelSettings}/>
+                            <LateralListItem toggleMenu={toggleMenu} text="Configuración" link="/app/admin" Icon={AdminPanelSettings}/>
                         )}
                         <LateralListItem className="hover:bg-red-200 hover:text-black duration-150 transition-colors" text="Cerrar Sesión" Icon={Logout} onClick={()=>logoutUser()}/>
                         <Divider/>

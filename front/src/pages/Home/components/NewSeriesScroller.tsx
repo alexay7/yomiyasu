@@ -7,8 +7,11 @@ import {SeriesFilter} from "../../../types/serie";
 
 function NewSeriesScroller():React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:newSeries, refetch:newSeriesRefetch} = useQuery("newseries", async()=> {
+    const {data:newSeries = [], refetch:newSeriesRefetch} = useQuery("newseries", async()=> {
         const res = await api.get<SeriesFilter>("series?sort=!_id&limit=15");
+
+        if (!res) return [];
+
         return res.data;
     });
 

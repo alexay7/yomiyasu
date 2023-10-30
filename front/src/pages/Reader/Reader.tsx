@@ -4,7 +4,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {IconButton, ThemeProvider, Tooltip, createTheme} from "@mui/material";
-import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight, ArrowBackIosNew, ArrowForwardIos} from "@mui/icons-material";
+import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight, ArrowBackIosNew, ArrowForwardIos, Translate} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
@@ -164,6 +164,31 @@ function Reader():React.ReactElement {
             }
         }
 
+        function handleKeyDown(e:KeyboardEvent):void {
+            switch (e.key) {
+                case "ArrowLeft":{
+                    iframe.current?.contentWindow?.postMessage({action:"goLeft"});
+                    break;
+                }
+                case " ":{
+                    iframe.current?.contentWindow?.postMessage({action:"goLeft"});
+                    break;
+                }
+                case "ArrowRight":{
+                    iframe.current?.contentWindow?.postMessage({action:"goRight"});
+                    break;
+                }
+                case "t":{
+                    setTimerOn((prev)=>!prev);
+                    break;
+                }
+                case "p":{
+                    setOpenTextSidebar((prev)=>!prev);
+                    break;
+                }
+            }
+        }
+
         function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):void {
             switch (e.data.action) {
                 case "newPage": {
@@ -192,6 +217,14 @@ function Reader():React.ReactElement {
                 case "selection":{
                     const {value} = e.data as {value:string};
                     getselectedText(value);
+                    break;
+                }
+                case "keypress":{
+                    const {value} = e.data as {value:KeyboardEvent};
+                    if (value.key === "ArrowLeft" || value.key === "ArrowRight" || value.key === " ") return;
+                    const event = new KeyboardEvent("keydown", {key:value.key});
+                    window.dispatchEvent(event);
+
                     break;
                 }
             }
@@ -245,23 +278,6 @@ function Reader():React.ReactElement {
         function handleResize():void {
             const doc = document.documentElement;
             doc.style.setProperty("--height", `${window.innerHeight}px`);
-        }
-
-        function handleKeyDown(e:KeyboardEvent):void {
-            switch (e.key) {
-                case "ArrowLeft":{
-                    iframe.current?.contentWindow?.postMessage({action:"goLeft"});
-                    break;
-                }
-                case " ":{
-                    iframe.current?.contentWindow?.postMessage({action:"goLeft"});
-                    break;
-                }
-                case "ArrowRight":{
-                    iframe.current?.contentWindow?.postMessage({action:"goRight"});
-                    break;
-                }
-            }
         }
 
         // Recibe mensajes del iframe
@@ -419,19 +435,26 @@ function Reader():React.ReactElement {
                     switch(e.key){
                         case "ArrowLeft":{
                             inputLeft();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
                             break;
                         };
                         case " ":{
                             inputLeft();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
                             break;
                         };
                         case "ArrowRight":{
                             inputRight();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
                             break;
                         };
+                        default:{
+                            window.parent.postMessage({action:"keypress",value:{key:e.key}},"*");
+                        }
                     };
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
                 });
 
                 ${readerSettings.dictionaryVersion === "word" ?
@@ -672,6 +695,11 @@ function Reader():React.ReactElement {
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
+                                <Tooltip enterTouchDelay={0} title={`${(bookData.pageChars || [])[currentPage - 1] - (bookData.pageChars || [])[currentPage - 2]} caracteres`}>
+                                    <IconButton>
+                                        <Translate/>
+                                    </IconButton>
+                                </Tooltip>
                                 <StopWatchMenu bookData={bookData} timer={timer} setTimer={setTimer}
                                     timerOn={timerOn} setTimerOn={setTimerOn}
                                 />
