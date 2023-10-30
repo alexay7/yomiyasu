@@ -23,7 +23,6 @@ function History():React.ReactElement {
         const rows:LogData[] = [];
 
         res.data.forEach((progress)=>{
-            console.log(progress);
             rows.push({
                 id:progress._id,
                 bookId:progress.bookInfo._id,
