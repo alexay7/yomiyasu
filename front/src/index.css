@@ -18,7 +18,6 @@
 :root {
   --height: 100vh;
   --primary-color:#24B14D;
-  touch-action: pan-x pan-y;
 }
 
 body {
