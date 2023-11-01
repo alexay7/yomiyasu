@@ -42,10 +42,6 @@ async function request<TResponse>(url:string, config:RequestInit):Promise<TRespo
                 toast.error("No tienes permisos para ejecutar esa acción");
                 break;
             }
-            default:{
-                toast.error("Algo salió mal");
-                break;
-            }
         }
 
         throw new HttpError(error.message, error.status, "NONE");

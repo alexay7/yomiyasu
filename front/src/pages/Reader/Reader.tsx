@@ -695,7 +695,7 @@ function Reader():React.ReactElement {
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
-                                <Tooltip enterTouchDelay={0} title={`${(bookData.pageChars || [])[currentPage - 1] - (bookData.pageChars || [])[currentPage - 2]} caracteres`}>
+                                <Tooltip enterTouchDelay={0} title={`${currentPage > 1 ? (bookData.pageChars || [0])[currentPage - 1] - (bookData.pageChars || [0])[currentPage - 2] : (bookData.pageChars || [0])[0]} caracteres`}>
                                     <IconButton>
                                         <Translate/>
                                     </IconButton>

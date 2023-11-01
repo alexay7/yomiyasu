@@ -171,7 +171,7 @@ export class SeriesService {
 
       const results = await result;
 
-      return {data:results, pages: Math.ceil(countQuery[0].total / (query.limit || 1))};
+      return {data:results, pages: Math.ceil((countQuery[0] || {total:0}).total / (query.limit || 1))};
   }
 
   async getArtistsAndGenres() {
