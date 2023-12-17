@@ -183,7 +183,7 @@ export class SeriesService {
               genres:{$addToSet:"$genres"},
               authors:{$addToSet:"$authors"}
           }).project({_id:0});
-      return pipe[0];
+      return pipe[0] || {genres:[], authors:[]};
   }
 
   getAlphabetCount(query?:SeriesSearch) {

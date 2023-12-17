@@ -340,19 +340,10 @@ export class SeriesController {
             // Finalize the archive
             await archive.finalize();
   
-            // Set the response headers
+            // Send the file to the client
             res.setHeader("Content-Type", "application/zip");
-            res.setHeader(
-                "Content-Disposition",
-                `attachment; filename=${zipFileName}`
-            );
-  
             const readStream = fs.createReadStream(zipFilePath);
-
-            readStream.on("close", async()=>{
-                await fs.unlink(zipFilePath);
-            });
-
+    
             return new StreamableFile(readStream);
         } catch (error) {
             console.error("Error al crear y enviar el archivo ZIP:", error);
