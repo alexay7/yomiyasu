@@ -21,12 +21,16 @@ export function formatTime(seconds: number): string {
 
 export async function checkRefreshToken():Promise<RefreshResponse> {
     const uuid = window.localStorage.getItem("uuid");
-    const response = await api.post<{uuid: string}, RefreshResponse>("auth/refresh", {uuid:uuid || ""});
+    try {
+        const response = await api.post<{uuid: string}, RefreshResponse>("auth/refresh", {uuid:uuid || ""});
 
-    if (!response) return {status:"fail", uuid:""};
+        if (!response) return {status:"fail", uuid:""};
 
-    setCookie("logged", "true", 2);
-    return response;
+        setCookie("logged", "true", 2);
+        return response;
+    } catch {
+        return {status:"fail", uuid:""};
+    }
 }
 
 export function goTo(navigate:NavigateFunction, link:string):void {

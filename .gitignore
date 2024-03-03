@@ -10,3 +10,5 @@ dicts/*
 docker-compose.yml
 
 scripts
+
+dump.rdb

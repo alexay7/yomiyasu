@@ -34,12 +34,14 @@ async function request<TResponse>(url:string, config:RequestInit):Promise<TRespo
                     if (responseSecondTry) {
                         return responseSecondTry.json() as TResponse;
                     }
+                    toast.error("Debes estar autenticado para ejecutar esta acción");
                 }
-                toast.error("Debes estar autenticado para ejecutar esta acción");
                 break;
             }
             case 403:{
-                toast.error("No tienes permisos para ejecutar esa acción");
+                if (!url.includes("auth")) {
+                    toast.error("No tienes permisos para ejecutar esa acción");
+                }
                 break;
             }
         }
