@@ -7,7 +7,13 @@ async function extractFirstFileNameFromFolder(folderPath: string): Promise<strin
         const files = await fs.readdir(folderPath);
 
         if (files.length > 0) {
-            const firstFileName = files[0];
+            // Find the first file that is a .jpg, .png or .jpeg
+            const firstFileName = files.find((file) => {
+                return file.endsWith(".jpg") || file.endsWith(".png") || file.endsWith(".jpeg");
+            });
+
+            if (!firstFileName) return null;
+
             if (!firstFileName.endsWith(".jpg") && !firstFileName.endsWith(".png") && !firstFileName.endsWith(".jpeg")) return null;
             return firstFileName;
         }
@@ -86,7 +92,7 @@ export async function extractUrlFromHtml(
         const urlRegexDecoded = /url\("(.*?)"\)/i;
         match = htmlContent.match(urlRegexDecoded);
     }
-    
+
     if (match && match[1]) {
         const imagesName = decodeURI(match[1].split("/")[0]);
         const imagesPath = join(dirname(bookPath), imagesName);

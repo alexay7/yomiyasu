@@ -12,3 +12,4 @@ docker-compose.yml
 scripts
 
 dump.rdb
+.DS_Store
