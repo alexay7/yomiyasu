@@ -2,13 +2,13 @@ import React, {Fragment, useState} from "react";
 import {PopupWindow} from "../../PopupWindow/PopupWindow";
 import {LateralListItem} from "./LateralListItem";
 import {Settings as SettingsIcon} from "@mui/icons-material";
-import {useSettings} from "../../../contexts/SettingsContext";
 import {Button, Checkbox, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControlLabel, MenuItem, Select} from "@mui/material";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 export function Settings():React.ReactElement {
     const [open, setOpen] = useState(false);
     const [openWarning, setOpenWarning] = useState(false);
-    const {setSiteSettings, siteSettings} = useSettings();
+    const {siteSettings, modifySiteSettings} = useSettingsStore();
 
     function closePopup():void {
         setOpen(false);
@@ -24,9 +24,7 @@ export function Settings():React.ReactElement {
                             if (c) {
                                 setOpenWarning(true);
                             } else {
-                                setSiteSettings((prev)=>{
-                                    return {...prev, openHTML:false};
-                                });
+                                modifySiteSettings("openHTML", false);
                             }
                         }}
                         />
@@ -35,9 +33,7 @@ export function Settings():React.ReactElement {
                     <div className="flex w-full justify-between items-center gap-4">
                         <p>¿Qué Información te interesa de cada libro?</p>
                         <Select value={siteSettings.bookView} onChange={(e)=>{
-                            setSiteSettings((prev)=>{
-                                return {...prev, bookView:e.target.value as "characters" | "pages" | "both"};
-                            });
+                            modifySiteSettings("bookView", e.target.value as "characters" | "pages" | "both");
                         }} className="w-1/2"
                         >
                             <MenuItem value="pages">Páginas</MenuItem>
@@ -50,18 +46,21 @@ export function Settings():React.ReactElement {
                     </div>
                     <FormControlLabel className="select-none" control={
                         <Checkbox checked={siteSettings.autoCrono} onChange={(e, c)=>{
-                            setSiteSettings((prev)=>{
-                                return {...prev, autoCrono:c};
-                            });
+                            modifySiteSettings("autoCrono", c);
                         }}
                         />
                     } label="Iniciar cronómetro automáticamente al abrir libro"
                     />
                     <FormControlLabel className="select-none" control={
+                        <Checkbox checked={siteSettings.startCronoOnPage} onChange={(e, c)=>{
+                            modifySiteSettings("startCronoOnPage", c);
+                        }}
+                        />
+                    } label="Iniciar cronómetro automáticamente al cambiar de página"
+                    />
+                    <FormControlLabel className="select-none" control={
                         <Checkbox checked={siteSettings.antispoilers} onChange={(e, c)=>{
-                            setSiteSettings((prev)=>{
-                                return {...prev, antispoilers:c};
-                            });
+                            modifySiteSettings("antispoilers", c);
                         }}
                         />
                     } label="Filtro anti-spoilers"
@@ -82,9 +81,7 @@ export function Settings():React.ReactElement {
                     >Revertir cambios
                     </Button>
                     <Button onClick={()=>{
-                        setSiteSettings((prev)=>{
-                            return {...prev, openHTML:true};
-                        });
+                        modifySiteSettings("openHTML", true);
                         setOpenWarning(false);
                     }} autoFocus
                     >

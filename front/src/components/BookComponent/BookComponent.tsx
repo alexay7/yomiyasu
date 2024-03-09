@@ -6,7 +6,7 @@ import {Fade, IconButton} from "@mui/material";
 import {BookSettings} from "./components/BookSettings";
 import {useNavigate} from "react-router-dom";
 import {goTo, formatTime} from "../../helpers/helpers";
-import {defaultSets, useSettings} from "../../contexts/SettingsContext";
+import {defaultSets, useSettingsStore} from "../../stores/SettingsStore";
 
 
 interface BookComponentProps {
@@ -19,7 +19,7 @@ interface BookComponentProps {
 
 export function BookComponent(props:BookComponentProps):React.ReactElement {
     const {bookData, insideSerie, forceRead, deck, blurred} = props;
-    const {siteSettings} = useSettings();
+    const {siteSettings} = useSettingsStore();
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
     const [read, setRead] = useState(bookData.status && bookData.status !== "unread");

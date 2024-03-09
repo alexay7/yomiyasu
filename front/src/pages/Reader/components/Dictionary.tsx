@@ -4,9 +4,9 @@ import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {DicionaryResult} from "../../../types/dictionary";
 import {toast} from "react-toastify";
-import {useSettings} from "../../../contexts/SettingsContext";
 import {ExitToApp} from "@mui/icons-material";
 import {HttpError} from "../../../types/error";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 interface DictionaryProps {
     searchWord:string;
@@ -15,7 +15,7 @@ interface DictionaryProps {
 
 export function Dictionary(props:DictionaryProps):React.ReactElement {
     const {searchWord, setSearchWord} = props;
-    const {readerSettings} = useSettings();
+    const {readerSettings} = useSettingsStore();
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [canClose, setCanClose] = useState(false);
 

@@ -25,4 +25,5 @@ export interface SiteConfig {
     bookView:"characters" | "pages" | "both" | "remainingchars" | "remainingpages" | "remainingtime";
     autoCrono:boolean;
     antispoilers:boolean;
+    startCronoOnPage:boolean;
 }

@@ -3,8 +3,8 @@ import "./style.css";
 import {CSSTransition} from "react-transition-group";
 import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/material";
 import {Close} from "@mui/icons-material";
-import {useSettings} from "../../../contexts/SettingsContext";
 import {toast} from "react-toastify";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 interface SettingsItemProps extends LiHTMLAttributes<HTMLLIElement> {
     label:string;
@@ -34,70 +34,52 @@ interface ReaderSettingsProps {
 }
 
 export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
-    const {readerSettings, setReaderSettings} = useSettings();
+    const {readerSettings, modifyReaderSettings} = useSettingsStore();
     const {showMenu, iframeWindow, closeSettings} = props;
 
     function setRightToLeft():void {
         iframeWindow.postMessage({action:"setSettings", property:"r2l"});
-        setReaderSettings((prev)=>{
-            return ({...prev, r2l:!prev.r2l});
-        });
+        modifyReaderSettings("r2l", !readerSettings.r2l);
     }
 
     function setCtrlToPan():void {
         iframeWindow.postMessage({action:"setSettings", property:"ctrlToPan"});
-        setReaderSettings((prev)=>{
-            return ({...prev, ctrlToPan:!prev.ctrlToPan});
-        });
+        modifyReaderSettings("ctrlToPan", !readerSettings.ctrlToPan);
     }
 
     function setZoom(e:SelectChangeEvent):void {
         iframeWindow.postMessage({action:"setSettings", property:"defaultZoom", value:e.target.value});
-        setReaderSettings((prev)=>{
-            return ({...prev, defaultZoomMode:e.target.value as "fit to screen" | "fit to width" | "original size" | "keep zoom level"});
-        });
+        modifyReaderSettings("defaultZoomMode", e.target.value as "fit to screen" | "fit to width" | "original size" | "keep zoom level");
     }
 
     function setOcr():void {
         iframeWindow.postMessage({action:"setSettings", property:"ocr"});
-        setReaderSettings((prev)=>{
-            return ({...prev, displayOCR:!prev.displayOCR});
-        });
+        modifyReaderSettings("displayOCR", !readerSettings.displayOCR);
     }
 
     function setBorders():void {
         iframeWindow.postMessage({action:"setSettings", property:"borders"});
-        setReaderSettings((prev)=>{
-            return ({...prev, textBoxBorders:!prev.textBoxBorders});
-        });
+        modifyReaderSettings("textBoxBorders", !readerSettings.textBoxBorders);
     }
 
     function setDoublePage():void {
         iframeWindow.postMessage({action:"setSettings", property:"doublePage"});
-        setReaderSettings((prev)=>{
-            return ({...prev, singlePageView:!prev.singlePageView});
-        });
+        modifyReaderSettings("singlePageView", !readerSettings.singlePageView);
     }
 
     function setCoverPage():void {
         iframeWindow.postMessage({action:"setSettings", property:"coverPage"});
-        setReaderSettings((prev)=>{
-            return ({...prev, hasCover:!prev.hasCover});
-        });
+        modifyReaderSettings("hasCover", !readerSettings.hasCover);
     }
 
     function setFontSize(e:SelectChangeEvent):void {
         iframeWindow.postMessage({action:"setSettings", property:"fontSize", value:e.target.value});
-        setReaderSettings((prev)=>{
-            return ({...prev, fontSize:e.target.value});
-        });
+        modifyReaderSettings("fontSize", e.target.value);
     }
 
     function setToggleBox():void {
         iframeWindow.postMessage({action:"setSettings", property:"toggleBoxes"});
-        setReaderSettings((prev)=>{
-            return ({...prev, toggleOCRTextBoxes:!prev.toggleOCRTextBoxes});
-        });
+        modifyReaderSettings("toggleOCRTextBoxes", !readerSettings.toggleOCRTextBoxes);
     }
 
     function setZoomPan():void {
@@ -106,36 +88,26 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         } else {
             iframeWindow.postMessage({action:"setSettings", property:"enableZoom"});
         }
-        setReaderSettings((prev)=>{
-            return ({...prev, panAndZoom:!prev.panAndZoom});
-        });
+        modifyReaderSettings("panAndZoom", !readerSettings.panAndZoom);
     }
 
     function setFont(e:SelectChangeEvent):void {
         iframeWindow.document.body.style.setProperty("--user-font", e.target.value);
 
-        setReaderSettings((prev)=>{
-            return ({...prev, fontFamily:e.target.value});
-        });
+        modifyReaderSettings("fontFamily", e.target.value);
     }
 
     function setDictionary():void {
-        setReaderSettings((prev)=>{
-            return ({...prev, nativeDictionary:!prev.nativeDictionary || false});
-        });
+        modifyReaderSettings("nativeDictionary", !readerSettings.nativeDictionary);
     }
 
     function setDictVersion(e:SelectChangeEvent):void {
-        setReaderSettings((prev)=>{
-            return ({...prev, dictionaryVersion:e.target.value as "word" | "sentence"});
-        });
+        modifyReaderSettings("dictionaryVersion", e.target.value as "word" | "sentence");
         window.location.reload();
     }
 
     function setScrollChange():void {
-        setReaderSettings((prev)=>{
-            return ({...prev, scrollChange:!prev.scrollChange});
-        });
+        modifyReaderSettings("scrollChange", !readerSettings.scrollChange);
         window.location.reload();
     }
 
@@ -147,18 +119,16 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                     const zoomIndex = zooms.indexOf(readerSettings.defaultZoomMode);
                     const newZoom = zoomIndex < 3 ? zooms[zoomIndex + 1] : zooms[0];
                     iframeWindow.postMessage({action:"setSettings", property:"defaultZoom", value:newZoom});
-                    setReaderSettings((prev)=>{
-                        return ({...prev, defaultZoomMode:newZoom as "fit to screen" | "fit to width" | "original size" | "keep zoom level"});
-                    });
+
+                    modifyReaderSettings("defaultZoomMode", newZoom as "fit to screen" | "fit to width" | "original size" | "keep zoom level");
                     toast.success(`Nuevo modo de zoom: ${newZoom}`);
                     break;
                 }
                 case "d":{
                     iframeWindow.postMessage({action:"setSettings", property:"doublePage"});
                     toast.success(`Double paginación ${readerSettings.singlePageView ? "activada" : "desactivada"}`);
-                    setReaderSettings((prev)=>{
-                        return ({...prev, singlePageView:!prev.singlePageView});
-                    });
+
+                    modifyReaderSettings("singlePageView", !readerSettings.singlePageView);
                     break;
                 }
                 case "z":{
@@ -169,9 +139,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                         iframeWindow.postMessage({action:"setSettings", property:"enableZoom"});
                         toast.success("Zoom&Pan activado");
                     }
-                    setReaderSettings((prev)=>{
-                        return ({...prev, panAndZoom:!prev.panAndZoom});
-                    });
+                    modifyReaderSettings("panAndZoom", !readerSettings.panAndZoom);
                     break;
                 }
             }
@@ -182,7 +150,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         return ()=>{
             removeEventListener("keydown", handleKeyDown);
         };
-    }, [iframeWindow, readerSettings, setReaderSettings]);
+    }, [iframeWindow, readerSettings, modifyReaderSettings]);
 
     return (
         <>

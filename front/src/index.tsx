@@ -7,7 +7,6 @@ import {BrowserRouter} from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import {ToastContainer} from "react-toastify";
 import {QueryClient, QueryClientProvider} from "react-query";
-import {SettingsProvider} from "./contexts/SettingsContext";
 import {GlobalProvider} from "./contexts/GlobalContext";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -25,12 +24,10 @@ root.render(
             <QueryClientProvider client={queryClient}>
                 <GlobalProvider>
                     <AuthProvider>
-                        <SettingsProvider>
-                            <BrowserRouter>
-                                <ToastContainer/>
-                                <App/>
-                            </BrowserRouter>
-                        </SettingsProvider>
+                        <BrowserRouter>
+                            <ToastContainer/>
+                            <App/>
+                        </BrowserRouter>
                     </AuthProvider>
                 </GlobalProvider>
             </QueryClientProvider>

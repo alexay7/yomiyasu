@@ -6,7 +6,6 @@ import {Book, BookProgress} from "../../types/book";
 import {IconButton, ThemeProvider, Tooltip, createTheme} from "@mui/material";
 import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight, ArrowBackIosNew, ArrowForwardIos, Translate} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
-import {defaultSets, useSettings} from "../../contexts/SettingsContext";
 import {ReaderConfig} from "../../types/settings";
 import {StopWatchMenu} from "./components/StopWatchMenu";
 import {createProgress} from "../../helpers/progress";
@@ -20,6 +19,7 @@ import {getCookie} from "../../helpers/cookies";
 import "./styles.css";
 import {InversedSlider} from "./components/InversedSlider";
 import {useMediaQuery} from "react-responsive";
+import {useSettingsStore, defaultSets} from "../../stores/SettingsStore";
 
 const theme = createTheme({
     direction: "rtl"
@@ -28,7 +28,7 @@ const theme = createTheme({
 function Reader():React.ReactElement {
     const {id} = useParams();
     const iframe = useRef<HTMLIFrameElement>(null);
-    const {readerSettings, siteSettings} = useSettings();
+    const {readerSettings, siteSettings} = useSettingsStore();
     const {reauth} = useAuth();
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -205,6 +205,11 @@ function Reader():React.ReactElement {
                             void nextBook(bookData);
                             return;
                         }
+
+                        if (siteSettings.startCronoOnPage && !timerOn) {
+                            setTimerOn(true);
+                        }
+
                         setCurrentPage(value + 1);
                     }
                     break;
@@ -310,7 +315,7 @@ function Reader():React.ReactElement {
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
         };
-    }, [bookData, readerSettings]);
+    }, [bookData, readerSettings, siteSettings, timerOn]);
 
     // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {

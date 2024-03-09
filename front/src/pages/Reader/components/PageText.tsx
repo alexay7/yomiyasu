@@ -3,8 +3,8 @@ import {IconButton} from "@mui/material";
 import React, {Fragment, useRef, useState} from "react";
 import {CSSTransition} from "react-transition-group";
 import "./style.css";
-import {useSettings} from "../../../contexts/SettingsContext";
 import {useMediaQuery} from "react-responsive";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 interface PageTextProps {
     lines:string[][][][];
@@ -14,7 +14,7 @@ interface PageTextProps {
 
 export function PageText(props:PageTextProps):React.ReactElement {
     const {open, setOpen} = props;
-    const {readerSettings} = useSettings();
+    const {readerSettings} = useSettingsStore();
     const sidebarRef = useRef<HTMLDivElement>(null);
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1024px)"});
 

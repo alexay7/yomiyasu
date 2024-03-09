@@ -6,10 +6,10 @@ import {SerieWithProgress, SeriesFilter} from "../../../types/serie";
 import {BookWithProgress} from "../../../types/book";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
-import {useSettings} from "../../../contexts/SettingsContext";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 export function SearchAutocomplete():React.ReactElement {
-    const {siteSettings} = useSettings();
+    const {siteSettings} = useSettingsStore();
     const [searchQuery, setSearchQuery] = useState("");
     const [foundSeries, setFoundSeries] = useState<SerieWithProgress[]>([]);
     const [foundBooks, setFoundBooks] = useState<BookWithProgress[]>([]);
