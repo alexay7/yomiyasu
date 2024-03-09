@@ -79,7 +79,12 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
                     ))}
                 </ul>
             ) : (
-                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4">
+                <ul ref={ulRef} className="lg:px-4 flex gap-8 flex-nowrap overflow-x-auto no-scrollbar py-4" onScroll={(e)=>{
+                    const {scrollLeft} = e.target as HTMLElement;
+
+                    setLeft(scrollLeft);
+                }}
+                >
                     {components?.map((serie)=>(
                         <SerieComponent key={serie._id} serieData={serie as SerieWithProgress}/>
                     ))}
