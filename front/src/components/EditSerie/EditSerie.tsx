@@ -88,6 +88,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                         node {
                             name {
                                 native
+                                full
                             }
                         }
                     }
@@ -131,7 +132,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
         }
 
         if (data.staff) {
-            const auxAuthors = data.staff.edges.filter((edge)=>edge.role.toLowerCase().includes("story") || edge.role.toLowerCase().includes("art")).map((edge)=>edge.node.name.native).filter((author)=>!!author);
+            const auxAuthors = data.staff.edges.filter((edge)=>edge.role.toLowerCase().includes("story") || edge.role.toLowerCase().includes("art")).map((edge)=>edge.node.name.native || edge.node.name.full).filter((author)=>!!author);
 
             setAuthors(auxAuthors);
         }

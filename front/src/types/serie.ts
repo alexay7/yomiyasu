@@ -94,6 +94,7 @@ export interface AnilistSerie {
                 node:{
                     name:{
                         native:string;
+                        full:string;
                     }
                 }
             }[]
