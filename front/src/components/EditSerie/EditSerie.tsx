@@ -126,12 +126,13 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
         }
 
         if (data.genres) {
-            const auxGenres = data.genres.map((genre)=>AnilistGenres[genre]);
+            const auxGenres = data.genres.map((genre)=>AnilistGenres[genre]).filter((gen)=>!!gen);
             setGenres(auxGenres);
         }
 
         if (data.staff) {
-            const auxAuthors = data.staff.edges.filter((edge)=>edge.role.toLowerCase().includes("story") || edge.role.toLowerCase().includes("art")).map((edge)=>edge.node.name.native);
+            const auxAuthors = data.staff.edges.filter((edge)=>edge.role.toLowerCase().includes("story") || edge.role.toLowerCase().includes("art")).map((edge)=>edge.node.name.native).filter((author)=>!!author);
+
             setAuthors(auxAuthors);
         }
 
