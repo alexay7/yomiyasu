@@ -22,7 +22,8 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
     useEffect(()=>{
         function setRight():void {
             if (!ulRef.current) return;
-            setMaxRight(ulRef.current.scrollWidth - ulRef.current.scrollLeft === ulRef.current.clientWidth);
+
+            setMaxRight(left > ulRef.current.scrollWidth - ulRef.current.clientWidth - 10);
         }
 
         setRight();
@@ -33,28 +34,24 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
         };
     }, [ulRef, components, left]);
 
-    function scrollToRight():void {
-        if (!ulRef || !ulRef.current) return;
-
-        ulRef.current.scrollBy({left:document.body.clientWidth, behavior:"smooth"});
-
-        setTimeout(()=>{
-            if (!ulRef.current) return;
-            setMaxRight(ulRef.current.scrollWidth - ulRef.current.scrollLeft === ulRef.current.clientWidth);
-            setLeft(ulRef.current?.scrollLeft || 0);
-        }, 300);
+    function scrollToLeft():void {
+        // Scroll to the left 90% the width of the component with an smooth effect
+        if (ulRef.current) {
+            ulRef.current.scrollTo({
+                left: left - (ulRef.current.clientWidth * 0.9),
+                behavior: "smooth"
+            });
+        }
     }
 
-    function scrollToLeft():void {
-        if (!ulRef || !ulRef.current) return;
-
-        ulRef.current.scrollBy({left:-document.body.clientWidth, behavior:"smooth"});
-
-        setTimeout(()=>{
-            if (!ulRef.current) return;
-            setMaxRight(ulRef.current.scrollWidth - ulRef.current.scrollLeft === ulRef.current.clientWidth);
-            setLeft(ulRef.current?.scrollLeft || 0);
-        }, 300);
+    function scrollToRight():void {
+        // Scroll to the right 90% the width of the component with an smooth effect
+        if (ulRef.current) {
+            ulRef.current.scrollTo({
+                left: left + (ulRef.current.clientWidth * 0.9),
+                behavior: "smooth"
+            });
+        }
     }
 
     return (
