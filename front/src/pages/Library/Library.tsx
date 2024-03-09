@@ -13,6 +13,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import {LibraryFilter} from "./components/LibraryFilter";
 import {Helmet} from "react-helmet";
 import {LibraryRandom} from "./components/LibraryRandom";
+import {set} from "date-fns";
 
 function Library():React.ReactElement {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -207,7 +208,11 @@ function Library():React.ReactElement {
                     }
 
                     return (
-                        <IconButton disabled={disabled} onClick={()=>setSelectedLetter(letter.group.toUpperCase())} className={`${textColor} text-sm font-semibold`} key={letter.group}>
+                        <IconButton disabled={disabled} onClick={()=>{
+                            setSelectedLetter(letter.group.toUpperCase());
+                            setCurrentPage(1);
+                        }} className={`${textColor} text-sm font-semibold`} key={letter.group}
+                        >
                             {letter.group.toUpperCase()}
                         </IconButton>
                     );
