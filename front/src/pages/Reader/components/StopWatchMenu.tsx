@@ -3,10 +3,12 @@ import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
 import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 import {createProgress} from "../../../helpers/progress";
-import {Book} from "../../../types/book";
+import {Book, BookProgress} from "../../../types/book";
 
 
 interface StopWatchMenuProps {
+    oldProgress:BookProgress | undefined;
+    characters:number;
     bookData:Book;
     timer:number;
     setTimer:(v:React.SetStateAction<number>)=>void;
@@ -14,8 +16,7 @@ interface StopWatchMenuProps {
     setTimerOn:(v:React.SetStateAction<boolean>)=>void;
 }
 
-export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
-    const {timer, setTimer, timerOn, setTimerOn, bookData} = props;
+export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn, bookData, oldProgress}:StopWatchMenuProps):React.ReactElement {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
@@ -35,6 +36,9 @@ export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
     }
 
     function resetTimer():void {
+        // Confirmation from the user
+        if (!window.confirm("¿Estás seguro de que quieres reiniciar el cronómetro?")) return;
+
         void createProgress(bookData, undefined, 1);
         window.localStorage.removeItem(bookData._id);
         setTimer(0);
@@ -55,7 +59,13 @@ export function StopWatchMenu(props:StopWatchMenuProps):React.ReactElement {
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
                 <li style={{paddingTop:".25rem", paddingBottom:".25rem"}}>
-                    <p style={{textAlign:"center"}}>{formatTime(timer)}</p>
+                    <p style={{textAlign:"center"}}>Tiempo: {formatTime(timer)}</p>
+                </li>
+                <hr/>
+                <li className="flex flex-col items-center justify-center">
+                    <p>Sesión Actual</p>
+                    <p className="text-xs">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</p>
+                    <p className="text-xs">Caracteres: {characters - (oldProgress?.characters || 0)}</p>
                 </li>
                 <hr />
                 {!timerOn ? (

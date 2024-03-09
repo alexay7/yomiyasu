@@ -735,7 +735,8 @@ function Reader():React.ReactElement {
                                         <Translate/>
                                     </IconButton>
                                 </Tooltip>
-                                <StopWatchMenu bookData={bookData} timer={timer} setTimer={setTimer}
+                                <StopWatchMenu characters={calculateCurrentCharacters()} oldProgress={bookProgress} bookData={bookData}
+                                    timer={timer} setTimer={setTimer}
                                     timerOn={timerOn} setTimerOn={setTimerOn}
                                 />
                                 {/* <IconButton>
