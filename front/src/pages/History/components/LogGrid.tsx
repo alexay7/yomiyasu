@@ -6,6 +6,7 @@ import {api} from "../../../api/api";
 import {BookProgress} from "../../../types/book";
 import {DataGrid, GridColDef, GridToolbar} from "@mui/x-data-grid";
 import {Delete} from "@mui/icons-material";
+import {useNavigate} from "react-router-dom";
 
 export interface LogData {
     id:string,
@@ -32,6 +33,7 @@ interface LogGridProps {
 }
 
 function LogGrid(props:LogGridProps):React.ReactElement {
+    const navigate = useNavigate();
     const {data, refetch, paginationModel, setPaginationModel, setSortField, total} = props;
 
     async function deleteProgress(id:string):Promise<void> {
@@ -65,7 +67,17 @@ function LogGrid(props:LogGridProps):React.ReactElement {
         {
             field: "image",
             headerName: "",
-            renderCell:(params)=><img loading="lazy" src={params.value as string} alt="" />,
+            renderCell:(params)=>(
+                <img className="cursor-pointer" loading="lazy" src={params.value as string} alt="" onClick={
+                    ()=> {
+                    // Confirmation from the user
+                        if (!confirm("¿Seguro que quieres abrir el libro?")) return;
+
+                        navigate(`/reader/${params.row.bookId}`);
+                    }
+                }
+                />
+            ),
             sortable:false,
             filterable:false
         },
@@ -131,7 +143,7 @@ function LogGrid(props:LogGridProps):React.ReactElement {
     ];
 
     return (
-        <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500">
+        <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500 hover:cursor-cell">
             <DataGrid rows={data} columns={columns} slots={setPaginationModel ? {toolbar:GridToolbar} : {}} onRowClick={(row)=>{
                 const rowData = row.row as LogData;
                 let text = `.log manga ${rowData.currentPage} ${rowData.book}`;
