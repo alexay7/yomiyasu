@@ -3,10 +3,11 @@ import {PopupWindow} from "../PopupWindow/PopupWindow";
 import {Autocomplete, FormControl, IconButton, InputLabel, MenuItem, Select, TextField} from "@mui/material";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
-import {Serie, SerieWithProgress} from "../../types/serie";
+import {AnilistGenres, AnilistSerie, AnilistStatus, Serie, SerieWithProgress} from "../../types/serie";
 import {toast} from "react-toastify";
 import {useGlobal} from "../../contexts/GlobalContext";
-import {Edit} from "@mui/icons-material";
+import {Edit, ImportExport} from "@mui/icons-material";
+import {gql, request} from "graphql-request";
 
 interface EditSerieProps {
     serieData:SerieWithProgress;
@@ -24,6 +25,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
     const [status, setStatus] = useState(serieData.status || "");
     const [genres, setGenres] = useState(serieData.genres);
     const [authors, setAuthors] = useState(serieData.authors);
+    const [alternativeNames, setAlternativeNames] = useState(serieData.alternativeNames || []);
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
         return api.get<{genres:string[], authors:string[]}>("series/genresAndArtists");
@@ -46,7 +48,8 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
             summary,
             status,
             genres,
-            authors
+            authors,
+            alternativeNames
         };
 
         try {
@@ -58,6 +61,89 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
             }
         } catch {
             toast.error("No tienes permisos para realizar esa acción");
+        }
+    }
+
+    async function getAnilistData(title:string):Promise<void> {
+        const query = gql`
+        query($query:String){
+            Media(search:$query, format: MANGA, sort: POPULARITY_DESC, type: MANGA){
+                status
+                description
+                genres
+                synonyms
+                siteUrl
+                autoCreateForumThread
+                isRecommendationBlocked
+                isReviewBlocked
+                modNotes
+                title {
+                    romaji
+                    english
+                    native
+                }
+                staff {
+                    edges {
+                        role
+                        node {
+                            name {
+                                native
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        `;
+
+        const response = await request<AnilistSerie>("https://graphql.anilist.co", query, {query:title});
+
+        const data = response.Media;
+
+        const alternativeNamesAux = [];
+
+        if (data.title) {
+            setName(data.title.native || data.title.romaji);
+
+            if (data.title.english) {
+                alternativeNamesAux.push(data.title.english);
+            }
+
+            if (data.title.romaji) {
+                alternativeNamesAux.push(data.title.romaji);
+
+                setSortName(data.title.romaji);
+            }
+        }
+
+        if (data.description) {
+            setSummary(data.description);
+        }
+
+        if (data.status) {
+            const auxStatus = AnilistStatus[data.status];
+            setStatus(auxStatus);
+        }
+
+        if (data.genres) {
+            const auxGenres = data.genres.map((genre)=>AnilistGenres[genre]);
+            setGenres(auxGenres);
+        }
+
+        if (data.staff) {
+            const auxAuthors = data.staff.edges.filter((edge)=>edge.role.toLowerCase().includes("story") || edge.role.toLowerCase().includes("art")).map((edge)=>edge.node.name.native);
+            setAuthors(auxAuthors);
+        }
+
+        if (data.synonyms) {
+            alternativeNamesAux.push(...data.synonyms);
+        }
+
+        if (alternativeNamesAux.length > 0) {
+            // Remove duplicates
+            const uniqueAlternativeNames = Array.from(new Set(alternativeNamesAux));
+
+            setAlternativeNames(uniqueAlternativeNames);
         }
     }
 
@@ -80,7 +166,15 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
             )}
             <PopupWindow open={open} title={`Editar ${serieData.visibleName}`} closePopup={closePopup} onSubmit={saveChanges}>
                 <div className="flex flex-col gap-4">
-                    <TextField required onChange={(e)=>setName(e.target.value)} value={name} fullWidth variant="filled" label="Nombre"/>
+                    <div className="flex gap-2">
+                        <TextField required onChange={(e)=>setName(e.target.value)} value={name} fullWidth variant="filled" label="Nombre"/>
+                        <IconButton className="shrink-0 w-[56px]" onClick={()=>{
+                            void getAnilistData(name);
+                        }}
+                        >
+                            <ImportExport/>
+                        </IconButton>
+                    </div>
                     <TextField required onChange={(e)=>setSortName(e.target.value)} value={sortName} fullWidth variant="filled" label="Nombre para ordenar"/>
                     <TextField onChange={(e)=>setSummary(e.target.value)} value={summary} fullWidth variant="filled" label="Resumen" multiline maxRows={5}/>
                     <FormControl variant="filled">
@@ -109,6 +203,17 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                             />
                         )}
                         options={genresAndArtists.authors}
+                    />
+                    <Autocomplete onChange={(e, v: readonly string[])=>setAlternativeNames(Array.from(v))}  value={alternativeNames}
+                        fullWidth freeSolo multiple
+                        renderInput={(params)=>(
+                            <TextField
+                                {...params}
+                                variant="filled"
+                                label="Nombres alternativos"
+                            />
+                        )}
+                        options={[]}
                     />
                 </div>
             </PopupWindow>

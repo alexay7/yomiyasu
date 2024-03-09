@@ -46,6 +46,9 @@ export class Serie {
 
   @Prop({type: Number, default: 0})
   valoration: number;
+  
+  @Prop({type: [String], default: []})
+  alternativeNames: string[];
 }
 
 export const SerieSchema = SchemaFactory.createForClass(Serie);

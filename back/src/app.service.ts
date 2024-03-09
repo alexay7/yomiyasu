@@ -112,7 +112,8 @@ export class AppService {
                   const newSeries = {
                       path: elem,
                       visibleName: elem,
-                      sortName: elem
+                      sortName: elem,
+                      alternativeNames:[elem]
                   };
                   await this.seriesService.updateOrCreate(newSeries);
                   setTimeout(()=>{

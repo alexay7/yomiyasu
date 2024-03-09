@@ -79,6 +79,7 @@ export class SeriesService {
   }
 
   async editSerie(id:Types.ObjectId, updateSerie:UpdateSerie) {
+      console.log(updateSerie);
       return this.seriesModel.findByIdAndUpdate(id, updateSerie);
   }
 
@@ -99,7 +100,7 @@ export class SeriesService {
 
       if (query.name) {
           const regex = new RegExp(query.name.replace(/\s+/g, ".*"), "i");
-          result.match({$or:[{"sortName":{$regex:regex}}, {"visibleName":{$regex:regex}}]});
+          result.match({$or:[{"visibleName":{$regex:regex}}, {"alternativeNames":{$in:[regex]}}]});
       }
 
       if ((query.min && query.min !== 0)) {

@@ -33,4 +33,8 @@ export class UpdateSeriesDto implements Partial<Serie> {
     @IsNumber()
     @IsOptional()
     valoration?: number;
+
+    @IsArray()
+    @IsOptional()
+    alternativeNames?: string[];
 }
