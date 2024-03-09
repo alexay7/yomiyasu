@@ -22,7 +22,7 @@ export function SearchAutocomplete():React.ReactElement {
                 setFoundSeries([]);
                 return;
             }
-            const res = await api.get<SeriesFilter>(`series?name=${searchQuery}&limit=5&page=1&sort=sortName`);
+            const res = await api.get<SeriesFilter>(`series?name=${searchQuery}&sort=sortName`);
 
             if (!res) return;
 
