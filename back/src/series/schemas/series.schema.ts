@@ -43,6 +43,9 @@ export class Serie {
 
   @Prop({type: Boolean, default: false})
   missing: boolean;
+
+  @Prop({type: Number, default: 0})
+  valoration: number;
 }
 
 export const SerieSchema = SchemaFactory.createForClass(Serie);

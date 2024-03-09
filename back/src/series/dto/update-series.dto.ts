@@ -29,4 +29,8 @@ export class UpdateSeriesDto implements Partial<Serie> {
     @IsArray()
     @IsOptional()
     authors?: string[];
+
+    @IsNumber()
+    @IsOptional()
+    valoration?: number;
 }

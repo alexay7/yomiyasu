@@ -58,6 +58,23 @@ export class ReviewsService {
         }
     }
 
+    async getSerieValoration(serie:Types.ObjectId) {
+        const pipe = await this.reviewModel.aggregate()
+            .match({serie:new Types.ObjectId(serie)})
+            .group({
+                _id:null,
+                totalRating:{$sum:"$valoration"},
+                totalReviews:{$sum:1}
+            }).project({
+                averageRating:{
+                    $divide:["$totalRating", "$totalReviews"]
+                }
+            });
+        if (pipe.length > 0) {
+            return pipe[0].averageRating;
+        }
+    }
+
     async removeReview(userId:Types.ObjectId, id:Types.ObjectId) {
         const foundReview = await this.reviewModel.findOne({_id:id, user:userId});
 

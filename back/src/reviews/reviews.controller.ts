@@ -33,7 +33,9 @@ export class ReviewsController {
 
         const difficulty = await this.reviewsService.getSerieDifficulty(createReviewDto.serie);
 
-        await this.seriesService.editSerie(createReviewDto.serie, {difficulty});
+        const valoration = await this.reviewsService.getSerieValoration(createReviewDto.serie);
+
+        await this.seriesService.editSerie(createReviewDto.serie, {difficulty, valoration});
 
         return response;
     }
@@ -54,7 +56,9 @@ export class ReviewsController {
 
         const difficulty = await this.reviewsService.getSerieDifficulty(foundReview.serie);
 
-        await this.seriesService.editSerie(foundReview.serie, {difficulty:difficulty || 0});
+        const valoration = await this.reviewsService.getSerieValoration(foundReview.serie);
+
+        await this.seriesService.editSerie(foundReview.serie, {difficulty:difficulty || 0, valoration:valoration || 0});
 
         return response;
     }

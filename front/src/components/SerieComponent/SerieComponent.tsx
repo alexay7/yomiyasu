@@ -1,6 +1,6 @@
 import React, {useRef, useState} from "react";
 import {SerieWithProgress} from "../../types/serie";
-import {Fade, IconButton, Tooltip} from "@mui/material";
+import {Fade, IconButton, Rating, Tooltip} from "@mui/material";
 import {Book, Whatshot} from "@mui/icons-material";
 import {SerieSettings} from "./components/SerieSettings";
 import {useNavigate} from "react-router-dom";
@@ -45,6 +45,11 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                         <Tooltip title={`Dificultad: ${serieData.difficulty.toFixed(1)}/10`}>
                             <Whatshot fontSize="medium" sx={{color:getFlameColor(serieData.difficulty)}}/>
                         </Tooltip>
+                    </div>
+                )}
+                {serieData.valoration && (
+                    <div className="absolute bottom-0 right-0 text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
+                        <Rating size="small" value={serieData.valoration / 2} max={5} precision={0.5}/>
                     </div>
                 )}
 

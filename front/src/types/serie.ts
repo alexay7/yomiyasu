@@ -23,6 +23,7 @@ export interface SerieWithProgress extends Serie {
     type:"serie";
     readlist:boolean;
     paused:boolean;
+    valoration:number;
 }
 
 export interface SeriesFilter {
