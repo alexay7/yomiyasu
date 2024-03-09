@@ -191,7 +191,7 @@ function Serie():React.ReactElement {
                                 )}
                                 {serieData.summary && (
                                     <div className="text-sm mt-4">
-                                        <p className="overflow-hidden whitespace-pre-line" ref={overflowingText} style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary}</p>
+                                        <p className="overflow-hidden whitespace-pre-line" ref={overflowingText} style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary.replace(/(<([^>]+)>)/ig, "")}</p>
                                         {textOverflows && (
                                             <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
                                         )}
