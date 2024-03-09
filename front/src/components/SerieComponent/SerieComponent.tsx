@@ -49,7 +49,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 )}
                 {serieData.valoration && (
                     <div className="absolute bottom-0 right-0 text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
-                        <Rating size="small" value={serieData.valoration / 2} max={5} precision={0.5}/>
+                        <Rating size="small" readOnly value={serieData.valoration / 2} max={5} precision={0.5}/>
                     </div>
                 )}
 

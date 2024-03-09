@@ -67,7 +67,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
     async function getAnilistData(title:string):Promise<void> {
         const query = gql`
         query($query:String){
-            Media(search:$query, format: MANGA, sort: POPULARITY_DESC, type: MANGA){
+            Media(search:$query, format: MANGA, type: MANGA){
                 status
                 description
                 genres
