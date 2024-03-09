@@ -670,6 +670,36 @@ function Reader():React.ReactElement {
         return formatTime(charactersLeft / speed);
     }
 
+    function calculateCharacters():number {
+        if (!bookData) return 0;
+
+        if (currentPage > 1) {
+            if (!doublePages) {
+                return (bookData.pageChars || [0])[currentPage - 1] - (bookData.pageChars || [0])[currentPage - 2];
+            }
+
+            // Sumar los caracteres de las dos páginas
+            return (bookData.pageChars || [0])[currentPage] - (bookData.pageChars || [0])[currentPage - 2];
+
+        }
+        return (bookData.pageChars || [0])[0];
+    }
+
+    function calculateCurrentCharacters():number {
+        if (!bookData) return 0;
+
+        if (currentPage > 1) {
+            if (!doublePages) {
+                return (bookData.pageChars || [0])[currentPage - 1];
+            }
+
+            // Sumar los caracteres de las dos páginas
+            return (bookData.pageChars || [0])[currentPage];
+
+        }
+        return (bookData.pageChars || [0])[0];
+    }
+
     return (
         <div className="text-black relative overflow-hidden h-screen flex flex-col">
             <Helmet>
@@ -700,7 +730,7 @@ function Reader():React.ReactElement {
                                 <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
                             </div>
                             <div className="flex items-center flex-row px-2 gap-1">
-                                <Tooltip enterTouchDelay={0} title={`${currentPage > 1 ? (bookData.pageChars || [0])[currentPage - 1] - (bookData.pageChars || [0])[currentPage - 2] : (bookData.pageChars || [0])[0]} caracteres`}>
+                                <Tooltip enterTouchDelay={0} title={`${calculateCharacters()} caracteres`}>
                                     <IconButton>
                                         <Translate/>
                                     </IconButton>
@@ -754,7 +784,7 @@ function Reader():React.ReactElement {
                                     {showTimeLeft ? (
                                         <p><span className="text-xs">Tiempo restante estimado: {getTimeLeft()}</span></p>
                                     ) : (
-                                        <p><span className="text-xs">Caracteres leídos:</span> {bookData.pageChars[currentPage - 1]} / {bookData.characters}</p>
+                                        <p><span className="text-xs">Caracteres leídos:</span> {calculateCurrentCharacters()} / {bookData.characters}</p>
                                     )}
                                 </div>
                             )}
