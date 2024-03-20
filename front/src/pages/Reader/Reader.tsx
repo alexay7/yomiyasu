@@ -195,7 +195,7 @@ function Reader():React.ReactElement {
                     if (!bookData) return;
                     const {value} = e.data as {value:number};
                     if (value || value === 0) {
-                        if (value === -1) {
+                        if ((value < -1 && !readerSettings.singlePageView) || (value < 0 && readerSettings.singlePageView)) {
                             if (!confirm("¿Volver al libro anterior?")) return;
                             void prevBook(bookData);
                             return;
@@ -319,7 +319,7 @@ function Reader():React.ReactElement {
 
     // Función que manda orden al iframe de cambiar de página
     function setPage(newPage:number):void {
-        iframe.current?.contentWindow?.postMessage({action:"setPage", page:newPage - 1});
+        iframe.current?.contentWindow?.postMessage({action:"setPage", page:newPage});
     }
 
     function closeSettingsMenu():void {
@@ -700,6 +700,23 @@ function Reader():React.ReactElement {
         return (bookData.pageChars || [0])[0];
     }
 
+    function getTotalPages():number {
+        if (!bookData) return 0;
+
+        if (readerSettings.r2l) {
+            if (readerSettings.hasCover && !readerSettings.singlePageView) {
+                return bookData.pages - 1;
+            }
+        }
+        return bookData.pages;
+    }
+
+    function getCurrentPage():number {
+        if (currentPage === 0) return 1;
+        return currentPage;
+    }
+
+
     return (
         <div className="text-black relative overflow-hidden h-screen flex flex-col">
             <Helmet>
@@ -789,55 +806,108 @@ function Reader():React.ReactElement {
                                     )}
                                 </div>
                             )}
-                            <div className="justify-between flex items-center">
-                                <Tooltip title="It al libro anterior">
-                                    <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer,
-                                            bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                        void prevBook(bookData);
-                                    }}
-                                    >
-                                        <ArrowCircleLeft/>
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Ir a la primera página">
-                                    <IconButton onClick={()=>{
-                                        setPage(1);
-                                    }}
-                                    >
-                                        <SkipPrevious/>
-                                    </IconButton>
-                                </Tooltip>
-                                <p>{readerSettings.r2l ? bookData.pages : currentPage}</p>
-                            </div>
+                            {readerSettings.r2l ? (
+                                <div className="justify-between flex items-center">
+                                    <Tooltip title="Ir al siguiente libro">
+                                        <IconButton onClick={async()=>{
+                                            await createProgress(bookData, currentPage, timer,
+                                                bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
+                                            void nextBook(bookData);
+                                        }}
+                                        >
+                                            <ArrowCircleLeft/>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Ir a la última página">
+                                        <IconButton  onClick={()=>{
+                                            setPage(bookData.pages);
+                                        }}
+                                        >
+                                            <SkipPrevious/>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <p>{readerSettings.r2l ? getTotalPages() : getCurrentPage()}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="justify-between flex items-center">
+                                    <Tooltip title="It al libro anterior">
+                                        <IconButton onClick={async()=>{
+                                            await createProgress(bookData, currentPage, timer,
+                                                bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
+                                            void prevBook(bookData);
+                                        }}
+                                        >
+                                            <ArrowCircleLeft/>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Ir a la primera página">
+                                        <IconButton onClick={()=>{
+                                            setPage(1);
+                                        }}
+                                        >
+                                            <SkipPrevious/>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <p>{readerSettings.r2l ? getTotalPages() : getCurrentPage()}
+                                    </p>
+                                </div>
+                            )}
                             <ThemeProvider theme={readerSettings.r2l ? theme : {}}>
-                                <InversedSlider marks track={readerSettings ? "inverted" : "normal"} className="mx-4" min={1} max={bookData.pages} value={currentPage} onChange={(e, v)=>{
+                                <InversedSlider marks track={readerSettings ? "inverted" : "normal"} className="mx-4" min={1} max={readerSettings.hasCover && !readerSettings.singlePageView ?
+                                    bookData.pages - 1 : bookData.pages} value={currentPage} onChange={(e, v)=>{
                                     setPage(v as number);
                                 }}
                                 step={doublePages ? 2 : 1}
                                 />
                             </ThemeProvider>
-                            <div className="justify-between flex items-center">
-                                <p>{!readerSettings.r2l ? bookData.pages : currentPage}</p>
-                                <Tooltip title="Ir a la última página">
-                                    <IconButton  onClick={()=>{
-                                        setPage(bookData.pages);
-                                    }}
-                                    >
-                                        <SkipNext/>
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Ir al siguiente libro">
-                                    <IconButton onClick={async()=>{
-                                        await createProgress(bookData, currentPage, timer,
-                                            bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                        void nextBook(bookData);
-                                    }}
-                                    >
-                                        <ArrowCircleRight/>
-                                    </IconButton>
-                                </Tooltip>
-                            </div>
+                            {!readerSettings.r2l ? (
+                                <div className="justify-between flex items-center">
+                                    <p>{!readerSettings.r2l ? getTotalPages() : getCurrentPage()}
+                                    </p>
+                                    <Tooltip title="Ir a la última página">
+                                        <IconButton  onClick={()=>{
+                                            setPage(bookData.pages);
+                                        }}
+                                        >
+                                            <SkipNext/>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Ir al siguiente libro">
+                                        <IconButton onClick={async()=>{
+                                            await createProgress(bookData, currentPage, timer,
+                                                bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
+                                            void nextBook(bookData);
+                                        }}
+                                        >
+                                            <ArrowCircleRight/>
+                                        </IconButton>
+                                    </Tooltip>
+                                </div>
+                            ) : (
+                                <div className="justify-between flex items-center">
+                                    <p>{!readerSettings.r2l ? getTotalPages() : getCurrentPage()}
+                                    </p>
+                                    <Tooltip title="Ir a la primera página">
+                                        <IconButton onClick={()=>{
+                                            setPage(1);
+                                        }}
+                                        >
+                                            <SkipNext/>
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="It al libro anterior">
+                                        <IconButton onClick={async()=>{
+                                            await createProgress(bookData, currentPage, timer,
+                                                bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
+                                            void prevBook(bookData);
+                                        }}
+                                        >
+                                            <ArrowCircleRight/>
+                                        </IconButton>
+                                    </Tooltip>
+                                </div>
+                            )}
                         </div>
                     )}
                 </Fragment>
