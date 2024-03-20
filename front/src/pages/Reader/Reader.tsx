@@ -53,7 +53,7 @@ function Reader():React.ReactElement {
     const {data:bookProgress, isLoading} = useQuery(`progress-${id}`, async()=>{
         const res = await api.get<BookProgress>(`readprogress?book=${id}&status=reading`);
         return res;
-    }, {refetchOnWindowFocus:false});
+    }, {refetchOnMount:false, refetchOnReconnect:false, refetchOnWindowFocus:false});
 
     useEffect(()=>{
         const logged = getCookie("logged");
