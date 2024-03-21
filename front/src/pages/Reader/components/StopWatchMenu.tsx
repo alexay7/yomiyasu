@@ -47,7 +47,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
     return (
         <div className="">
             <Tooltip title="Cronómetro">
-                <IconButton onClick={handleClick}>
+                <IconButton onClick={handleClick} className="dark:text-[#ebe8e3] text-[#0000008a]">
                     {timerOn ? (
                         <Timer/>
                     ) : (

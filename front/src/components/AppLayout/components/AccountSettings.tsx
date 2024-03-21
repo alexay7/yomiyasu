@@ -69,13 +69,13 @@ export function AccountSettings():React.ReactElement {
             <PopupWindow title="Ajustes de cuenta" open={open} closePopup={closePopup} onSubmit={editUserData}>
                 <div className="flex flex-col gap-4">
                     <p>Ajustes del perfil</p>
-                    <TextField type="text" required onChange={(e)=>setUsername(e.target.value)} value={username} fullWidth variant="filled" label="Nombre de usuario"/>
-                    <TextField type="email" disabled value={userData?.email} fullWidth variant="filled" label="Correo electrónico"/>
+                    <TextField type="text" required onChange={(e)=>setUsername(e.target.value)} value={username} fullWidth variant="filled" label="Nombre de usuario" autoComplete="username"/>
+                    <TextField type="email" disabled value={userData?.email} fullWidth variant="filled" label="Correo electrónico" autoComplete="email"/>
                     <Divider/>
                     <p>Cambiar contraseña</p>
-                    <TextField type="password" variant="filled" fullWidth value={oldPassword} onChange={(e)=>setOldPassword(e.target.value)} label="Contraseña actual"/>
-                    <TextField type="password" variant="filled" fullWidth value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} label="Nueva contraseña"/>
-                    <TextField type="password" variant="filled" fullWidth value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} label="Repetir nueva contraseña"/>
+                    <TextField type="password" variant="filled" fullWidth value={oldPassword} onChange={(e)=>setOldPassword(e.target.value)} label="Contraseña actual" autoComplete="current-password"/>
+                    <TextField type="password" variant="filled" fullWidth value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} label="Nueva contraseña" autoComplete="new-password"/>
+                    <TextField type="password" variant="filled" fullWidth value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} label="Repetir nueva contraseña" autoComplete="new-password"/>
                 </div>
             </PopupWindow>
         </Fragment>

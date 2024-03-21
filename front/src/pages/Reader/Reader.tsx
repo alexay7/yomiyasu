@@ -505,7 +505,13 @@ function Reader():React.ReactElement {
                 // Oculta el menú de mokuro
                 document.getElementById('topMenu').style.display="none";
                 document.getElementById('showMenuA').style.display="none";
-                document.body.style.backgroundColor = "black";
+                // Get color from localStorage
+                const color = window.localStorage.getItem("color-theme");
+                if (color === "dark") {
+                    document.body.style.backgroundColor = "black";
+                } else {
+                    document.body.style.backgroundColor = "white";
+                }
 
                 ${readerSettings.scrollChange ? `
                 // Permite pasar de página con swipes
@@ -718,7 +724,7 @@ function Reader():React.ReactElement {
 
 
     return (
-        <div className="text-black relative overflow-hidden h-screen flex flex-col">
+        <div className="text-[#0000008a] relative overflow-hidden h-screen flex flex-col">
             <Helmet>
                 <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
             </Helmet>
@@ -732,7 +738,7 @@ function Reader():React.ReactElement {
             {bookData && (
                 <Fragment>
                     {showToolBar && (
-                        <div className="dark:bg-[#272727] bg-white w-full h-[5vh] dark:text-white flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
+                        <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-[5vh] dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
                             <div className="w-1/2 flex items-center gap-2 px-2">
                                 <Tooltip title="Volver atrás">
                                     <IconButton onClick={async()=>{
@@ -740,6 +746,7 @@ function Reader():React.ReactElement {
                                             bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                         window.location.href = window.localStorage.getItem("origin") || "/app";
                                     }}
+                                    className="dark:text-[#ebe8e3] text-[#0000008a]"
                                     >
                                         <ArrowBack/>
                                     </IconButton>
@@ -749,7 +756,7 @@ function Reader():React.ReactElement {
                             <div className="flex items-center flex-row px-2 gap-1">
                                 <Tooltip enterTouchDelay={0} title={`${calculateCharacters()} caracteres`}>
                                     <IconButton>
-                                        <Translate/>
+                                        <Translate className="dark:text-[#ebe8e3] text-[#0000008a]"/>
                                     </IconButton>
                                 </Tooltip>
                                 <StopWatchMenu characters={calculateCurrentCharacters()} oldProgress={bookProgress} bookData={bookData}
@@ -761,12 +768,12 @@ function Reader():React.ReactElement {
                                 </IconButton> */}
                                 <Tooltip title="Ajustes del lector">
                                     <IconButton onClick={()=>setShowSettings(true)}>
-                                        <Settings/>
+                                        <Settings className="dark:text-[#ebe8e3] text-[#0000008a]"/>
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Mostrar caracteres por separado">
                                     <IconButton onClick={toggleSidebar}>
-                                        <ViewSidebar/>
+                                        <ViewSidebar className="dark:text-[#ebe8e3] text-[#0000008a]"/>
                                     </IconButton>
                                 </Tooltip>
                             </div>
@@ -786,7 +793,7 @@ function Reader():React.ReactElement {
                             >
                                 <ArrowBackIosNew className="stroke-gray-600 stroke-1"/>
                             </IconButton>
-                            <p className="text-white font-semibold text-lg" style={{textShadow:"-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black"}}>{currentPage} / {bookData.pages}</p>
+                            <p className="text-[#ebe8e3] font-semibold text-lg" style={{textShadow:"-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black"}}>{currentPage} / {bookData.pages}</p>
                             <IconButton onClick={()=>{
                                 iframe.current?.contentWindow?.postMessage({action:"goRight"});
                             }} className="w-1/3"
@@ -796,9 +803,9 @@ function Reader():React.ReactElement {
                         </div>
                     )}
                     {showToolBar && (
-                        <div className="dark:bg-[#272727] bg-white h-[5vh] w-full dark:text-white flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
+                        <div className="dark:bg-[#101010] bg-[#ebe8e3] h-[5vh] w-full dark:text-[#ebe8e3] flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                             {bookData.pageChars && (
-                                <div className="absolute -top-6 right-1 text-white text-sm select-none" onClick={()=>setShowTimeLeft((prev)=>!prev)} style={{textShadow:"-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black"}}>
+                                <div className="absolute -top-6 right-1 text-white text-sm select-none font-bold" onClick={()=>setShowTimeLeft((prev)=>!prev)} style={{textShadow:"-1px 0 #787878, 0 1px #787878, 1px 0 #787878, 0 -1px #787878"}}>
                                     {showTimeLeft ? (
                                         <p><span className="text-xs">Tiempo restante estimado: {getTimeLeft()}</span></p>
                                     ) : (
@@ -814,6 +821,7 @@ function Reader():React.ReactElement {
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                             void nextBook(bookData);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <ArrowCircleLeft/>
                                         </IconButton>
@@ -822,6 +830,7 @@ function Reader():React.ReactElement {
                                         <IconButton  onClick={()=>{
                                             setPage(bookData.pages);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <SkipPrevious/>
                                         </IconButton>
@@ -837,6 +846,7 @@ function Reader():React.ReactElement {
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                             void prevBook(bookData);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <ArrowCircleLeft/>
                                         </IconButton>
@@ -845,6 +855,7 @@ function Reader():React.ReactElement {
                                         <IconButton onClick={()=>{
                                             setPage(1);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <SkipPrevious/>
                                         </IconButton>
@@ -858,7 +869,7 @@ function Reader():React.ReactElement {
                                     bookData.pages - 1 : bookData.pages} value={currentPage} onChange={(e, v)=>{
                                     setPage(v as number);
                                 }}
-                                step={doublePages ? 2 : 1}
+                                step={1}
                                 />
                             </ThemeProvider>
                             {!readerSettings.r2l ? (
@@ -869,6 +880,7 @@ function Reader():React.ReactElement {
                                         <IconButton  onClick={()=>{
                                             setPage(bookData.pages);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <SkipNext/>
                                         </IconButton>
@@ -879,6 +891,7 @@ function Reader():React.ReactElement {
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                             void nextBook(bookData);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <ArrowCircleRight/>
                                         </IconButton>
@@ -892,6 +905,7 @@ function Reader():React.ReactElement {
                                         <IconButton onClick={()=>{
                                             setPage(1);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <SkipNext/>
                                         </IconButton>
@@ -902,6 +916,7 @@ function Reader():React.ReactElement {
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
                                             void prevBook(bookData);
                                         }}
+                                        className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
                                             <ArrowCircleRight/>
                                         </IconButton>

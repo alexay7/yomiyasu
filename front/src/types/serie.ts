@@ -21,12 +21,12 @@ export interface Serie {
     alternativeNames: string[];
 }
 
-export interface SerieWithProgress extends Serie {
+export type SerieWithProgress = {
     unreadBooks: number;
     type:"serie";
     readlist:boolean;
     paused:boolean;
-}
+} & Serie;
 
 export interface SeriesFilter {
     data:SerieWithProgress[],

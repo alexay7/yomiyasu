@@ -7,6 +7,7 @@ import {BookSettings} from "./components/BookSettings";
 import {useNavigate} from "react-router-dom";
 import {goTo, formatTime} from "../../helpers/helpers";
 import {defaultSets, useSettingsStore} from "../../stores/SettingsStore";
+import {twMerge} from "tailwind-merge";
 
 
 interface BookComponentProps {
@@ -111,7 +112,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
     return (
         <div className="w-[9rem] flex-shrink-0">
-            <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
+            <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80 group"
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
                         goToBook();
@@ -120,11 +121,11 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img className={blurred && siteSettings.antispoilers ? "blur" : ""} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
+                    <img className={twMerge(blurred && siteSettings.antispoilers ? "blur" : "", "group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300")} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {!read && (
-                    <div className={`absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent ${bookData.readlist ? "border-r-blue-500" : "border-r-primary"}`} style={{borderWidth:"0 35px 35px 0"}}/>
+                    <div className={`absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent ${bookData.readlist ? "border-r-accent" : "border-r-primary"}`} style={{borderWidth:"0 35px 35px 0"}}/>
                 )}
 
                 <Fade in={onItem}>

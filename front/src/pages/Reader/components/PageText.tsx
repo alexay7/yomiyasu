@@ -120,7 +120,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
                         {lines.map((page, i)=>(
                             <Fragment key={`${i}`}>
                                 <p className="text-center text-xl font-semibold">{getPageName(i)}</p>
-                                <li className="border shadow-lg shadow-black border-white border-solid p-2 rounded-md bg-[#272727] bg-opacity-80">
+                                <li className="border shadow-lg shadow-black border-white border-solid p-2 rounded-md bg-[#101010] bg-opacity-80">
                                     <ul className="flex flex-col gap-4">
                                         {page.map((koma, j)=>(
                                             <li key={`${i}-${j}`}>

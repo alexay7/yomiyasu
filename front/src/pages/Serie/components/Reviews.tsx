@@ -27,7 +27,7 @@ export function Reviews(props:ReviewProps):React.ReactElement {
     }
 
     return (
-        <div className="border-[#212121] border-2 border-solid rounded-md p-2 dark:bg-[#363636] dark:text-white">
+        <div className="border-[#0000008a] dark:border-[#212121] border-2 border-solid rounded-md p-2 dark:bg-[#363636] dark:text-white">
             <div className="relative flex items-center justify-center py-3">
                 <p className="dark:text-white text-center font-semibold">Valoraciones de usuarios ({serieData.reviews.length})</p>
                 <ReviewForm serieData={serieData}/>

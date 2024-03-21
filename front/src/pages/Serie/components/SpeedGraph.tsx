@@ -39,7 +39,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
                 label: "Velocidad",
                 data: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => item.meanReadSpeed),
                 fill: true,
-                borderColor: "#24B14D",
+                borderColor: "#308054",
                 backgroundColor: "#24b14c39",
                 borderWidth: 2,
                 pointRadius: 4,

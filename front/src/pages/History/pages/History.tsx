@@ -4,6 +4,7 @@ import {api} from "../../../api/api";
 import {UserProgress} from "../../../types/user";
 import {Helmet} from "react-helmet";
 import LogGrid, {LogData} from "../components/LogGrid";
+import {Alert, Snackbar} from "@mui/material";
 
 function History():React.ReactElement {
     const [total, setTotal] = useState(0);
@@ -12,6 +13,7 @@ function History():React.ReactElement {
         pageSize: 25,
         page: 0
     });
+    const [copied, setCopied] = useState(false);
 
     const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", paginationModel, sortField], async()=>{
         const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}&sort=${sortField}`);
@@ -43,13 +45,20 @@ function History():React.ReactElement {
     });
 
     return (
-        <div className="dark:bg-[#121212] overflow-x-hidden p-4">
+        <div className="dark:bg-[#121212] overflow-x-hidden h-fill p-4">
             <Helmet>
                 <title>YomiYasu - Historial</title>
             </Helmet>
+            <Snackbar
+                open={copied}
+                autoHideDuration={2000}
+                onClose={()=>setCopied(false)}
+            >
+                <Alert severity="success">Log copiado al portapapeles</Alert>
+            </Snackbar>
             <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
             <LogGrid data={progressData} total={total} setSortField={setSortField} setPaginationModel={setPaginationModel}
-                refetch={()=>void refetchProgress()}
+                refetch={()=>void refetchProgress()} setCopied={setCopied}
             />
         </div>
     );

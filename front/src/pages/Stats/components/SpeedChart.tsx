@@ -19,6 +19,10 @@ function SpeedChart(props:SpeedProps):React.ReactElement {
     const {data} = props;
     const theme = useTheme();
 
+    const style = getComputedStyle(document.body);
+    const primCol = `${style.getPropertyValue("--primary-color")}39`;
+    const accCol = style.getPropertyValue("--primary-color");
+
     const chartData:ChartData<"line", (number | Point | null)[], unknown> = {
         labels: data.map((item) => item.month),
         datasets: [
@@ -26,9 +30,9 @@ function SpeedChart(props:SpeedProps):React.ReactElement {
                 label: "Velocidad en el tiempo",
                 data: data.map((item) => item.speed),
                 fill: true,
-                borderColor: "#24B14D",
-                backgroundColor: "#24b14c39",
-                borderWidth: 2,
+                borderColor: accCol,
+                backgroundColor: primCol,
+                borderWidth: 3,
                 pointRadius: 4,
                 pointBackgroundColor: "white",
                 pointHoverRadius: 8,

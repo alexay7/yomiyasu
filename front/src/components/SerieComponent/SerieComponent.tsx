@@ -6,6 +6,7 @@ import {SerieSettings} from "./components/SerieSettings";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../helpers/helpers";
 import {getFlameColor} from "../../helpers/series";
+import {twMerge} from "tailwind-merge";
 
 interface SerieComponentProps {
     serieData:SerieWithProgress
@@ -23,7 +24,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
 
     return (
         <div className="w-[9rem] flex-shrink-0">
-            <div className="h-[13rem] bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80"
+            <div className="h-[13rem] bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80 group"
                 onClick={(e)=>{
                     if (e.target === e.currentTarget) {
                         goTo(navigate, `/app/series/${serieData._id}`);
@@ -32,12 +33,12 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
+                    <img className={twMerge("group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300")} loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {unreadBooks > 0 && (
                     <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                        <p className={`p-1 ${serieData.readlist ? "bg-blue-500" : "bg-primary"}`}>{unreadBooks}</p>
+                        <p className={`p-1 ${serieData.readlist ? "bg-accent" : "bg-primary"}`}>{unreadBooks}</p>
                     </div>
                 )}
                 {serieData.difficulty > 0 && (

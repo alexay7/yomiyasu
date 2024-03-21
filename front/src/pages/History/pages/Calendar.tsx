@@ -92,7 +92,7 @@ function Calendar():React.ReactElement {
     });
 
     return (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-8 overflow-x-hidden h-fill">
             <Helmet>
                 <title>YomiYasu - Calendario</title>
             </Helmet>
@@ -121,7 +121,7 @@ function Calendar():React.ReactElement {
                 <div className="mx-4">
                     <h2 className="dark:text-white">Logs del {selectedDay?.toDate().toLocaleDateString("es", {year:"numeric", month:"long", day:"numeric"})}</h2>
                 </div>
-                <LogGrid data={progressData} refetch={refetchProgress}/>
+                <LogGrid data={progressData} refetch={refetchProgress} />
             </div>
         </div>
     );

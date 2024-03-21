@@ -11,7 +11,7 @@ const RecentSeriesScroller = loadable(() => import("./components/RecentSeriesScr
 
 function Home():React.ReactElement {
     return (
-        <div className="dark:bg-[#121212] bg-white overflow-x-hidden h-full">
+        <div className="dark:bg-[#121212] bg-white overflow-x-hidden h-fill">
             <Helmet>
                 <title>YomiYasu</title>
             </Helmet>

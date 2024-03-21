@@ -20,7 +20,7 @@ export const InversedSlider = styled(Slider)(({theme}) => ({
         height: 3
     },
     "& .MuiSlider-mark":{
-        background: "white",
+        background: "var(--primary-color)",
         width:5,
         height:5,
         borderRadius:"9999px"

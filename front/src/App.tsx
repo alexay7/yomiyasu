@@ -45,7 +45,7 @@ export function App():React.ReactElement {
                     palette: {
                         mode: mode,
                         primary:{
-                            main:"#24B14D"
+                            main:"#308054"
                         }
                     }
                 }, esES, dateEsEs, gridEsEs
@@ -64,7 +64,7 @@ export function App():React.ReactElement {
                     meta={[
                         {
                             name: "theme-color",
-                            content: "#272727"
+                            content: "#101010"
                         }
                     ]}
                 >

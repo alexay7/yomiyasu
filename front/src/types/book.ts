@@ -1,6 +1,6 @@
 export type ProgressStatus = "unread" | "reading" | "completed";
 
-export interface BookWithProgress extends Book {
+export type BookWithProgress = {
     lastProgress?:
     {
         startDate: Date,
@@ -12,7 +12,7 @@ export interface BookWithProgress extends Book {
     , status: "reading" | "unread" | "completed",
     readlist:boolean,
     type:"book"
-}
+} & Book;
 
 export interface Book {
     _id: string,

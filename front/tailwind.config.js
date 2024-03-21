@@ -6,14 +6,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#24B14D"
+        primary: "var(--primary-color)",
+        accent: "var(--accent-color)",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
       width: {
         "fill": "-webkit-fill-available"
-      }
+      },
+      height: {
+        "fill": "-webkit-fill-available"
+      },
     },
   },
   plugins: [],

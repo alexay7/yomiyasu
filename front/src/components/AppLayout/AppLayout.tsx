@@ -35,11 +35,11 @@ export function AppLayout():React.ReactElement {
         <div className="h-screen">
             {/* Barra de búsqueda */}
             <CSSTransition classNames="searchbar" timeout={300} in={showMenu}>
-                <div className={`bg-[#F5F5F5] dark:bg-[#272727] h-16 ${isTabletOrMobile ? "left-0" : "left-[256px]"} fixed right-0 flex px-2 items-center justify-between z-10`}>
+                <div className={`bg-[#EBE8E3] dark:bg-[#101010] h-16 ${isTabletOrMobile ? "left-0" : "left-[270px]"} fixed right-0 flex px-2 items-center justify-between z-10 gap-2`}>
                     <IconButton onClick={toggleMenu}>
                         <Menu className="dark:text-white p-1"/>
                     </IconButton>
-                    <div className="dark:bg-[#1E1E1E] w-[95%] px-4 py-2 rounded-md shadow-gray-400 dark:shadow-gray-900 shadow-sm">
+                    <div className="dark:bg-[#1E1E1E] w-[95%] px-4 py-2 rounded-md shadow-gray-400 dark:shadow-gray-900 shadow-sm bg-white">
                         <SearchAutocomplete/>
                     </div>
                 </div>
@@ -47,8 +47,8 @@ export function AppLayout():React.ReactElement {
 
             {/* Barra lateral */}
             <CSSTransition classNames="leftbar" timeout={300} in={showMenu} unmountOnExit>
-                <div className="w-[256px] bg-white dark:bg-[#363636] h-screen fixed">
-                    <div className="h-16 justify-center dark:text-white flex items-center bg-[#F5F5F5] dark:bg-[#363636]">
+                <div className="w-[270px] bg-[#f7f7f7] dark:bg-[#212121] h-screen fixed">
+                    <div className="h-16 justify-center dark:text-white flex items-center bg-[#EBE8E3] dark:bg-[#101010]">
                         <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>navigate("/app")}>YomiYasu</h1>
                     </div>
                     <Divider/>
@@ -87,18 +87,19 @@ export function AppLayout():React.ReactElement {
                             />
                         )}
                         <LateralListItem toggleMenu={toggleMenu} text="Reportar fallos" Icon={GitHub} onClick={()=>
-                            window.open("https://github.com/alexay7/tfg/issues/new", "_blank")?.focus()}
+                            window.open("https://github.com/alexay7/yomiyasu/issues/new", "_blank")?.focus()}
                         />
                     </ul>
                     <div className="absolute bottom-0 left-0 p-4">
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/tfg" className="text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu {process.env.REACT_APP_VERSION}</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/yomiyasu" className="text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu {process.env.REACT_APP_VERSION}</a>
                     </div>
                 </div>
             </CSSTransition>
 
             {/* Contenido */}
             <CSSTransition classNames="maincontent" timeout={300} in={showMenu}>
-                <div className={`h-[calc(100%-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[256px]"} dark:bg-[#121212]`}>
+                <div className={`h-[calc(100%-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[270px]"} dark:bg-[#121212] bg-[#ebe8e3]`}>
+                    <Divider/>
                     <Outlet/>
                 </div>
             </CSSTransition>

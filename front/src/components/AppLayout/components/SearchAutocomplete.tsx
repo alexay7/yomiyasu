@@ -1,5 +1,5 @@
-import {Search} from "@mui/icons-material";
-import {Autocomplete, Box, TextField} from "@mui/material";
+import {Search, Whatshot} from "@mui/icons-material";
+import {Autocomplete, Box, Rating, TextField, Tooltip} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {api} from "../../../api/api";
 import {SerieWithProgress, SeriesFilter} from "../../../types/serie";
@@ -7,6 +7,11 @@ import {BookWithProgress} from "../../../types/book";
 import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
 import {useSettingsStore} from "../../../stores/SettingsStore";
+import {getFlameColor} from "../../../helpers/series";
+
+function isSerie(option:BookWithProgress | SerieWithProgress):option is SerieWithProgress {
+    return option.type === "serie";
+}
 
 export function SearchAutocomplete():React.ReactElement {
     const {siteSettings} = useSettingsStore();
@@ -74,7 +79,20 @@ export function SearchAutocomplete():React.ReactElement {
                     }}
                 >
                     <img loading="lazy" width="50" src={`/api/static/${getThumbnail(option)}`} alt={option.visibleName} />
-                    <p className="w-2/3 flex-grow">{option.visibleName}</p>
+                    <p className="w-2/3 flex-grow">{option.visibleName} <sup className="text-xs">({isSerie(option) ? `${option.bookCount} vols` : `${option.pages} pags`})</sup></p>
+                    {/* If option is SerieWithProgress */}
+                    {isSerie(option) && option.difficulty > 0 && (
+                        <div className="text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
+                            <Tooltip title={`Dificultad: ${option.difficulty.toFixed(1)}/10`}>
+                                <Whatshot fontSize="medium" sx={{color:getFlameColor(option.difficulty)}}/>
+                            </Tooltip>
+                        </div>
+                    )}
+                    {isSerie(option) && option.valoration && (
+                        <div className="text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
+                            <Rating size="small" readOnly value={option.valoration / 2} max={5} precision={0.5}/>
+                        </div>
+                    )}
                 </Box>
             )}
             renderInput={(params) => (

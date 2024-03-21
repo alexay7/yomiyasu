@@ -30,11 +30,12 @@ interface LogGridProps {
     setSortField?:(v:React.SetStateAction<string>)=>void,
     paginationModel?:{pageSize:number, page:number},
     setPaginationModel?:(v:React.SetStateAction<{pageSize:number, page:number}>)=>void,
+    setCopied?:React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function LogGrid(props:LogGridProps):React.ReactElement {
     const navigate = useNavigate();
-    const {data, refetch, paginationModel, setPaginationModel, setSortField, total} = props;
+    const {data, refetch, paginationModel, setPaginationModel, setSortField, total, setCopied} = props;
 
     async function deleteProgress(id:string):Promise<void> {
         const res = await api.delete<BookProgress>(`readprogress/${id}`);
@@ -157,6 +158,7 @@ function LogGrid(props:LogGridProps):React.ReactElement {
                 }
 
                 void navigator.clipboard.writeText(text);
+                setCopied?.(true);
             }}
             initialState={{
                 sorting:{

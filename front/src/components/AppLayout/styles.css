@@ -1,80 +1,80 @@
 /* Left Bar */
 .leftbar-enter {
-    left: -256px;
+  left: -270px;
 }
-  
+
 .leftbar-enter-active {
-    left:0;
-    transition: left 300ms ease;
+  left: 0;
+  transition: left 300ms ease;
 }
 
 .leftbar-enter-done {
-    left: 0;
+  left: 0;
 }
-  
+
 .leftbar-exit {
-    left:0;
+  left: 0;
 }
-  
+
 .leftbar-exit-active {
-    left:-256px;
-    transition: left 300ms ease;
+  left: -270px;
+  transition: left 300ms ease;
 }
 
 .leftbar-exit-done {
-    left:-256px;
+  left: -270px;
 }
-  
+
 /* Main Content */
 .maincontent-enter {
-    padding-left: 0!important;
+  padding-left: 0 !important;
 }
-  
+
 .maincontent-enter-active {
-    padding-left:256px!important;
-    transition: padding 300ms ease;
+  padding-left: 270px !important;
+  transition: padding 300ms ease;
 }
 
 .maincontent-enter-done {
-    padding-left:256px!important;
+  padding-left: 270px !important;
 }
-  
+
 .maincontent-exit {
-    padding-left:256px!important;
+  padding-left: 270px !important;
 }
-  
+
 .maincontent-exit-active {
-    padding-left:0!important;
-    transition: padding 300ms ease;
+  padding-left: 0 !important;
+  transition: padding 300ms ease;
 }
 
 .maincontent-exit-done {
-    padding-left:0!important;
+  padding-left: 0 !important;
 }
 
 /* Search Bar */
 .searchbar-enter {
-    left: 0!important;
+  left: 0 !important;
 }
-  
+
 .searchbar-enter-active {
-    left:256px!important;
-    transition: left 300ms ease;
+  left: 270px !important;
+  transition: left 300ms ease;
 }
 
 .searchbar-enter-done {
-    left:256px!important;
+  left: 270px !important;
 }
-  
+
 .searchbar-exit {
-    left:256px!important;
+  left: 270px !important;
 }
-  
+
 .searchbar-exit-active {
-    left:0!important;
-    transition: left 300ms ease;
+  left: 0 !important;
+  transition: left 300ms ease;
 }
 
 .searchbar-exit-done {
-    left:0!important;
+  left: 0 !important;
 }

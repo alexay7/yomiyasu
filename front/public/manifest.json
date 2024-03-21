@@ -1,6 +1,6 @@
 {
-    "theme_color": "#272727",
-    "background_color": "#272727",
+    "theme_color": "#101010",
+    "background_color": "#101010",
     "icons": [
         {
             "purpose": "maskable",
@@ -31,7 +31,7 @@
     "lang": "es-ES",
     "name": "Yomiyasu",
     "short_name": "yomiyasu",
-    "start_url": "https://manga.ajr.moe/",
+    "start_url": "https://manga.manabe.es/",
     "description": "YomiYasu - Biblioteca de manga con OCR",
-    "id": "yomiyasu-ajr"
+    "id": "yomiyasu-manabe"
 }

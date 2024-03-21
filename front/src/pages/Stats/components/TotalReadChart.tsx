@@ -20,15 +20,19 @@ function TotalReadChart(props:HoursProps):React.ReactElement {
     const {data} = props;
     const theme = useTheme();
 
+    const style = getComputedStyle(document.body);
+    const primCol = `${style.getPropertyValue("--primary-color")}39`;
+    const accCol = style.getPropertyValue("--primary-color");
+
     const chartData:ChartData<"bar", (number | Point | null)[], unknown> = {
         labels: data.map((item) => item.month),
         datasets: [
             {
                 label: "Horas leídas por mes",
                 data: data.map((item) => item.totalHours),
-                borderColor: "#24B14D",
-                backgroundColor: "#24b14c39",
-                borderWidth: 2
+                borderColor: accCol,
+                backgroundColor: primCol,
+                borderWidth: 3
             }
         ]
     };

@@ -161,14 +161,14 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
             </CSSTransition>
             <CSSTransition in={showMenu} timeout={300} classNames="readerconf" unmountOnExit>
                 <div className="w-full lg:w-1/2 max-w-screen-sm absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
-                    <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl dark:text-white">
+                    <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl text-[#ebe8e3] dark:text-[#101010]">
                         <IconButton onClick={closeSettings}>
-                            <Close/>
+                            <Close className="text-[#ebe8e3] dark:text-[#101010]"/>
                         </IconButton>
                         <p className="text-lg">Ajustes del Lector</p>
                     </div>
                     <div className="flex flex-col dark:bg-[#1E1E1E] bg-white py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
-                        <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de YomiYasu</p>
+                        <p className="font-bold text-[#101010] dark:text-[#ebe8e3] text-xl py-1">Ajustes de YomiYasu</p>
                         <div className="ml-2 flex flex-col gap-2">
                             <SettingsItem className="dark:text-white" label="Activar diccionario nativo" childrenId="dict">
                                 <div className="flex justify-end">
@@ -193,7 +193,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                 </div>
                             </SettingsItem>
                         </div>
-                        <p className="font-bold text-[#BCBCBC] text-xl py-1">Ajustes de Mokuro</p>
+                        <p className="font-bold text-[#101010] dark:text-[#ebe8e3] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
                             <SettingsItem className="dark:text-white" label="Tipo de fuente" childrenId="font">
                                 <div className="flex justify-end">

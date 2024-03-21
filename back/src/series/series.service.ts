@@ -79,7 +79,6 @@ export class SeriesService {
   }
 
   async editSerie(id:Types.ObjectId, updateSerie:UpdateSerie) {
-      console.log(updateSerie);
       return this.seriesModel.findByIdAndUpdate(id, updateSerie);
   }
 

@@ -133,11 +133,11 @@ function Library():React.ReactElement {
     }
 
     return (
-        <div className="dark:bg-[#121212] overflow-x-hidden pb-4">
+        <div className="dark:bg-[#121212] pb-4 h-[inherit]">
             <Helmet>
                 <title>YomiYasu - Biblioteca</title>
             </Helmet>
-            <div className="fixed z-20 w-fill dark:bg-[#212121] py-1 flex items-center justify-between h-12">
+            <div className="fixed z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] py-1 flex items-center justify-between h-12 border-x border-0 border-solid border-[#0000001f]">
                 <div className="flex items-center mx-4">
                     <Tooltip title="Volver atrás">
                         <IconButton onClick={()=>goBack(navigate)}>
@@ -193,70 +193,72 @@ function Library():React.ReactElement {
                     <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
                 </div>
             </div>
-            {/* Elegir alfabeto */}
-            <div className="flex w-full justify-center gap-1 flex-wrap pt-16">
-                {alphabet?.map((letter)=>{
-                    let textColor = "dark:text-white text-black";
-                    let disabled = false;
+            <div className="flex flex-col overflow-x-hidden h-fill">
+                {/* Elegir alfabeto */}
+                <div className="flex w-full justify-center gap-1 flex-wrap pt-16">
+                    {alphabet?.map((letter)=>{
+                        let textColor = "dark:text-white text-black";
+                        let disabled = false;
 
-                    if (letter.group.toUpperCase() === selectedLetter) {
-                        textColor = "text-primary";
-                    } else if (letter.count === 0) {
-                        textColor = "dark:text-gray-700 text-gray-300";
-                        disabled = true;
-                    }
+                        if (letter.group.toUpperCase() === selectedLetter) {
+                            textColor = "text-primary";
+                        } else if (letter.count === 0) {
+                            textColor = "dark:text-gray-700 text-gray-300";
+                            disabled = true;
+                        }
 
-                    return (
-                        <IconButton disabled={disabled} onClick={()=>{
-                            setSelectedLetter(letter.group.toUpperCase());
-                            setCurrentPage(1);
-                        }} className={`${textColor} text-sm font-semibold`} key={letter.group}
-                        >
-                            {letter.group.toUpperCase()}
-                        </IconButton>
-                    );
-                })}
+                        return (
+                            <IconButton disabled={disabled} onClick={()=>{
+                                setSelectedLetter(letter.group.toUpperCase());
+                                setCurrentPage(1);
+                            }} className={`${textColor} text-sm font-semibold`} key={letter.group}
+                            >
+                                {letter.group.toUpperCase()}
+                            </IconButton>
+                        );
+                    })}
+                </div>
+
+                {series.pages > 1 && (
+                    <div className="flex justify-center py-4">
+                        <Pagination onChange={(e, p)=>{
+                            setCurrentPage(p);
+                            searchParams.set("page", `${p}`);
+                            setSearchParams(searchParams);
+                        }} page={currentPage} color="primary" count={series.pages}
+                        />
+                    </div>
+                )}
+
+                {!isLoading && (
+                    <div className="flex w-full items-center justify-center">
+                        {series.data.length > 0 ? (
+                            <ul className="flex flex-wrap p-8 py-4 gap-4">
+                                {series.data.map((serie)=>(
+                                    <SerieComponent key={serie._id} serieData={serie}/>
+                                ))}
+                            </ul>
+
+                        ) : (
+                            <div className="flex items-center flex-col py-8 justify-center text-center">
+                                <RestorePage className="w-40 h-40" color="primary"/>
+                                <p className="text-3xl dark:text-white">Esta biblioteca está vacía...</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {series.pages > 1 && (
+                    <div className="flex justify-center">
+                        <Pagination onChange={(e, p)=>{
+                            setCurrentPage(p);
+                            searchParams.set("page", `${p}`);
+                            setSearchParams(searchParams);
+                        }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
+                        />
+                    </div>
+                )}
             </div>
-
-            {series.pages > 1 && (
-                <div className="flex justify-center py-4">
-                    <Pagination onChange={(e, p)=>{
-                        setCurrentPage(p);
-                        searchParams.set("page", `${p}`);
-                        setSearchParams(searchParams);
-                    }} page={currentPage} color="primary" count={series.pages}
-                    />
-                </div>
-            )}
-
-            {!isLoading && (
-                <div className="flex w-full items-center justify-center">
-                    {series.data.length > 0 ? (
-                        <ul className="flex flex-wrap p-8 py-4 gap-4">
-                            {series.data.map((serie)=>(
-                                <SerieComponent key={serie._id} serieData={serie}/>
-                            ))}
-                        </ul>
-
-                    ) : (
-                        <div className="flex items-center flex-col py-8 justify-center text-center">
-                            <RestorePage className="w-40 h-40" color="primary"/>
-                            <p className="text-3xl dark:text-white">Esta biblioteca está vacía...</p>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {series.pages > 1 && (
-                <div className="flex justify-center">
-                    <Pagination onChange={(e, p)=>{
-                        setCurrentPage(p);
-                        searchParams.set("page", `${p}`);
-                        setSearchParams(searchParams);
-                    }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
-                    />
-                </div>
-            )}
         </div>
     );
 }
