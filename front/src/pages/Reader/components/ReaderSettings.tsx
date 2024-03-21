@@ -195,6 +195,26 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                         </div>
                         <p className="font-bold text-[#101010] dark:text-[#ebe8e3] text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
+                            <SettingsItem className="dark:text-white" label="Activar Zoom&Pan" childrenId="zoompan">
+                                <div className="flex justify-end">
+                                    <Checkbox id="zoompan" onClick={setZoomPan} checked={readerSettings.panAndZoom}/>
+                                </div>
+                            </SettingsItem>
+                            <SettingsItem className="dark:text-white" label="Mostrar doble página" childrenId="doublepage">
+                                <div className="flex justify-end">
+                                    <Checkbox id="doublepage" onClick={setDoublePage} checked={!readerSettings.singlePageView}/>
+                                </div>
+                            </SettingsItem>
+                            <SettingsItem className="dark:text-white" label="Primera página es portada" childrenId="coverpage">
+                                <div className="flex justify-end">
+                                    <Checkbox id="coverpage" onClick={setCoverPage} checked={readerSettings.hasCover}/>
+                                </div>
+                            </SettingsItem>
+                            <SettingsItem className="dark:text-white" label="Leer de derecha a izquierda" childrenId="r2l">
+                                <div className="flex justify-end">
+                                    <Checkbox id="r2l" onClick={setRightToLeft} checked={readerSettings.r2l}/>
+                                </div>
+                            </SettingsItem>
                             <SettingsItem className="dark:text-white" label="Tipo de fuente" childrenId="font">
                                 <div className="flex justify-end">
                                     <Select className="w-full" variant="standard" id="font" value={readerSettings.fontFamily} onChange={(e)=>setFont(e)}>
@@ -202,11 +222,6 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                         <MenuItem value="IPA">IPAex Gothic</MenuItem>
                                         <MenuItem value="Noto Sans JP">Noto Sans Japanese</MenuItem>
                                     </Select>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Leer de derecha a izquierda" childrenId="r2l">
-                                <div className="flex justify-end">
-                                    <Checkbox id="r2l" onClick={setRightToLeft} checked={readerSettings.r2l}/>
                                 </div>
                             </SettingsItem>
                             <SettingsItem className="dark:text-white" label="Ctrl para moverse por el libro (PC)" childrenId="ctrl">
@@ -229,16 +244,6 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     <Checkbox id="ocr" onClick={setOcr} checked={readerSettings.displayOCR}/>
                                 </div>
                             </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Mostrar doble página" childrenId="doublepage">
-                                <div className="flex justify-end">
-                                    <Checkbox id="doublepage" onClick={setDoublePage} checked={!readerSettings.singlePageView}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Primera página es portada" childrenId="coverpage">
-                                <div className="flex justify-end">
-                                    <Checkbox id="coverpage" onClick={setCoverPage} checked={readerSettings.hasCover}/>
-                                </div>
-                            </SettingsItem>
                             <SettingsItem className="dark:text-white" label="Mostrar bordes en cuadros de texto" childrenId="borders">
                                 <div className="flex justify-end">
                                     <Checkbox id="borders" onClick={setBorders} checked={readerSettings.textBoxBorders}/>
@@ -257,11 +262,6 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                             <SettingsItem className="dark:text-white" label="Mantener texto al hacer click" childrenId="togglebox">
                                 <div className="flex justify-end">
                                     <Checkbox id="togglebox" onClick={setToggleBox} checked={readerSettings.toggleOCRTextBoxes}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Activar Zoom&Pan" childrenId="zoompan">
-                                <div className="flex justify-end">
-                                    <Checkbox id="zoompan" onClick={setZoomPan} checked={readerSettings.panAndZoom}/>
                                 </div>
                             </SettingsItem>
                         </div>
