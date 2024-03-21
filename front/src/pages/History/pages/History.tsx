@@ -45,7 +45,7 @@ function History():React.ReactElement {
     });
 
     return (
-        <div className="dark:bg-[#121212] overflow-x-hidden h-fill p-4">
+        <div className="dark:bg-[#121212] overflow-y-scroll h-[calc(100svh-4rem)] px-4">
             <Helmet>
                 <title>YomiYasu - Historial</title>
             </Helmet>
@@ -56,10 +56,12 @@ function History():React.ReactElement {
             >
                 <Alert severity="success">Log copiado al portapapeles</Alert>
             </Snackbar>
-            <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
-            <LogGrid data={progressData} total={total} setSortField={setSortField} setPaginationModel={setPaginationModel}
-                refetch={()=>void refetchProgress()} setCopied={setCopied}
-            />
+            <div className="flex flex-col py-4">
+                <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
+                <LogGrid data={progressData} total={total} setSortField={setSortField} setPaginationModel={setPaginationModel}
+                    refetch={()=>void refetchProgress()} setCopied={setCopied}
+                />
+            </div>
         </div>
     );
 }

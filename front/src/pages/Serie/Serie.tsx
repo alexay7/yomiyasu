@@ -86,11 +86,11 @@ function Serie():React.ReactElement {
     }
 
     return (
-        <div className="dark:bg-[#121212] pb-4 h-[inherit]">
+        <div className="dark:bg-[#121212] pb-4">
             <Helmet>
                 <title>{`YomiYasu - ${serieData?.visibleName ? serieData?.visibleName : "serie"}`}</title>
             </Helmet>
-            <div className="z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] py-1 flex items-center justify-between h-12 border-x border-0 border-solid border-[#0000001f]">
+            <div className="z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] flex items-center justify-between h-14 border-x border-0 border-solid border-[#0000001f]">
                 <div className="flex items-center mx-4 w-5/6 overflow-hidden">
                     <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>
@@ -141,8 +141,8 @@ function Serie():React.ReactElement {
                 )}
             </div>
             {serieData && (
-                <div className="p-8 overflow-x-hidden h-fill">
-                    <div className="flex gap-8 flex-col lg:flex-row">
+                <div className="px-8 overflow-y-scroll h-[calc(100svh-7.5rem)]">
+                    <div className="flex gap-8 flex-col lg:flex-row pt-8">
                         <div className="flex flex-col items-center sm:items-start sm:flex-row w-full gap-8">
                             <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
                                 {unreadBooks > 0 && (
@@ -257,7 +257,7 @@ function Serie():React.ReactElement {
                             </Accordion>
                         )}
                     </div>
-                    <ul className="flex flex-wrap gap-4 py-4">
+                    <ul className="flex flex-wrap gap-4 py-4 pb-8">
                         {serieBooks && serieBooks.length > 0 && serieBooks.map((book, i)=>(
                             <BookComponent key={book._id} bookData={book} insideSerie forceRead={unreadBooks === 0}
                                 blurred={(serieData.bookCount - unreadBooks) < i}

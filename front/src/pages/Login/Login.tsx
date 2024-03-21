@@ -34,7 +34,7 @@ function Login():React.ReactElement {
     }
 
     return (
-        <div className="h-screen flex justify-center items-center bg-cover bg-gradient-radial from-gray-500 to-[#000011]">
+        <div className="h-[100svh] flex justify-center items-center bg-cover bg-gradient-radial from-gray-500 to-[#000011]">
             <Helmet>
                 <title>YomiYasu - Login</title>
             </Helmet>

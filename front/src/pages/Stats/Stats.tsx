@@ -29,24 +29,26 @@ function Stats():React.ReactElement {
     });
 
     return (
-        <div className="flex flex-col w-full dark:bg-[#121212] gap-8 py-8 overflow-x-hidden h-fill">
+        <div className="flex flex-col w-full dark:bg-[#121212] overflow-y-scroll h-[calc(100svh-4rem)]">
             <Helmet>
                 <title>YomiYasu - Estadísticas</title>
             </Helmet>
-            <div className="flex flex-col w-3/4 mx-auto gap-8 items-start">
-                <h1 className="dark:text-white">Estadísticas de {userData?.username}</h1>
-                <GeneralStats/>
-            </div>
-            <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
-                <h2 className="dark:text-white">Velocidad con el tiempo</h2>
-                <div className="h-80">
-                    <SpeedChart data={data.speedGraph}/>
+            <div className="flex flex-col py-8 gap-8">
+                <div className="flex flex-col w-3/4 mx-auto gap-8 items-start">
+                    <h1 className="dark:text-white">Estadísticas de {userData?.username}</h1>
+                    <GeneralStats/>
                 </div>
-            </div>
-            <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
-                <h2 className="dark:text-white">Horas leídas por mes</h2>
-                <div className="h-80">
-                    <TotalReadChart data={data.hoursGraph}/>
+                <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
+                    <h2 className="dark:text-white">Velocidad con el tiempo</h2>
+                    <div className="h-80">
+                        <SpeedChart data={data.speedGraph}/>
+                    </div>
+                </div>
+                <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
+                    <h2 className="dark:text-white">Horas leídas por mes</h2>
+                    <div className="h-80">
+                        <TotalReadChart data={data.hoursGraph}/>
+                    </div>
                 </div>
             </div>
         </div>

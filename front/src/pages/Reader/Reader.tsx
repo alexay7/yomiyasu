@@ -724,7 +724,7 @@ function Reader():React.ReactElement {
 
 
     return (
-        <div className="text-[#0000008a] relative overflow-hidden h-screen flex flex-col">
+        <div className="text-[#0000008a] relative overflow-hidden h-[100svh] flex flex-col">
             <Helmet>
                 <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
             </Helmet>
@@ -739,7 +739,7 @@ function Reader():React.ReactElement {
                 <Fragment>
                     {showToolBar && (
                         <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-[5vh] dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
-                            <div className="w-1/2 flex items-center gap-2 px-2">
+                            <div className="flex items-center gap-2 px-2 shrink lg:w-1/2">
                                 <Tooltip title="Volver atrás">
                                     <IconButton onClick={async()=>{
                                         await createProgress(bookData, currentPage, timer,
@@ -751,9 +751,9 @@ function Reader():React.ReactElement {
                                         <ArrowBack/>
                                     </IconButton>
                                 </Tooltip>
-                                <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap">{bookData.visibleName}</h1>
+                                <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap max-w-[10ch] lg:max-w-[30ch]">{bookData.visibleName}</h1>
                             </div>
-                            <div className="flex items-center flex-row px-2 gap-1">
+                            <div className="flex items-center flex-row px-2 gap-1 grow lg:w-1/2 justify-end">
                                 <Tooltip enterTouchDelay={0} title={`${calculateCharacters()} caracteres`}>
                                     <IconButton>
                                         <Translate className="dark:text-[#ebe8e3] text-[#0000008a]"/>

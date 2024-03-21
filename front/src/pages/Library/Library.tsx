@@ -133,11 +133,11 @@ function Library():React.ReactElement {
     }
 
     return (
-        <div className="dark:bg-[#121212] pb-4 h-[inherit]">
+        <div className="dark:bg-[#121212] pb-4">
             <Helmet>
                 <title>YomiYasu - Biblioteca</title>
             </Helmet>
-            <div className="fixed z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] py-1 flex items-center justify-between h-12 border-x border-0 border-solid border-[#0000001f]">
+            <div className="z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] flex items-center justify-between h-14 border-x border-0 border-solid border-[#0000001f]">
                 <div className="flex items-center mx-4">
                     <Tooltip title="Volver atrás">
                         <IconButton onClick={()=>goBack(navigate)}>
@@ -193,9 +193,9 @@ function Library():React.ReactElement {
                     <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
                 </div>
             </div>
-            <div className="flex flex-col overflow-x-hidden h-fill">
+            <div className="flex flex-col">
                 {/* Elegir alfabeto */}
-                <div className="flex w-full justify-center gap-1 flex-wrap pt-16">
+                <div className="flex w-full justify-center gap-1 flex-wrap h-12">
                     {alphabet?.map((letter)=>{
                         let textColor = "dark:text-white text-black";
                         let disabled = false;
@@ -219,45 +219,47 @@ function Library():React.ReactElement {
                     })}
                 </div>
 
-                {series.pages > 1 && (
-                    <div className="flex justify-center py-4">
-                        <Pagination onChange={(e, p)=>{
-                            setCurrentPage(p);
-                            searchParams.set("page", `${p}`);
-                            setSearchParams(searchParams);
-                        }} page={currentPage} color="primary" count={series.pages}
-                        />
-                    </div>
-                )}
+                <div className="flex flex-col overflow-y-scroll h-[calc(100svh-10.5rem)]">
+                    {series.pages > 1 && (
+                        <div className="flex justify-center py-4">
+                            <Pagination onChange={(e, p)=>{
+                                setCurrentPage(p);
+                                searchParams.set("page", `${p}`);
+                                setSearchParams(searchParams);
+                            }} page={currentPage} color="primary" count={series.pages}
+                            />
+                        </div>
+                    )}
 
-                {!isLoading && (
-                    <div className="flex w-full items-center justify-center">
-                        {series.data.length > 0 ? (
-                            <ul className="flex flex-wrap p-8 py-4 gap-4">
-                                {series.data.map((serie)=>(
-                                    <SerieComponent key={serie._id} serieData={serie}/>
-                                ))}
-                            </ul>
+                    {!isLoading && (
+                        <div className="flex w-full items-center justify-center">
+                            {series.data.length > 0 ? (
+                                <ul className="flex flex-wrap p-8 py-4 gap-4">
+                                    {series.data.map((serie)=>(
+                                        <SerieComponent key={serie._id} serieData={serie}/>
+                                    ))}
+                                </ul>
 
-                        ) : (
-                            <div className="flex items-center flex-col py-8 justify-center text-center">
-                                <RestorePage className="w-40 h-40" color="primary"/>
-                                <p className="text-3xl dark:text-white">Esta biblioteca está vacía...</p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            ) : (
+                                <div className="flex items-center flex-col py-8 justify-center text-center">
+                                    <RestorePage className="w-40 h-40" color="primary"/>
+                                    <p className="text-3xl dark:text-white">Esta biblioteca está vacía...</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                {series.pages > 1 && (
-                    <div className="flex justify-center">
-                        <Pagination onChange={(e, p)=>{
-                            setCurrentPage(p);
-                            searchParams.set("page", `${p}`);
-                            setSearchParams(searchParams);
-                        }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
-                        />
-                    </div>
-                )}
+                    {series.pages > 1 && (
+                        <div className="flex justify-center">
+                            <Pagination onChange={(e, p)=>{
+                                setCurrentPage(p);
+                                searchParams.set("page", `${p}`);
+                                setSearchParams(searchParams);
+                            }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

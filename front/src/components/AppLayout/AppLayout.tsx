@@ -32,7 +32,7 @@ export function AppLayout():React.ReactElement {
     }
 
     return (
-        <div className="h-screen">
+        <div className="h-[100svh]">
             {/* Barra de búsqueda */}
             <CSSTransition classNames="searchbar" timeout={300} in={showMenu}>
                 <div className={`bg-[#EBE8E3] dark:bg-[#101010] h-16 ${isTabletOrMobile ? "left-0" : "left-[270px]"} fixed right-0 flex px-2 items-center justify-between z-10 gap-2`}>
@@ -47,7 +47,7 @@ export function AppLayout():React.ReactElement {
 
             {/* Barra lateral */}
             <CSSTransition classNames="leftbar" timeout={300} in={showMenu} unmountOnExit>
-                <div className="w-[270px] bg-[#f7f7f7] dark:bg-[#212121] h-screen fixed">
+                <div className="w-[270px] bg-[#f7f7f7] dark:bg-[#212121] h-[100svh] fixed">
                     <div className="h-16 justify-center dark:text-white flex items-center bg-[#EBE8E3] dark:bg-[#101010]">
                         <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>navigate("/app")}>YomiYasu</h1>
                     </div>
@@ -98,7 +98,7 @@ export function AppLayout():React.ReactElement {
 
             {/* Contenido */}
             <CSSTransition classNames="maincontent" timeout={300} in={showMenu}>
-                <div className={`h-[calc(100%-4rem)] pt-[64px] ${isTabletOrMobile ? "pl-0" : "pl-[270px]"} dark:bg-[#121212] bg-[#ebe8e3]`}>
+                <div className={`h-[calc(100svh-4rem)] pt-16 ${isTabletOrMobile ? "pl-0" : "pl-[270px]"} dark:bg-[#121212] bg-[#ebe8e3]`}>
                     <Divider/>
                     <Outlet/>
                 </div>

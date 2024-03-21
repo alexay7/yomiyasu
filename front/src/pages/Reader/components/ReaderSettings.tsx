@@ -155,7 +155,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
     return (
         <>
             <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
-                <div className="dark:bg-black w-full h-screen fixed top-0 left-0 z-10 opacity-40"
+                <div className="dark:bg-black w-full h-[100svh] fixed top-0 left-0 z-10 opacity-40"
                     onClick={closeSettings}
                 />
             </CSSTransition>

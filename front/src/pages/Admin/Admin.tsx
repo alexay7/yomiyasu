@@ -118,7 +118,7 @@ export default function Admin():React.ReactElement {
     ];
 
     return (
-        <div className="flex flex-col w-full dark:bg-[#121212] gap-8 overflow-x-hidden h-fill">
+        <div className="flex flex-col w-full dark:bg-[#121212] gap-8 overflow-y-scroll h-[calc(100svh-4rem)]">
             <Helmet>
                 <title>YomiYasu - Panel Admin</title>
             </Helmet>

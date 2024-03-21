@@ -92,7 +92,7 @@ function Calendar():React.ReactElement {
     });
 
     return (
-        <div className="flex flex-col gap-8 overflow-x-hidden h-fill">
+        <div className="flex flex-col gap-8 overflow-y-scroll h-[calc(100svh-4rem)]">
             <Helmet>
                 <title>YomiYasu - Calendario</title>
             </Helmet>
@@ -117,7 +117,7 @@ function Calendar():React.ReactElement {
                 />
                 <h4 className="dark:text-white pb-4 text-center">{total} registros</h4>
             </div>
-            <div className="flex flex-col gap-4 mx-4">
+            <div className="flex flex-col gap-4 mx-4 pb-4">
                 <div className="mx-4">
                     <h2 className="dark:text-white">Logs del {selectedDay?.toDate().toLocaleDateString("es", {year:"numeric", month:"long", day:"numeric"})}</h2>
                 </div>
