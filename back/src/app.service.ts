@@ -119,7 +119,7 @@ export class AppService {
                           visibleName: elem,
                           sortName: elem,
                           alternativeNames:[elem],
-                          variant:"manga"
+                          variant:"manga" as const
                       };
                       await this.seriesService.updateOrCreate(newSeries);
                   })
@@ -131,7 +131,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontradas series de manga desaparecidas");
               areChanges = true;
               foldersToMarkAsDeleted.forEach(async(elem) => {
-                  await this.seriesService.markAsMissing(elem);
+                  await this.seriesService.markAsMissing(elem, "manga");
               });
           }
           // FIN PROCESO DE SERIES
@@ -197,7 +197,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontrados libros desaparecidos");
               areChanges = true;
               booksToMarkAsDeleted.forEach(async(elem) => {
-                  await this.booksService.markAsMissing(elem.bookName);
+                  await this.booksService.markAsMissing(elem.bookName, "manga");
               });
           }
           // FIN PROCESO DE LIBROS
@@ -289,7 +289,7 @@ export class AppService {
                           visibleName: elem,
                           sortName: elem,
                           alternativeNames:[elem],
-                          variant:"novela"
+                          variant:"novela" as const
                       };
                       await this.seriesService.updateOrCreate(newSeries);
                   })
@@ -302,7 +302,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontradas series de novela desaparecidas");
               areChanges = true;
               foldersToMarkAsDeleted.forEach(async(elem) => {
-                  await this.seriesService.markAsMissing(elem);
+                  await this.seriesService.markAsMissing(elem, "novela");
               });
           }
           // FIN PROCESO DE SERIES
@@ -367,7 +367,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontrados novelas desaparecidas");
               areChanges = true;
               booksToMarkAsDeleted.forEach(async(elem) => {
-                  await this.booksService.markAsMissing(elem.bookName);
+                  await this.booksService.markAsMissing(elem.bookName, "novela");
               });
           }
           // FIN PROCESO DE LIBROS

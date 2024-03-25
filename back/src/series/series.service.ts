@@ -55,8 +55,9 @@ export class SeriesService {
       path: string;
       visibleName: string;
       sortName: string;
+      variant: "manga" | "novela";
   }): Promise<Serie | null> {
-      const found = await this.seriesModel.findOne({path: newSerie.path});
+      const found = await this.seriesModel.findOne({path: newSerie.path, variant:newSerie.variant});
 
       /**
      * Si existe es que se ha encontrado una serie que fue
@@ -68,7 +69,7 @@ export class SeriesService {
               "\x1b[34m" + newSerie.path + " restaurada a la biblioteca"
           );
           return this.seriesModel.findOneAndUpdate(
-              {path: newSerie.path},
+              {path: newSerie.path, variant:newSerie.variant},
               {missing: false}
           );
       }
@@ -243,10 +244,10 @@ export class SeriesService {
       return this.seriesModel.find({missing: true, variant});
   }
 
-  markAsMissing(path: string): Promise<Serie | null> {
+  markAsMissing(path: string, variant:"manga" | "novela"): Promise<Serie | null> {
       this.logger.log("\x1b[34m" + path + " marcada como desaparecida.");
       return this.seriesModel.findOneAndUpdate(
-          {path},
+          {path, variant},
           {missing: true},
           {new: true}
       );

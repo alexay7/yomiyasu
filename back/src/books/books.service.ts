@@ -190,7 +190,7 @@ export class BooksService {
       variant:"manga" | "novela";
       pageChars?:number[];
   }): Promise<Book | null> {
-      const found = await this.bookModel.findOne({path: newBook.path});
+      const found = await this.bookModel.findOne({path: newBook.path, variant:newBook.variant});
 
       /**
      * Si existe es que se ha encontrado un libro que fue
@@ -202,7 +202,7 @@ export class BooksService {
               "\x1b[34m" + newBook.path + " restaurada a la biblioteca"
           );
           return this.bookModel.findOneAndUpdate(
-              {path: newBook.path},
+              {path: newBook.path, variant:newBook.variant},
               {missing: false}
           );
       }
@@ -219,7 +219,7 @@ export class BooksService {
       return this.bookModel.find({missing: true, variant});
   }
 
-  markAsMissing(path: string): Promise<Book | null> {
+  markAsMissing(path: string, variant:"manga" | "novela"): Promise<Book | null> {
       this.logger.log("\x1b[34m" + path + " marcado como desaparecido.");
       return this.bookModel.findOneAndUpdate(
           {path},

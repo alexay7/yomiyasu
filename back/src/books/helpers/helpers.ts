@@ -53,8 +53,6 @@ export async function getNovelCharacterCount(book:EPub): Promise<number> {
             const japaneseCharacters = text.match(japaneseRegex);
 
             if (japaneseCharacters) {
-                // Output to file output.txt for debugging
-                fs.appendFile("output.txt", japaneseCharacters.join("") + "\n", "utf8");
             
                 japaneseCharacterCount += japaneseCharacters.length;
             }
