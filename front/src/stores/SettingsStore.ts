@@ -49,7 +49,7 @@ export const useSettingsStore = create<SettingsState>()(
             storage:createJSONStorage(()=>localStorage),
             merge: (source, target) => {
                 const prev = source as SettingsState;
-                return {...prev, ...target};
+                return {...target, ...prev};
             }
         }
     )
