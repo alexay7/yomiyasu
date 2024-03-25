@@ -46,6 +46,25 @@ function Stats():React.ReactElement {
             // Get labels from both res.manga and res.novelas without duplicates
             const labels = res.manga.map((item)=>`${item._id.month}/${item._id.year}`).concat(res.novela.map((item)=>`${item._id.month}/${item._id.year}`)).filter((value, index, self)=>self.indexOf(value) === index);
 
+            // Fill the gaps in the data with the previous value in speedData or 0 if it's the first label
+            labels.forEach((label, index)=>{
+                if (!hoursData.manga.find((item)=>item.month === label)) {
+                    hoursData.manga.splice(index, 0, {month:label, totalHours:0});
+                }
+
+                if (!hoursData.novelas.find((item)=>item.month === label)) {
+                    hoursData.novelas.splice(index, 0, {month:label, totalHours:0});
+                }
+
+                if (!speedData.manga.find((item)=>item.month === label)) {
+                    speedData.manga.splice(index, 0, {month:label, speed:speedData.manga[index - 1]?.speed || 0});
+                }
+
+                if (!speedData.novelas.find((item)=>item.month === label)) {
+                    speedData.novelas.splice(index, 0, {month:label, speed:speedData.novelas[index - 1]?.speed || 0});
+                }
+            });
+
             return {speedData, hoursData, labels};
         }
     });
