@@ -21,11 +21,17 @@ export function useGlobal():GlobalContexType {
 export function GlobalProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
     const [reload, setReload] = useState("");
-    const {siteSettings, setSiteSettings, setReaderSettings} = useSettingsStore();
+    const {siteSettings, setSiteSettings, setReaderSettings, modifySiteSettings} = useSettingsStore();
 
     const navigate = useNavigate();
 
     const ttuConnector = useRef<HTMLIFrameElement>(null);
+
+    useEffect(()=>{
+        if (siteSettings.mainView === undefined) {
+            modifySiteSettings("mainView", "both");
+        }
+    }, [modifySiteSettings, siteSettings.mainView]);
 
     function forceReload(key:string):void {
         setReload(key);
