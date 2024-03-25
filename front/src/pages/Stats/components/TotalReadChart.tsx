@@ -13,25 +13,38 @@ interface DataPoint {
 
 
 interface HoursProps {
-    data:DataPoint[]
+    data:{
+        manga:DataPoint[];
+        novelas:DataPoint[];
+    },
+    labels?:string[];
 }
 
 function TotalReadChart(props:HoursProps):React.ReactElement {
-    const {data} = props;
+    const {data, labels} = props;
     const theme = useTheme();
 
     const style = getComputedStyle(document.body);
     const primCol = `${style.getPropertyValue("--primary-color")}39`;
     const accCol = style.getPropertyValue("--primary-color");
+    const secCol = `${style.getPropertyValue("--accent-color")}39`;
+    const secAccCol = style.getPropertyValue("--accent-color");
 
     const chartData:ChartData<"bar", (number | Point | null)[], unknown> = {
-        labels: data.map((item) => item.month),
+        labels: labels,
         datasets: [
             {
-                label: "Horas leídas por mes",
-                data: data.map((item) => item.totalHours),
+                label: "Manga",
+                data: data.manga.map((item) => item.totalHours),
                 borderColor: accCol,
                 backgroundColor: primCol,
+                borderWidth: 3
+            },
+            {
+                label: "Novelas",
+                data: data.novelas.map((item) => item.totalHours),
+                borderColor: secAccCol,
+                backgroundColor: secCol,
                 borderWidth: 3
             }
         ]
@@ -49,7 +62,8 @@ function TotalReadChart(props:HoursProps):React.ReactElement {
                 grace:"10%",
                 ticks: {
                     color: theme.palette.mode === "dark" ? "white" : "black"
-                }
+                },
+                stacked:true
             },
             x: {
                 title: {
@@ -59,7 +73,8 @@ function TotalReadChart(props:HoursProps):React.ReactElement {
                 },
                 ticks: {
                     color: theme.palette.mode === "dark" ? "white" : "black"
-                }
+                },
+                stacked:true
             }
         },
         elements:{

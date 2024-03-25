@@ -34,7 +34,13 @@ export async function checkRefreshToken():Promise<RefreshResponse> {
 }
 
 export function goTo(navigate:NavigateFunction, link:string):void {
-    window.localStorage.setItem("origin", window.location.pathname.replace("login", ""));
+    let origin = window.location.pathname.replace("login", "");
+
+    if (origin.includes("reader") || origin.includes("ranobe")) {
+        origin = "/";
+    }
+
+    window.localStorage.setItem("origin", origin);
     navigate(link);
 }
 

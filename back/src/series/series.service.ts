@@ -86,8 +86,12 @@ export class SeriesService {
       return this.seriesModel.findByIdAndUpdate(id, {$inc:{bookCount:1}, $set:{lastModifiedDate:new Date()}});
   }
 
-  async filterSeries(user:Types.ObjectId, query:SeriesSearch) {
+  async filterSeries(user:Types.ObjectId, variant:"manga" | "novela" | "all", query:SeriesSearch) {
       const result = this.seriesModel.aggregate().collation({locale: "es"}).match({bookCount:{$gt:0}});
+
+      if (variant !== "all") {
+          result.match({variant});
+      }
 
       if (query.author) {
           result.match({authors:{$in:[query.author]}});
@@ -186,8 +190,8 @@ export class SeriesService {
       return pipe[0] || {genres:[], authors:[]};
   }
 
-  getAlphabetCount(query?:SeriesSearch) {
-      const pipe = this.seriesModel.aggregate();
+  getAlphabetCount(variant:"manga" | "novela", query?:SeriesSearch) {
+      const pipe = this.seriesModel.aggregate().match({variant});
       if (query) {
           if (query.author) {
               pipe.match({authors:{$in:[query.author]}});
@@ -226,17 +230,17 @@ export class SeriesService {
       return pipe;
   }
 
-  async getIdFromPath(path:string):Promise<Types.ObjectId> {
-      const foundSerie = await this.seriesModel.findOne({path}, {_id:1});
+  async getIdFromPath(path:string, variant:"manga" | "novela"):Promise<Types.ObjectId> {
+      const foundSerie = await this.seriesModel.findOne({path, variant}, {_id:1});
       return foundSerie?._id;
   }
 
-  findNonMissing(): Promise<Serie[]> {
-      return this.seriesModel.find({missing: false});
+  findNonMissing(variant:"manga" | "novela"): Promise<Serie[]> {
+      return this.seriesModel.find({missing: false, variant});
   }
 
-  findMissing(): Promise<Serie[]> {
-      return this.seriesModel.find({missing: true});
+  findMissing(variant:"manga" | "novela"): Promise<Serie[]> {
+      return this.seriesModel.find({missing: true, variant});
   }
 
   markAsMissing(path: string): Promise<Serie | null> {

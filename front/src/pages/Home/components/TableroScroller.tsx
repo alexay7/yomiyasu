@@ -4,12 +4,28 @@ import {BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {useGlobal} from "../../../contexts/GlobalContext";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 function TableroScroller():React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:tableroData, refetch:tableroRefetch} = useQuery("tablero", async()=> {
+    const {siteSettings} = useSettingsStore();
+
+    const {data:tableroData, refetch:tableroRefetch} = useQuery(["tablero", siteSettings.mainView], async()=> {
         const res = await api.get<BookWithProgress[]>("readprogress/tablero");
-        return res;
+
+        if (!res) return [];
+
+        switch (siteSettings.mainView) {
+            case "manga":{
+                return res.filter((serie)=> serie.variant === "manga");
+            }
+            case "novels":{
+                return res.filter((serie)=> serie.variant === "novela");
+            }
+            default:{
+                return res;
+            }
+        }
     });
 
     useEffect(()=>{

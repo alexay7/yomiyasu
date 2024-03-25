@@ -14,7 +14,11 @@ import {LibraryFilter} from "./components/LibraryFilter";
 import {Helmet} from "react-helmet";
 import {LibraryRandom} from "./components/LibraryRandom";
 
-function Library():React.ReactElement {
+interface LibraryProps {
+    variant: "manga" | "novela";
+}
+
+function Library({variant}:LibraryProps):React.ReactElement {
     const [searchParams, setSearchParams] = useSearchParams();
     const genre = searchParams.get("genre");
     const author = searchParams.get("author");
@@ -35,8 +39,8 @@ function Library():React.ReactElement {
 
     const navigate = useNavigate();
 
-    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading} = useQuery(["seriesData", selectedLetter, currentPage, elements], async()=>{
-        let link = "series?";
+    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading} = useQuery(["seriesData", variant, selectedLetter, currentPage, elements], async()=>{
+        let link = `series/${variant}?`;
 
         if (selectedLetter !== "ALL") {
             if (currentPage !== 1) {
@@ -85,8 +89,8 @@ function Library():React.ReactElement {
         return api.get<SeriesFilter>(link);
     });
 
-    const {data:alphabet, refetch:refetchAlphabet} = useQuery("alphabet", async()=>{
-        let link = "series/alphabet?";
+    const {data:alphabet, refetch:refetchAlphabet} = useQuery(["alphabet", variant], async()=>{
+        let link = `series/${variant}/alphabet?`;
 
         if (genre) {
             link += `genre=${genre}&`;
@@ -145,7 +149,7 @@ function Library():React.ReactElement {
                         </IconButton>
                     </Tooltip>
                     {userData?.admin && (
-                        <LibrarySettings/>
+                        <LibrarySettings variant={variant}/>
                     )}
                 </div>
                 <div className="flex items-center mx-4">
@@ -189,7 +193,7 @@ function Library():React.ReactElement {
                             </MenuItem>
                         </Menu>
                     </div>
-                    <LibraryRandom/>
+                    <LibraryRandom variant={variant}/>
                     <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
                 </div>
             </div>
@@ -236,7 +240,7 @@ function Library():React.ReactElement {
                             {series.data.length > 0 ? (
                                 <ul className="flex flex-wrap p-8 py-4 gap-4">
                                     {series.data.map((serie)=>(
-                                        <SerieComponent key={serie._id} serieData={serie}/>
+                                        <SerieComponent variant={variant} key={serie._id} serieData={serie}/>
                                     ))}
                                 </ul>
 

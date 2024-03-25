@@ -1,4 +1,4 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List, PhotoAlbum} from "@mui/icons-material";
 import {Divider, IconButton, useTheme} from "@mui/material";
 import React, {Fragment, useContext, useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
@@ -54,7 +54,8 @@ export function AppLayout():React.ReactElement {
                     <Divider/>
                     <ul className="mt-4 select-none h-[calc(100vh-8rem)] overflow-y-auto">
                         <LateralListItem toggleMenu={toggleMenu} text="Inicio" link="/app" Icon={Home}/>
-                        <LateralListItem toggleMenu={toggleMenu} text="Biblioteca" link="/app/library" Icon={Book}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Mangas" link="/app/library/manga" Icon={PhotoAlbum}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Novelas" link="/app/library/novels" Icon={Book}/>
                         <Divider className="my-4"/>
                         <LateralListItem category toggleMenu={toggleMenu} text="Historial" link="/app/history" Icon={History}/>
                         <Fragment>

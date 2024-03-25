@@ -33,10 +33,17 @@ export class SeriesController {
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
 
-    @Get()
+    @Get("genresAndArtists")
+    @ApiOkResponse({status:HttpStatus.OK})
+    @UseInterceptors(CacheInterceptor)
+    async getGenresAndArtists() {
+        return this.seriesService.getArtistsAndGenres();
+    }
+
+    @Get(":variant")
     @ApiOkResponse({status:HttpStatus.OK})
     @CacheTTL(60)
-    async filterSeries(@Req() req:Request, @Query() query:SeriesSearch) {
+    async filterSeries(@Req() req:Request, @Query() query:SeriesSearch, @Param("variant") variant:"manga" | "novela" | "all") {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
@@ -55,7 +62,7 @@ export class SeriesController {
             query.limit = 25;
         }
 
-        const foundSeries = await this.seriesService.filterSeries(userId, query);
+        const foundSeries = await this.seriesService.filterSeries(userId, variant, query);
 
         let seriesWithProgress = [];
         let skip = 0;
@@ -104,13 +111,13 @@ export class SeriesController {
         return response;
     }
 
-    @Get("random")
-    async getRandomSerie(@Req() req:Request, @Query() query:SeriesSearch) {
+    @Get(":variant/random")
+    async getRandomSerie(@Req() req:Request, @Query() query:SeriesSearch, @Param("variant") variant:"manga" | "novela") {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
-        const foundSeries = await this.seriesService.filterSeries(userId, query);
+        const foundSeries = await this.seriesService.filterSeries(userId, variant, query);
 
         const promises = foundSeries.data.map(async(serieElem)=>{
             const serieBooks = await this.booksService.getSerieBooks(serieElem._id);
@@ -184,18 +191,11 @@ export class SeriesController {
         return this.seriesService.editSerie(serie, updateSerie);
     }
 
-    @Get("genresAndArtists")
+    @Get(":variant/alphabet")
     @ApiOkResponse({status:HttpStatus.OK})
     @UseInterceptors(CacheInterceptor)
-    async getGenresAndArtists() {
-        return this.seriesService.getArtistsAndGenres();
-    }
-
-    @Get("alphabet")
-    @ApiOkResponse({status:HttpStatus.OK})
-    @UseInterceptors(CacheInterceptor)
-    async getAlphabetGroups(@Query() query:SeriesSearch) {
-        const filledLetters = await this.seriesService.getAlphabetCount(query);
+    async getAlphabetGroups(@Query() query:SeriesSearch, @Param("variant") variant:"manga" | "novela") {
+        const filledLetters = await this.seriesService.getAlphabetCount(variant, query);
         const alphabet: {
             group: string;
             count: number;
@@ -219,8 +219,8 @@ export class SeriesController {
         return alphabet;
     }
 
-    @Get("readlist")
-    async getReadlistSeries(@Req() req:Request) {
+    @Get(":variant/readlist")
+    async getReadlistSeries(@Req() req:Request, @Param("variant") variant:"manga" | "novela") {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
@@ -230,10 +230,10 @@ export class SeriesController {
             return cached;
         }
 
-        const foundSeries = await this.readListsService.getUserReadListSeries(userId);
+        const foundSeries = await this.readListsService.getUserReadListSeries(userId, variant);
 
         const promises = foundSeries.map(async(serieElem) => {
-            const serieData = await this.booksService.getSerieStats(userId, serieElem._id);
+            const serieData = await this.booksService.getSerieStats(userId, serieElem._id, variant);
             const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
         
             if (serieData) {
@@ -278,7 +278,7 @@ export class SeriesController {
         return {status:"OK"};
     }
 
-    @Get(":id")
+    @Get("serie/:id")
     @ApiOkResponse({status:HttpStatus.OK})
     async getSerie(@Req() req:Request, @Param("id", ParseObjectIdPipe) id:Types.ObjectId) {
         if (!req.user) throw new UnauthorizedException();
@@ -294,7 +294,7 @@ export class SeriesController {
 
         if (!foundSerie) throw new NotFoundException();
 
-        const serieData = await this.booksService.getSerieStats(userId, foundSerie._id);
+        const serieData = await this.booksService.getSerieStats(userId, foundSerie._id, foundSerie.variant);
         const readlist = await this.readListsService.isInReadlist(userId, foundSerie._id);
 
         if (serieData) {
@@ -315,7 +315,34 @@ export class SeriesController {
         
         const foundSerie = await this.seriesService.findById(serie);
 
-        const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", foundSerie.path);
+        if (foundSerie.variant === "novela") {
+            const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", "novelas", foundSerie.path);
+
+            // Zip all the epub files of the serie
+            const zipFileName = `${foundSerie.sortName}.zip`;
+            const zipFilePath = path.join(__dirname, "..", "..", "..", "exterior", zipFileName);
+
+            const output = fs.createWriteStream(zipFilePath);
+
+            const archive = archiver("zip", {
+                zlib: {level: 9} // Compression level (0-9)
+            });
+
+            archive.pipe(output);
+
+            // Add all the epub files to the archive
+            archive.directory(sourceFolderPath, false);
+
+            await archive.finalize();
+
+            res.setHeader("Content-Type", "application/zip");
+            res.setHeader("Content-Disposition", `attachment; filename=${encodeURI(foundSerie.sortName)}.zip`);
+            const readStream = fs.createReadStream(zipFilePath);
+
+            return new StreamableFile(readStream);
+        }
+
+        const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", "mangas", foundSerie.path);
 
         try {
         // Crear un archivo ZIP
@@ -342,6 +369,10 @@ export class SeriesController {
   
             // Send the file to the client
             res.setHeader("Content-Type", "application/zip");
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename=${zipFileName}`
+            );
             const readStream = fs.createReadStream(zipFilePath);
     
             return new StreamableFile(readStream);

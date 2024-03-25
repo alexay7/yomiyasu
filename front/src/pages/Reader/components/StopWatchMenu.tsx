@@ -9,7 +9,7 @@ import {Book, BookProgress} from "../../../types/book";
 interface StopWatchMenuProps {
     oldProgress:BookProgress | undefined;
     characters:number;
-    bookData:Book;
+    bookData?:Book;
     timer:number;
     setTimer:(v:React.SetStateAction<number>)=>void;
     timerOn:boolean;
@@ -39,8 +39,10 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
         // Confirmation from the user
         if (!window.confirm("¿Estás seguro de que quieres reiniciar el cronómetro?")) return;
 
-        void createProgress(bookData, undefined, 1);
-        window.localStorage.removeItem(bookData._id);
+        if (bookData) {
+            void createProgress(bookData, undefined, 1);
+            window.localStorage.removeItem(bookData._id);
+        }
         setTimer(0);
     }
 

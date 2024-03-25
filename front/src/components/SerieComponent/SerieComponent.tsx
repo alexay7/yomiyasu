@@ -9,18 +9,19 @@ import {getFlameColor} from "../../helpers/series";
 import {twMerge} from "tailwind-merge";
 
 interface SerieComponentProps {
-    serieData:SerieWithProgress
+    serieData:SerieWithProgress,
+    variant?:"manga" | "novela"
 }
 
 export function SerieComponent(props:SerieComponentProps):React.ReactElement {
-    const {serieData} = props;
+    const {serieData, variant} = props;
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
     const [unreadBooks, setUnreadBooks] = useState(serieData.unreadBooks);
 
     const navigate = useNavigate();
 
-    const thumbnail = `/api/static/${serieData.thumbnailPath}`;
+    const thumbnail = serieData ? variant === "manga" ? `/api/static/mangas/${serieData.thumbnailPath}` : `/api/static/novelas/${serieData.thumbnailPath}` : "";
 
     return (
         <div className="w-[9rem] flex-shrink-0">

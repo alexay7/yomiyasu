@@ -1,6 +1,6 @@
 {
   "name": "tfgback",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "",
   "author": "",
   "private": true,
@@ -52,6 +52,8 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
+    "epub2": "^3.0.2",
+    "epubjs": "^0.3.93",
     "fs-extra": "^11.1.1",
     "jmdict-simplified-node": "^1.1.2",
     "leveldown": "^6.1.1",

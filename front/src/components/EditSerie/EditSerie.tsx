@@ -64,10 +64,10 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
         }
     }
 
-    async function getAnilistData(title:string):Promise<void> {
+    async function getAnilistData(title:string, variant:"manga" | "novela"):Promise<void> {
         const query = gql`
-        query($query:String){
-            Media(search:$query, format: MANGA, type: MANGA){
+        query($query:String, $format:MediaFormat){
+            Media(search:$query, format: $format, type: MANGA){
                 status
                 description
                 genres
@@ -97,7 +97,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
         }
         `;
 
-        const response = await request<AnilistSerie>("https://graphql.anilist.co", query, {query:title});
+        const response = await request<AnilistSerie>("https://graphql.anilist.co", query, {query:title, format:variant === "manga" ? "MANGA" : "NOVEL"});
 
         const data = response.Media;
 
@@ -171,7 +171,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                     <div className="flex gap-2">
                         <TextField required onChange={(e)=>setName(e.target.value)} value={name} fullWidth variant="filled" label="Nombre"/>
                         <IconButton className="shrink-0 w-[56px]" onClick={()=>{
-                            void getAnilistData(name);
+                            void getAnilistData(name, serieData.variant);
                         }}
                         >
                             <ImportExport/>

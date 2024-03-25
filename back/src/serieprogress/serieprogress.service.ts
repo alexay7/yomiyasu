@@ -12,7 +12,7 @@ export class SerieprogressService {
         @InjectModel(SerieProgress.name) private readonly serieProgressModel: Model<SerieProgress>
     ) {}
 
-    async createOrModifySerieProgress(user:Types.ObjectId, serie:Types.ObjectId, books:Types.ObjectId[]) {
+    async createOrModifySerieProgress(user:Types.ObjectId, serie:Types.ObjectId, books:Types.ObjectId[], variant:"manga" | "novela") {
         const foundProgress = await this.serieProgressModel.findOne({
             user:user,
             serie:serie
@@ -27,12 +27,13 @@ export class SerieprogressService {
             user,
             readBooks:books,
             paused:false,
-            lastUpdate:new Date()
+            lastUpdate:new Date(),
+            variant
         };
         return this.serieProgressModel.create(createProgress);
     }
 
-    async createOrIncreaseBooks(createSerieprogressDto: CreateOrModifySerieProgress) {
+    async createOrIncreaseBooks(createSerieprogressDto: CreateOrModifySerieProgress, variant:"manga" | "novela") {
         const foundProgress = await this.serieProgressModel.findOne({
             user:createSerieprogressDto.user,
             serie:createSerieprogressDto.serie
@@ -50,7 +51,8 @@ export class SerieprogressService {
             ...createSerieprogressDto,
             readBooks:createSerieprogressDto.action === "add" ? [new Types.ObjectId(createSerieprogressDto.book)] : [],
             paused:false,
-            lastUpdate:new Date()
+            lastUpdate:new Date(),
+            variant
         };
         return this.serieProgressModel.create(createProgress);
     }
@@ -78,7 +80,7 @@ export class SerieprogressService {
             paused:boolean
         } = {
             unreadBooks:serieData.bookCount,
-            thumbnailPath:`${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}`,
+            thumbnailPath:serieData.variant === "manga" ? `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}` : `${serieBooks[0].seriePath}/${serieBooks[0].thumbnailPath}`,
             currentBook:serieBooks[0],
             type:"serie",
             paused:false
@@ -109,7 +111,7 @@ export class SerieprogressService {
         result.unreadBooks = unreadBooks.length;
         const currentBook = unreadBooks[0];
         result.currentBook = currentBook;
-        result.thumbnailPath = `${currentBook.seriePath}/${currentBook.imagesFolder}/${currentBook.thumbnailPath}`;
+        result.thumbnailPath = serieData.variant === "manga" ? `${currentBook.seriePath}/${currentBook.imagesFolder}/${currentBook.thumbnailPath}` : `${currentBook.seriePath}/${currentBook.thumbnailPath}`;
         return result;
     }
 }

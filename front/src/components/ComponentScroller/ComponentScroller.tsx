@@ -11,10 +11,11 @@ interface ComponentScrollerProps {
     components:BookWithProgress[] | SerieWithProgress[];
     type:"books" | "series";
     deck?:boolean;
+    variant?:"manga" | "novela";
 }
 
 export function ComponentScroller(props:ComponentScrollerProps):React.ReactElement {
-    const {title, components, type, deck} = props;
+    const {title, components, type, deck, variant} = props;
     const ulRef = useRef<HTMLUListElement>(null);
     const [left, setLeft] = useState(0);
     const [maxRight, setMaxRight] = useState(!ulRef);
@@ -86,7 +87,7 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
                 }}
                 >
                     {components?.map((serie)=>(
-                        <SerieComponent key={serie._id} serieData={serie as SerieWithProgress}/>
+                        <SerieComponent variant={variant} key={serie._id} serieData={serie as SerieWithProgress}/>
                     ))}
                 </ul>
             )}

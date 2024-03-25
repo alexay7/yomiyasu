@@ -46,7 +46,7 @@ function Reader():React.ReactElement {
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
     const {data:bookData} = useQuery("book", async()=> {
-        const res = await api.get<Book>(`books/${id}`);
+        const res = await api.get<Book>(`books/book/${id}`);
         return res;
     });
 
@@ -103,7 +103,7 @@ function Reader():React.ReactElement {
             const initial = defaultSets() as {page_idx:number};
 
             initial.page_idx = page;
-            window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
+            window.localStorage.setItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
 
             setCurrentPage(page - 1);
         }
@@ -143,7 +143,7 @@ function Reader():React.ReactElement {
          * la configuración anterior del volumen
          */
         if (bookData) {
-            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string;
+            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string;
             if (rawProgress) {
                 const progress = JSON.parse(rawProgress) as {"page_idx":number, "singlePageView":boolean};
                 setDoublePages(!progress.singlePageView);
@@ -197,12 +197,12 @@ function Reader():React.ReactElement {
                     if (value || value === 0) {
                         if ((value < -1 && !readerSettings.singlePageView) || (value < 0 && readerSettings.singlePageView)) {
                             if (!confirm("¿Volver al libro anterior?")) return;
-                            void prevBook(bookData);
+                            void prevBook({book:bookData, variant:"manga"});
                             return;
                         }
                         if (value >= bookData.pages) {
                             if (!confirm("¿Pasar al siguiente libro?")) return;
-                            void nextBook(bookData);
+                            void nextBook({book:bookData, variant:"manga"});
                             return;
                         }
 
@@ -620,7 +620,7 @@ function Reader():React.ReactElement {
 
         // Establece los ajustes del usuario
         if (!bookData) return;
-        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
+        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
 
         if (readerSettings.r2l !== currentSettings.r2l) {
             iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
@@ -781,7 +781,7 @@ function Reader():React.ReactElement {
                     )}
                     <iframe
                         ref={iframe}
-                        src={`/api/static/${bookData?.seriePath}/${bookData?.path}.html`}
+                        src={`/api/static/mangas/${bookData?.seriePath}/${bookData?.path}.html`}
                         className="w-full measure"
                         onLoad={injectCustomScript}
                     />
@@ -819,7 +819,7 @@ function Reader():React.ReactElement {
                                         <IconButton onClick={async()=>{
                                             await createProgress(bookData, currentPage, timer,
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                            void nextBook(bookData);
+                                            void nextBook({book:bookData, variant:"manga"});
                                         }}
                                         className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
@@ -844,7 +844,7 @@ function Reader():React.ReactElement {
                                         <IconButton onClick={async()=>{
                                             await createProgress(bookData, currentPage, timer,
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                            void prevBook(bookData);
+                                            void prevBook({book:bookData, variant:"manga"});
                                         }}
                                         className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
@@ -889,7 +889,7 @@ function Reader():React.ReactElement {
                                         <IconButton onClick={async()=>{
                                             await createProgress(bookData, currentPage, timer,
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                            void nextBook(bookData);
+                                            void nextBook({book:bookData, variant:"manga"});
                                         }}
                                         className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >
@@ -914,7 +914,7 @@ function Reader():React.ReactElement {
                                         <IconButton onClick={async()=>{
                                             await createProgress(bookData, currentPage, timer,
                                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                            void prevBook(bookData);
+                                            void prevBook({book:bookData, variant:"manga"});
                                         }}
                                         className="dark:text-[#ebe8e3] text-[#0000008a]"
                                         >

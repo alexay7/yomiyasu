@@ -8,6 +8,7 @@ import {useNavigate} from "react-router-dom";
 import {goTo, formatTime} from "../../helpers/helpers";
 import {defaultSets, useSettingsStore} from "../../stores/SettingsStore";
 import {twMerge} from "tailwind-merge";
+import {useGlobal} from "../../contexts/GlobalContext";
 
 
 interface BookComponentProps {
@@ -25,6 +26,8 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     const [onItem, setOnItem] = useState(false);
     const [read, setRead] = useState(bookData.status && bookData.status !== "unread");
 
+    const {ttuConnector} = useGlobal();
+
     useEffect(()=>{
         if (forceRead) {
             setRead(true);
@@ -32,7 +35,8 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     }, [forceRead]);
 
     const navigate = useNavigate();
-    const thumbnailUrl = `/api/static/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}`;
+
+    const thumbnailUrl = bookData.variant === "manga" ? `/api/static/mangas/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}` : `/api/static/novelas/${bookData.seriePath}/${bookData.thumbnailPath}` ;
 
     useEffect(()=>{
         if (lastProgressRef.current && bookData.lastProgress) {
@@ -44,42 +48,75 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 lastProgressRef.current.style.width = "100%";
                 return;
             }
+            let value = 0;
             // Sets the lastProgress bar
-            let value = bookData.lastProgress.currentPage * 100 / bookData.pages;
-            value = value < 100 ? value : 100;
+            if (bookData.variant === "manga") {
+                value = bookData.lastProgress.currentPage * 100 / bookData.pages;
+                value = value < 100 ? value : 100;
+            } else {
+                value = (bookData.lastProgress.characters || 0) * 100 / (bookData.characters || 1);
+                value = value < 100 ? value : 100;
+            }
             lastProgressRef.current.style.width = `${value}%`;
         }
     }, [bookData, read]);
 
-    function goToBook(mouse?:boolean):void {
-        if (siteSettings.openHTML) {
-            let settings = defaultSets() as {backgroundColor:string};
-            const prevSettings = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`);
-            if (prevSettings) {
-                settings = JSON.parse(prevSettings) as {backgroundColor:string};
-            }
-            settings.backgroundColor = "#121212";
+    async function goToBook(mouse?:boolean):Promise<void> {
+        if (bookData.variant === "manga") {
+            // MANGA
+            if (siteSettings.openHTML) {
+                let settings = defaultSets() as {backgroundColor:string};
+                const prevSettings = window.localStorage.getItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`);
+                if (prevSettings) {
+                    settings = JSON.parse(prevSettings) as {backgroundColor:string};
+                }
+                settings.backgroundColor = "#121212";
 
-            window.localStorage.setItem(`mokuro_/api/static/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(settings));
+                window.localStorage.setItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(settings));
 
-            if (mouse) {
-                window.open(`/api/static/${bookData.seriePath}/${bookData.path}.html`, "_blank")?.focus();
+                if (mouse) {
+                    window.open(`/api/static/mangas/${bookData.seriePath}/${bookData.path}.html`, "_blank")?.focus();
+                    return;
+                }
+                window.location.href = `/api/static/mangas/${bookData.seriePath}/${bookData.path}.html`;
                 return;
             }
-            window.location.href = `/api/static/${bookData.seriePath}/${bookData.path}.html`;
+            if (read && bookData.status === "completed") {
+                if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+            }
+            if (mouse) {
+                window.open(`/reader/${bookData._id}`, "_blank")?.focus();
+                return;
+            }
+            goTo(navigate, `/reader/${bookData._id}`);
             return;
         }
-        if (read && bookData.status === "completed") {
-            if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
-        }
-        if (mouse) {
-            window.open(`/reader/${bookData._id}`, "_blank")?.focus();
+
+        // NOVELA
+        if (!ttuConnector.current) return;
+
+        const iframe = ttuConnector.current;
+
+        // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
+
+        const response = await fetch(`/api/static/novelas/${bookData.seriePath}/${bookData.path}.epub`);
+
+        if (!response.ok) {
+            console.error("Failed to fetch epub file");
             return;
         }
-        goTo(navigate, `/reader/${bookData._id}`);
+
+        // Send as a File
+        const blob = await response.blob();
+
+        const file = new File([blob], `${bookData.path}.epub`, {type: blob.type});
+
+        // Send via postmessage
+        iframe.contentWindow?.postMessage({book:file, yomiyasuId:bookData._id, mouse}, "*");
     }
 
     function renderBookInfo():string {
+        if (bookData.variant === "novela") return `${bookData.characters} caracteres`;
         switch (siteSettings.bookView) {
             case "characters":{
                 return `${bookData.characters} caracteres`;
@@ -113,10 +150,12 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     return (
         <div className="w-[9rem] flex-shrink-0">
             <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80 group"
-                onClick={(e)=>{
-                    if (e.target === e.currentTarget) {
-                        goToBook();
-                    }
+                onMouseDown={(e)=>{
+                    if (e.button !== 1 || e.target === e.currentTarget) return;
+                    void goToBook(true);
+                }}
+                onClick={()=>{
+                    void goToBook();
                 }}
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
@@ -130,7 +169,14 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
                 <Fade in={onItem}>
                     <div>
-                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onClick={()=>goToBook()}>
+                        <IconButton className="absolute w-16 h-16 text-center left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-primary bg-white rounded-full" onMouseDown={(e)=>{
+                            if (e.button !== 1 || e.target === e.currentTarget) return;
+                            void goToBook(true);
+                        }}
+                        onClick={()=>{
+                            void goToBook();
+                        }}
+                        >
                             <PlayCircle className="w-16 h-16"/>
                         </IconButton>
                     </div>
@@ -138,12 +184,27 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             </div>
 
             <div className="dark:bg-[#1E1E1E] dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
-                <a href={siteSettings.openHTML ? `/api/static/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
-                    className="line-clamp-2 h-12" onClick={()=>{
-                        window.localStorage.setItem("origin", window.location.pathname);
-                    }}
-                >{bookData.visibleName}
-                </a>
+                {bookData.variant === "manga" && (
+                    <a href={siteSettings.openHTML ? `/api/static/mangas/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
+                        className="line-clamp-2 h-12" onClick={()=>{
+                            window.localStorage.setItem("origin", window.location.pathname);
+                        }}
+                    >{bookData.visibleName}
+                    </a>
+                )}
+                {bookData.variant === "novela" && (
+                    <button className="text-left bg-transparent border-0 text-white p-0 hover:underline hover:cursor-pointer text-base">
+                        <p className="line-clamp-2 h-12" onMouseDown={(e)=>{
+                            if (e.button !== 1 || e.target === e.currentTarget) return;
+                            void goToBook(true);
+                        }}
+                        onClick={()=>{
+                            void goToBook();
+                        }}
+                        >{bookData.visibleName}
+                        </p>
+                    </button>
+                )}
                 <div className="flex items-center justify-between text-sm">
                     <p className="dark:text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
                     <BookSettings bookData={bookData} insideSerie={insideSerie} read={read} setRead={setRead} deck={deck}/>

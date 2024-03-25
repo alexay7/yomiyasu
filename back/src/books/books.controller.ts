@@ -9,13 +9,14 @@ import {ParseObjectIdPipe} from "../validation/objectId";
 import {UsersService} from "../users/users.service";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UpdateBookDto} from "./dto/update-book.dto";
-import {getCharacterCount} from "./helpers/helpers";
+import {getCharacterCount, getNovelCharacterCount} from "./helpers/helpers";
 import {join} from "path";
 import {CacheInterceptor, CacheTTL, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
 import * as path from "path";
 import * as archiver from "archiver";
 import * as fs from "fs-extra";
+import EPub from "epub2";
 
 @Controller("books")
 @ApiTags("Libros")
@@ -28,10 +29,17 @@ export class BooksController {
         @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) {}
   
-    @Get()
+    @Get("genresAndArtists")
+    @UseInterceptors(CacheInterceptor)
+    @ApiOkResponse({status:HttpStatus.OK})
+    async getGenresAndArtists() {
+        return this.booksService.getArtistsAndGenres();
+    }
+
+    @Get(":variant")
     @CacheTTL(60)
     @ApiOkResponse({status:HttpStatus.OK})
-    async filterBooks(@Req() req:Request, @Query() query:SearchQuery) {
+    async filterBooks(@Req() req:Request, @Query() query:SearchQuery, @Param("variant") variant:"manga" | "novela" | "all") {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId: Types.ObjectId};
@@ -51,7 +59,7 @@ export class BooksController {
             }
         }
 
-        const response = await this.booksService.filterBooks(userId, query);
+        const response = await this.booksService.filterBooks(userId, variant, query);
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 
@@ -91,19 +99,20 @@ export class BooksController {
 
         const mainFolderPath = join(process.cwd(), "..", "exterior");
 
-        const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"), borders);
+        if (foundBook.variant === "manga") {
+            const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"), borders);
 
-        return this.booksService.editBook(book, {characters:characters.total, pageChars:characters.pages});
+            return this.booksService.editBook(book, {characters:characters.total, pageChars:characters.pages});
+        }
+
+        const bookEpub = await EPub.createAsync(join(mainFolderPath, "novelas", foundBook.seriePath, foundBook.path + ".epub"));
+
+        const chars = await getNovelCharacterCount(bookEpub);
+
+        return this.booksService.editBook(book, {characters:chars});
     }
 
-    @Get("genresAndArtists")
-    @UseInterceptors(CacheInterceptor)
-    @ApiOkResponse({status:HttpStatus.OK})
-    async getGenresAndArtists() {
-        return this.booksService.getArtistsAndGenres();
-    }
-
-    @Get(":id")
+    @Get("book/:id")
     @UseInterceptors(CacheInterceptor)
     @ApiOkResponse({status:HttpStatus.OK})
     async getBook(@Param("id") book:Types.ObjectId) {
@@ -126,7 +135,7 @@ export class BooksController {
 
         if (!foundBook) throw new NotFoundException();
 
-        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie, sort:"sortName"});
+        const serieBooks = await this.booksService.filterBooks(userId, foundBook.variant, {serie:foundBook.serie, sort:"sortName"});
 
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
@@ -147,7 +156,7 @@ export class BooksController {
 
         if (!foundBook) throw new NotFoundException();
 
-        const serieBooks = await this.booksService.filterBooks(userId, {serie:foundBook.serie, sort:"sortName"});
+        const serieBooks = await this.booksService.filterBooks(userId, foundBook.variant, {serie:foundBook.serie, sort:"sortName"});
 
         const bookIndex = serieBooks.findIndex(x=>x.path === foundBook.path);
 
@@ -163,9 +172,24 @@ export class BooksController {
         
         const foundBook = await this.booksService.findById(book);
 
+        if (foundBook?.variant === "novela") {
+            const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", "novelas", foundBook?.seriePath);
+
+            // Send the epub file
+            res.setHeader("Content-Type", "application/epub+zip");
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename=${encodeURI(foundBook.path)}.epub`
+            );
+
+            const readStream = fs.createReadStream(path.join(sourceFolderPath, foundBook.path + ".epub"));
+
+            return new StreamableFile(readStream);
+        }
+
         if (!foundBook?.seriePath || !foundBook.path) throw new BadRequestException();
 
-        const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", foundBook?.seriePath);
+        const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", "mangas", foundBook?.seriePath);
 
         try {
         // Crear un archivo ZIP

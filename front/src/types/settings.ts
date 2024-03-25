@@ -26,4 +26,5 @@ export interface SiteConfig {
     autoCrono:boolean;
     antispoilers:boolean;
     startCronoOnPage:boolean;
+    mainView:"manga" | "novels" | "both";
 }

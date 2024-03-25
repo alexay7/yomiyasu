@@ -29,7 +29,7 @@ function Serie():React.ReactElement {
     const overflowingText = useRef<HTMLParagraphElement | null>(null);
 
     const {data:serieData, refetch:serieRefetch} = useQuery(`serie-${id}`, async()=>{
-        const response = await api.get<FullSerie>(`series/${id}`);
+        const response = await api.get<FullSerie>(`series/serie/${id}`);
 
         if (response) {
             setUnreadBooks(response.unreadBooks);
@@ -38,9 +38,9 @@ function Serie():React.ReactElement {
     });
 
     const {data:serieBooks, refetch:booksRefetch} = useQuery(`books-serie-${id}`, async()=>{
-        const response = await api.get<BookWithProgress[]>(`books?serie=${id}&sort=sortName`);
+        const response = await api.get<BookWithProgress[]>(`books/${serieData!.variant}?serie=${id}&sort=sortName`);
         return response;
-    });
+    }, {enabled:!!serieData});
 
     const navigate = useNavigate();
 
@@ -84,6 +84,8 @@ function Serie():React.ReactElement {
 
         return `${characters} caracteres totales (${Math.floor(characters / serieBooks?.length)} caract./libro)`;
     }
+
+    const thumbnailUrl = serieData ? serieData.variant === "manga" ? `/api/static/mangas/${serieData.thumbnailPath}` : `/api/static/novelas/${serieData.thumbnailPath}` : "";
 
     return (
         <div className="dark:bg-[#121212] pb-4">
@@ -150,7 +152,7 @@ function Serie():React.ReactElement {
                                         <p className={`p-2 ${serieData.readlist ? "bg-accent" : "bg-primary"}`}>{unreadBooks}</p>
                                     </div>
                                 )}
-                                <img loading="lazy" className="rounded-sm" src={`/api/static/${serieData.thumbnailPath}`} alt="" />
+                                <img loading="lazy" className="rounded-sm" src={thumbnailUrl} alt="" />
                                 {serieData.difficulty > 0 && (
                                     <div className="absolute top-0 left-0 text-center font-semibold bg-white m-1 rounded-full">
                                         <div className="relative">

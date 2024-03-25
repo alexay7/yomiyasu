@@ -5,10 +5,14 @@ import {ComponentScroller} from "../../../components/ComponentScroller/Component
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {SerieWithProgress} from "../../../types/serie";
 
-function ReadLaterScroller():React.ReactElement {
+interface ReadLaterScrollerProps {
+    variant:"manga" | "novela";
+}
+
+function ReadLaterScroller({variant}:ReadLaterScrollerProps):React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:readlist, refetch:readlistRefetch} = useQuery("readlist", async()=> {
-        const res = await api.get<SerieWithProgress[]>("series/readlist");
+    const {data:readlist, refetch:readlistRefetch} = useQuery(["readlist", variant], async()=> {
+        const res = await api.get<SerieWithProgress[]>(`series/${variant}/readlist`);
         return res;
     });
 
@@ -29,7 +33,7 @@ function ReadLaterScroller():React.ReactElement {
     if (!readlist || readlist.length === 0) return <></>;
 
     return (
-        <ComponentScroller type="series" title="&quot;Leer más tarde&quot;" components={readlist}/>
+        <ComponentScroller type="series" title={`"&quot;Leer más tarde&quot;" ${variant}`} components={readlist}/>
     );
 }
 

@@ -7,24 +7,46 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Helmet} from "react-helmet";
 
+interface MonthPoint {
+    _id:{month:number, year:number}, totalHours:number, meanReadSpeed:number
+}
+
 function Stats():React.ReactElement {
     const {userData} = useAuth();
 
-    const {data = {speedGraph:[], hoursGraph:[]}} = useQuery("mygraphs", async()=>{
-        const res = await api.get<{_id:{month:number, year:number}, totalHours:number, meanReadSpeed:number}[]>("readprogress/mygraphs");
+    const {data = {speedData:{
+        manga:[],
+        novelas:[]
+    }, hoursData:{
+        manga:[],
+        novelas:[]
+    }, labels:[]}} = useQuery("mygraphs", async()=>{
+        const res = await api.get<{manga:MonthPoint[], novela:MonthPoint[]}>("readprogress/mygraphs");
 
         if (res) {
-            const hoursGraph = res.map((x)=>{
-                return {month:`${x._id.month}-${x._id.year}`, totalHours:Math.floor(x.totalHours)};
-            }).filter((x)=>x.totalHours > 0);
-            let speedGraph = res.map((x)=>{
-                return {month:`${x._id.month}-${x._id.year}`, speed:Math.floor(x.meanReadSpeed)};
-            }).filter((x)=>x.speed > 0);
+        // Get speed data from manga and novelas so that inside of the object we have novelas with the speed and manga with the speed
+            const speedData = {
+                manga:res.manga.map((item)=>({month:`${item._id.month}/${item._id.year}`, speed:item.meanReadSpeed})),
+                novelas:res.novela.map((item)=>({month:`${item._id.month}/${item._id.year}`, speed:item.meanReadSpeed}))
+            };
 
-            if (speedGraph.length === 1) {
-                speedGraph = speedGraph.concat(speedGraph);
+            const hoursData = {
+                manga:res.manga.map((item)=>({month:`${item._id.month}/${item._id.year}`, totalHours:item.totalHours})),
+                novelas:res.novela.map((item)=>({month:`${item._id.month}/${item._id.year}`, totalHours:item.totalHours}))
+            };
+
+            if (speedData.manga.length === 1) {
+                speedData.manga = speedData.manga.concat(speedData.manga);
             }
-            return {hoursGraph:hoursGraph, speedGraph:speedGraph};
+
+            if (speedData.novelas.length === 1) {
+                speedData.novelas = speedData.novelas.concat(speedData.novelas);
+            }
+
+            // Get labels from both res.manga and res.novelas without duplicates
+            const labels = res.manga.map((item)=>`${item._id.month}/${item._id.year}`).concat(res.novela.map((item)=>`${item._id.month}/${item._id.year}`)).filter((value, index, self)=>self.indexOf(value) === index);
+
+            return {speedData, hoursData, labels};
         }
     });
 
@@ -41,13 +63,13 @@ function Stats():React.ReactElement {
                 <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
                     <h2 className="dark:text-white">Velocidad con el tiempo</h2>
                     <div className="h-80">
-                        <SpeedChart data={data.speedGraph}/>
+                        <SpeedChart data={data.speedData} labels={data.labels}/>
                     </div>
                 </div>
                 <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
                     <h2 className="dark:text-white">Horas leídas por mes</h2>
                     <div className="h-80">
-                        <TotalReadChart data={data.hoursGraph}/>
+                        <TotalReadChart data={data.hoursData} labels={data.labels}/>
                     </div>
                 </div>
             </div>

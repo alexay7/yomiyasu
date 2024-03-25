@@ -27,7 +27,7 @@ export function SearchAutocomplete():React.ReactElement {
                 setFoundSeries([]);
                 return;
             }
-            const res = await api.get<SeriesFilter>(`series?name=${searchQuery}&sort=sortName`);
+            const res = await api.get<SeriesFilter>(`series/all?name=${searchQuery}&sort=sortName`);
 
             if (!res) return;
 
@@ -38,7 +38,7 @@ export function SearchAutocomplete():React.ReactElement {
                 setFoundBooks([]);
                 return;
             }
-            const res = await api.get<BookWithProgress[]>(`books?name=${searchQuery}&limit=10&page=1&sort=sortName`);
+            const res = await api.get<BookWithProgress[]>(`books/all?name=${searchQuery}&limit=10&page=1&sort=sortName`);
 
             if (!res) return;
 
@@ -54,10 +54,16 @@ export function SearchAutocomplete():React.ReactElement {
     }, [searchQuery]);
 
     function getThumbnail(option:BookWithProgress | SerieWithProgress):string {
-        if (option.type === "book") {
-            return `${option.seriePath}/${option.imagesFolder}/${option.thumbnailPath}`;
+        if (option.variant === "manga") {
+            if (option.type === "book") {
+                return `mangas/${option.seriePath}/${option.imagesFolder}/${option.thumbnailPath}`;
+            }
+            return `mangas/${option.thumbnailPath}`;
         }
-        return option.thumbnailPath;
+        if (option.type === "book") {
+            return `novelas/${option.seriePath}/${option.thumbnailPath}`;
+        }
+        return `novelas/${option.thumbnailPath}`;
     }
 
     return (
@@ -68,7 +74,7 @@ export function SearchAutocomplete():React.ReactElement {
                         if (e.button === 1) {
                             if (option.type === "book") {
                                 if (siteSettings.openHTML) {
-                                    window.open(`/api/static/${option.seriePath}/${option.path}.html`, "_href");
+                                    window.open(`/api/static/mangas/${option.seriePath}/${option.path}.html`, "_href");
                                     return;
                                 }
                                 window.open(`/reader/${option._id}`, "_href");
@@ -104,7 +110,18 @@ export function SearchAutocomplete():React.ReactElement {
                     />
                 </div>
             )}
-            groupBy={(option)=>`${option.type.toUpperCase().replace("BOOK", "LIBRO")}S`}
+            groupBy={(option)=>{
+                if (option.type === "serie") {
+                    if (option.variant === "manga") {
+                        return "Series de Manga";
+                    }
+                    return "Series de Novelas";
+                }
+                if (option.variant === "manga") {
+                    return "Mangas";
+                }
+                return "Novelas";
+            }}
             onInputChange={(e, v)=>setSearchQuery(v)}
             isOptionEqualToValue={(option, value)=>option.visibleName === value.visibleName || option.sortName === value.sortName}
             getOptionLabel={(option)=>option.visibleName}
@@ -114,7 +131,7 @@ export function SearchAutocomplete():React.ReactElement {
                 if (v) {
                     if (v.type === "book") {
                         if (siteSettings.openHTML) {
-                            window.location.href = `/api/static/${v.seriePath}/${v.path}.html`;
+                            window.location.href = `/api/static/mangas/${v.seriePath}/${v.path}.html`;
                             return;
                         }
                         goTo(navigate, `/reader/${v._id}`);

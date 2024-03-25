@@ -5,7 +5,11 @@ import {MoreVert} from "@mui/icons-material";
 import {api} from "../../../api/api";
 import {toast} from "react-toastify";
 
-export function LibrarySettings():React.ReactElement {
+interface LibrarySettingsProps {
+    variant:"manga" | "novela";
+}
+
+export function LibrarySettings({variant}:LibrarySettingsProps):React.ReactElement {
     const {userData} = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -17,10 +21,10 @@ export function LibrarySettings():React.ReactElement {
         setAnchorEl(null);
     }
 
-    async function rescanLibrary():Promise<void> {
+    async function rescanLibrary(vari:"manga" | "novela"):Promise<void> {
         toast.info("Reescaneando la biblioteca...");
         try {
-            await api.get<{status:string}>("rescan");
+            await api.get<{status:string}>(`rescan/${vari}`);
         } catch {
             toast.error("No tienes permisos para realizar esa acción");
         }
@@ -42,7 +46,7 @@ export function LibrarySettings():React.ReactElement {
             >
                 {userData?.admin && (
                     <MenuItem key="readlist" onClick={()=>{
-                        void rescanLibrary();
+                        void rescanLibrary(variant);
                         handleClose();
                     }}
                     >

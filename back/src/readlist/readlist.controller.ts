@@ -6,7 +6,8 @@ import {
     Req,
     UseGuards,
     Get,
-    HttpStatus
+    HttpStatus,
+    Param
 } from "@nestjs/common";
 import {ReadlistService} from "./readlist.service";
 import {Request} from "express";
@@ -30,13 +31,13 @@ export class ReadlistController {
         return this.readlistService.create({user: userId, serie: createReadListDto.serie});
     }
 
-    @Get()
+    @Get(":variant")
     @ApiOkResponse({status:HttpStatus.OK})
-    getReadList(@Req() req: Request) {
+    getReadList(@Req() req: Request, @Param("variant") variant: "manga" | "novela") {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId: Types.ObjectId};
-        return this.readlistService.getUserReadListSeries(userId);
+        return this.readlistService.getUserReadListSeries(userId, variant);
     }
 
     @Post("delete")

@@ -14,6 +14,7 @@ export interface LogData {
     book:string,
     bookId:string,
     serie:string,
+    tipo:"manga" | "novela",
     status:string,
     currentPage:number,
     startDate:Date,
@@ -95,6 +96,12 @@ function LogGrid(props:LogGridProps):React.ReactElement {
             filterable:false
         },
         {
+            field: "tipo",
+            headerName: "Tipo",
+            width: 100,
+            filterable:true
+        },
+        {
             field: "status",
             headerName: "Estado",
             width: 110,
@@ -149,11 +156,15 @@ function LogGrid(props:LogGridProps):React.ReactElement {
                 const rowData = row.row as LogData;
                 let text = `.log manga ${rowData.currentPage} ${rowData.book}`;
 
+                if (rowData.tipo === "novela") {
+                    text = `.log lectura ${rowData.characters} ${rowData.book}`;
+                }
+
                 if (rowData.time > 59) {
                     text += `;${Math.floor(rowData.time / 60)}`;
                 }
 
-                if (rowData.characters > 0) {
+                if (rowData.characters > 0 && rowData.tipo === "manga") {
                     text += `&${rowData.characters}`;
                 }
 

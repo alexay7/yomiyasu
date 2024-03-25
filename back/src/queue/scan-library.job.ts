@@ -7,9 +7,15 @@ import {AppService} from "../app.service";
 export class ScanWorker  {
     constructor(private readonly appService: AppService) {}
 
-    @Process("scanjob")
+    @Process("scanmangas")
     async handle() {
     // Llamar a tu función pesada aquí
-        await this.appService.rescanLibrary();
+        await this.appService.rescanMangaLibrary();
+    }
+
+    @Process("scanranobe")
+    async handleRanobe() {
+    // Llamar a tu función pesada aquí
+        await this.appService.rescanRanobeLibrary();
     }
 }

@@ -69,7 +69,7 @@ export class ReadprogressController {
                     serie:foundBook.serie,
                     book:progressDto.book,
                     user:userId,
-                    action:"add"});
+                    action:"add"}, foundBook.variant);
             }
 
             const foundReadList = await this.readListService.findSerieInReadList(userId, foundBook?.serie);
@@ -83,7 +83,7 @@ export class ReadprogressController {
                     serie:foundBook.serie,
                     book:progressDto.book,
                     user:userId,
-                    action:"remove"});
+                    action:"remove"}, foundBook.variant);
             }
         }
 
@@ -95,7 +95,8 @@ export class ReadprogressController {
                 ...progressDto,
                 serie:foundBook.serie,
                 startDate:new Date(),
-                lastUpdateDate:new Date()
+                lastUpdateDate:new Date(),
+                variant:foundBook.variant
             };
 
             return this.readprogressService.createReadProgress(newProgress);
@@ -120,11 +121,15 @@ export class ReadprogressController {
 
         await Promise.all(promises);
 
+        const [firstBook] = found;
+
         if (!req.user) throw new UnauthorizedException();
+
+        if (!firstBook) throw new BadRequestException();
 
         const {userId} = req.user as {userId: Types.ObjectId};
 
-        await this.serieProgressService.createOrModifySerieProgress(userId, serieId, found.map(x=>x._id));
+        await this.serieProgressService.createOrModifySerieProgress(userId, serieId, found.map(x=>x._id), firstBook.variant);
 
         return {status:"OK"};
     }

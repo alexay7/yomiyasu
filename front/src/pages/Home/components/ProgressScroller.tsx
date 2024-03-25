@@ -4,12 +4,28 @@ import {BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {useGlobal} from "../../../contexts/GlobalContext";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 function ProgressScroller():React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:progresoData = [], refetch:progressRefetch} = useQuery("progreso", async()=> {
+    const {siteSettings} = useSettingsStore();
+
+    const {data:progresoData = [], refetch:progressRefetch} = useQuery(["progreso", siteSettings.mainView], async()=> {
         const res = await api.get<BookWithProgress[]>("readprogress/reading");
-        return res;
+
+        if (!res) return [];
+
+        switch (siteSettings.mainView) {
+            case "manga":{
+                return res.filter((book)=> book.variant === "manga");
+            }
+            case "novels":{
+                return res.filter((book)=> book.variant === "novela");
+            }
+            default:{
+                return res;
+            }
+        }
     });
 
     useEffect(()=>{

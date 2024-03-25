@@ -44,4 +44,5 @@ export interface UserProgress {
     bookInfo:Book;
     serieInfo:Serie;
     characters?:number;
+    variant:"manga" | "novela"
 }

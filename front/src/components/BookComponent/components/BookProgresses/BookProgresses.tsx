@@ -20,7 +20,7 @@ export function EditProgress(props:EditProgressProps):React.ReactElement {
     const {data:progressData = [], refetch} = useQuery(`${bookData._id}-progress`, async()=>{
         if (!bookData) return;
         return api.get<BookProgress[]>(`readprogress/book/${bookData._id}`);
-    });
+    }, {enabled:open});
 
     function closePopup():void {
         setOpen(false);

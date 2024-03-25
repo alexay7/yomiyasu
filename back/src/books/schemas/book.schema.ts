@@ -17,7 +17,7 @@ export class Book {
   @Prop({type:String, required:true})
   seriePath:string;
 
-  @Prop({type: Number, required: true})
+  @Prop({type: Number, required: false})
   pages: number;
 
   @Prop({type: String, required: true})
@@ -26,7 +26,7 @@ export class Book {
   @Prop({type: String, required: true})
   sortName: string;
 
-  @Prop({type: String, required: true})
+  @Prop({type: String, required: false})
   imagesFolder: string;
 
   @Prop({type: String, required: true})
@@ -49,6 +49,11 @@ export class Book {
 
   @Prop({type:Array, default:[]})
   pageChars:number[];
+
+  @Prop({type:String, enum:["manga", "novela"], required:true})
+  variant:"manga" | "novela";
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);
+
+BookSchema.index({path:1, variant:1}, {unique:true});

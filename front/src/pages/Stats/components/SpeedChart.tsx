@@ -12,26 +12,44 @@ interface DataPoint {
 }
 
 interface SpeedProps {
-    data:DataPoint[]
+    data:{
+        manga:DataPoint[];
+        novelas:DataPoint[];
+    },
+    labels?:string[];
 }
 
 function SpeedChart(props:SpeedProps):React.ReactElement {
-    const {data} = props;
+    const {data, labels} = props;
     const theme = useTheme();
 
     const style = getComputedStyle(document.body);
     const primCol = `${style.getPropertyValue("--primary-color")}39`;
     const accCol = style.getPropertyValue("--primary-color");
+    const secCol = `${style.getPropertyValue("--accent-color")}39`;
+    const secAccCol = style.getPropertyValue("--accent-color");
 
     const chartData:ChartData<"line", (number | Point | null)[], unknown> = {
-        labels: data.map((item) => item.month),
+        labels: labels?.length === 1 ? labels.concat(labels) : labels,
         datasets: [
             {
-                label: "Velocidad en el tiempo",
-                data: data.map((item) => item.speed),
+                label: "Manga",
+                data: data.manga.map((item) => item.speed),
                 fill: true,
                 borderColor: accCol,
                 backgroundColor: primCol,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointBackgroundColor: "white",
+                pointHoverRadius: 8,
+                pointHoverBackgroundColor: "white"
+            },
+            {
+                label: "Novela",
+                data: data.novelas.map((item) => item.speed),
+                fill: true,
+                borderColor: secAccCol,
+                backgroundColor: secCol,
                 borderWidth: 3,
                 pointRadius: 4,
                 pointBackgroundColor: "white",

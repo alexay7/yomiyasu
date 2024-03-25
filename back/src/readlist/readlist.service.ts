@@ -22,7 +22,7 @@ export class ReadlistService {
         return (await this.readListModel.count({user, serie})) > 0;
     }
 
-    async getUserReadListSeries(user: Types.ObjectId) {
+    async getUserReadListSeries(user: Types.ObjectId, variant:"manga" | "novela") {
         const result = await this.readListModel
             .aggregate()
             .match({user: new Types.ObjectId(user)})
@@ -32,7 +32,8 @@ export class ReadlistService {
                 foreignField: "_id",
                 as: "serieInfo"
             })
-            .unwind({path:"$serieInfo"});
+            .unwind({path:"$serieInfo"})
+            .match({"serieInfo.variant":variant});
 
         return result.map(x=>x.serieInfo);
         

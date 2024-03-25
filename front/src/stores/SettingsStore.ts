@@ -38,14 +38,19 @@ export const useSettingsStore = create<SettingsState>()(
                 bookView: "characters",
                 autoCrono: false,
                 antispoilers: false,
-                startCronoOnPage: false
+                startCronoOnPage: false,
+                mainView: "both"
             },
             setSiteSettings: (v) => set({siteSettings:v}),
             modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}})
         }),
         {
             name:"yomiyasu-settings",
-            storage:createJSONStorage(()=>localStorage)
+            storage:createJSONStorage(()=>localStorage),
+            merge: (source, target) => {
+                const prev = source as SettingsState;
+                return {...prev, ...target};
+            }
         }
     )
 );

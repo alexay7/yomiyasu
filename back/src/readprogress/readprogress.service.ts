@@ -115,7 +115,7 @@ export class ReadprogressService {
         const totalReads = await this.readProgressModel.count({user, book:foundProgress?.book});
 
         if (totalReads === 1) {
-            await this.seriesProgressService.createOrIncreaseBooks({book:foundProgress.book, user, action:"remove", serie:foundProgress.serie});
+            await this.seriesProgressService.createOrIncreaseBooks({book:foundProgress.book, user, action:"remove", serie:foundProgress.serie}, foundProgress.variant);
         }
 
         return this.readProgressModel.findOneAndDelete({_id:id, user});
@@ -134,12 +134,42 @@ export class ReadprogressService {
             .match({user:new Types.ObjectId(user), status:{$ne:"unread"}})
             .group({
                 _id: null,
-                totalBooks: {
+                totalMangaBooks: {
                     $sum: {
-                        $cond: [{$ne: ["$status", "unread"]}, 1, 0]
+                        $cond: [
+                            {$and: [{$ne: ["$status", "unread"]}, {$eq: ["$variant", "manga"]}]},
+                            1,
+                            0
+                        ]
                     }
                 },
-                totalUniqueSeries: {$addToSet: "$serie"},
+                totalNovelaBooks: {
+                    $sum: {
+                        $cond: [
+                            {$and: [{$ne: ["$status", "unread"]}, {$eq: ["$variant", "novela"]}]},
+                            1,
+                            0
+                        ]
+                    }
+                },
+                mangaSeries: {
+                    $addToSet: {
+                        $cond: [
+                            {$eq: ["$variant", "manga"]},
+                            "$series",
+                            null
+                        ]
+                    }
+                },
+                novelaSeries: {
+                    $addToSet: {
+                        $cond: [
+                            {$eq: ["$variant", "novela"]},
+                            "$series",
+                            null
+                        ]
+                    }
+                },
                 totalPagesRead: {
                     $sum: "$currentPage"
                 },
@@ -148,12 +178,15 @@ export class ReadprogressService {
                 },
                 totalCharacters: {
                     $sum: "$characters"
-                }})
+                }
+            })
             .project(
                 {
                     _id: 0,
-                    totalBooks: 1,
-                    totalSeries: {$size: "$totalUniqueSeries"},
+                    totalMangaBooks: 1,
+                    totalNovelaBooks: 1,
+                    totalMangaSeries: {$size: "$mangaSeries"},
+                    totalNovelaSeries: {$size: "$novelaSeries"},
                     totalPagesRead: 1,
                     totalCharacters:1,
                     totalTimeRead: {
@@ -169,8 +202,8 @@ export class ReadprogressService {
     }
 
     async getGraphStats(user:Types.ObjectId) {
-        const res = await this.readProgressModel.aggregate()
-            .match({user:new Types.ObjectId(user), time:{$gt:0}})
+        const mangaRes = (await this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user), time:{$gt:0}, variant:"manga"})
             .group({
                 _id: {
                     year: {$year: "$endDate"},
@@ -204,10 +237,47 @@ export class ReadprogressService {
                     "_id.year": 1,
                     "_id.month": 1
                 }
-            );
+            )).filter(x=>x._id.year !== null);
 
-        if (res) {
-            return res.filter(x=>x._id.year !== null);
+        const novelaRes = (await this.readProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user), time:{$gt:0}, variant:"novela"})
+            .group({
+                _id: {
+                    year: {$year: "$endDate"},
+                    month: {$month: "$endDate"}
+                },
+                totalCharacters: {$sum: "$characters"},
+                totalTime: {$sum: "$time"}
+            })
+            .addFields(
+                {
+                    meanReadSpeed: {
+                        $cond: [
+                            {$gt: ["$totalTime", 0]},
+                            {$multiply:[{$divide: ["$totalCharacters", "$totalTime"]}, 3600]},
+                            0 // Avoid division by zero, set meanReadSpeed to 0
+                        ]
+                    }
+                }
+            )
+            .addFields({
+                totalHours: {
+                    $cond: [
+                        {$gt: ["$totalTime", 0]},
+                        {$divide: ["$totalTime", 3600]}, // 3600 seconds in an hour
+                        0 // Avoid division by zero, set totalHours to 0
+                    ]
+                }
+            })
+            .sort(
+                {
+                    "_id.year": 1,
+                    "_id.month": 1
+                }
+            )).filter(x=>x._id.year !== null);
+
+        if (mangaRes.length > 0 || novelaRes.length > 0) {
+            return {manga:mangaRes, novela:novelaRes};
         }
         return {};
     }

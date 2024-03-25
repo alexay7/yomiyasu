@@ -1,0 +1,31 @@
+.extrainfo-enter {
+  opacity: 0;
+  height: 0;
+}
+
+.extrainfo-enter-active {
+  opacity: 1;
+  height: 100%;
+  transition: opacity 300ms ease, height 100ms ease;
+}
+
+.extrainfo-enter-done {
+  height: 100%;
+  opacity: 1;
+}
+
+.extrainfo-exit {
+  height: 100%;
+  opacity: 1;
+}
+
+.extrainfo-exit-active {
+  height: 0;
+  opacity: 0;
+  transition: opacity 300ms ease, height 100ms ease;
+}
+
+.extrainfo-exit-done {
+  height: 0;
+  opacity: 0;
+}

@@ -5,7 +5,8 @@ import {
     Res,
     UseGuards,
     HttpStatus,
-    UnauthorizedException
+    UnauthorizedException,
+    Param
 } from "@nestjs/common";
 import {AppService} from "./app.service";
 import {Request, Response} from "express";
@@ -33,16 +34,16 @@ export class AppController {
         return this.appService.getHello();
     }
 
-    @Get("rescan")
+    @Get("rescan/:variant")
     @ApiOkResponse({status:HttpStatus.OK})
-    async rescanLibrary(@Req() req:Request) {
+    async rescanLibrary(@Req() req:Request, @Param("variant") variant:"manga" | "novela") {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId:Types.ObjectId};
 
         await this.usersService.isAdmin(userId);
 
-        const job = await this.rescanQueue.add("scanjob");
+        const job = await this.rescanQueue.add(variant === "manga" ? "scanmangas" : "scanranobe");
 
         console.log(`created job ${ job.id}`);
 

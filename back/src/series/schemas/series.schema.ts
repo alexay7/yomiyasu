@@ -11,6 +11,9 @@ export class Serie {
   @Prop({type: String, required: true, unique: true})
   path: string;
 
+  @Prop({type: String, required: true, enum: ["manga", "novela"]})
+  variant:"manga" | "novela";
+
   @Prop({type: String, required: true})
   visibleName: string;
 
@@ -52,3 +55,5 @@ export class Serie {
 }
 
 export const SerieSchema = SchemaFactory.createForClass(Serie);
+
+SerieSchema.index({path:1, variant:1}, {unique:true});

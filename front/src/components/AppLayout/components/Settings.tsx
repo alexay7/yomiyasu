@@ -19,6 +19,17 @@ export function Settings():React.ReactElement {
             <LateralListItem text="Ajustes de Página" Icon={SettingsIcon} onClick={()=>setOpen(true)}/>
             <PopupWindow title="Ajustes de página" open={open} closePopup={closePopup} >
                 <div className="flex flex-col gap-4">
+                    <div className="flex w-full justify-between items-center gap-4">
+                        <p>¿Que tipo de medio debería salirte en el inicio?</p>
+                        <Select value={siteSettings.mainView} onChange={(e)=>{
+                            modifySiteSettings("mainView", e.target.value as "manga" | "novels" | "both");
+                        }} className="w-1/2"
+                        >
+                            <MenuItem value="both">Mangas y Novelas</MenuItem>
+                            <MenuItem value="manga">Solo Mangas</MenuItem>
+                            <MenuItem value="novels">Solo Novelas</MenuItem>
+                        </Select>
+                    </div>
                     <FormControlLabel className="select-none" control={
                         <Checkbox checked={siteSettings.openHTML} onChange={(e, c)=>{
                             if (c) {

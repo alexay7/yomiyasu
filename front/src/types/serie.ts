@@ -19,6 +19,7 @@ export interface Serie {
     currentBook:string;
     valoration:number;
     alternativeNames: string[];
+    variant: "manga" | "novela";
 }
 
 export type SerieWithProgress = {

@@ -22,6 +22,8 @@ export class CreateReadProgress extends UpdateReadProgress {
   user:Types.ObjectId;
 
   serie:Types.ObjectId;
+
+  variant:"manga" | "novela";
 }
 
 export class ReadProgressWithBook extends ReadProgress {

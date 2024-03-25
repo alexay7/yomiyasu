@@ -18,6 +18,7 @@ const Library = lazy(() => import("./pages/Library/Library"));
 const Serie = lazy(() => import("./pages/Serie/Serie"));
 const History = lazy(() => import("./pages/History/pages/History"));
 const Reader = lazy(() => import("./pages/Reader/Reader"));
+const EpubReader = lazy(() => import("./pages/EpubReader/EpubReader"));
 const Anki = lazy(() => import("./pages/Anki/Anki"));
 const Stats = lazy(() => import("./pages/Stats/Stats"));
 const Admin = lazy(() => import("./pages/Admin/Admin"));
@@ -74,7 +75,11 @@ export function App():React.ReactElement {
                         <Route path="/login" element={<React.Suspense fallback={<Loading/>}><Login/></React.Suspense>}/>
                         <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
                             <Route index element={<React.Suspense fallback={<Loading/>}><Home/></React.Suspense>}/>
-                            <Route path="library" element={<React.Suspense fallback={<Loading/>}><Library/></React.Suspense>}/>
+                            <Route path="library">
+                                <Route index element={<React.Suspense fallback={<Loading/>}><Library variant="manga"/></React.Suspense>}/>
+                                <Route path="manga" element={<React.Suspense fallback={<Loading/>}><Library variant="manga"/></React.Suspense>}/>
+                                <Route path="novels" element={<React.Suspense fallback={<Loading/>}><Library variant="novela"/></React.Suspense>}/>
+                            </Route>
                             <Route path="series/:id" element={<React.Suspense fallback={<Loading/>}><Serie/></React.Suspense>}/>
                             <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
                             <Route path="profile" element={<React.Suspense fallback={<Loading/>}><Stats/></React.Suspense>}/>
@@ -83,6 +88,7 @@ export function App():React.ReactElement {
                             <Route path="*" element={<Navigate to="/app"/>}/>
                         </Route>
                         <Route path="reader/:id" element={<React.Suspense fallback={<Loading/>}><Reader/></React.Suspense>}/>
+                        <Route path="ranobe/:id" element={<React.Suspense fallback={<Loading/>}><EpubReader/></React.Suspense>}/>
                         <Route path="ankiexport" element={<Anki/>}/>
                         <Route path="*" element={<Navigate to="/app"/>}/>
                     </Routes>

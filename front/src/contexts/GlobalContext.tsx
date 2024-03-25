@@ -1,11 +1,15 @@
-import React, {createContext, useContext, useEffect, useState} from "react";
+import React, {createContext, useContext, useEffect, useRef, useState} from "react";
 import {ContextProps} from "./AuthContext";
 import socket from "../api/socket";
 import {useSettingsStore} from "../stores/SettingsStore";
+import {useNavigate} from "react-router-dom";
+import {goTo} from "../helpers/helpers";
+import {findBookId} from "../helpers/ttu";
 
 type GlobalContexType = {
     forceReload:(v:string)=>void,
-    reloaded:string
+    reloaded:string,
+    ttuConnector:React.RefObject<HTMLIFrameElement>
 };
 
 export const GlobalContext = createContext<GlobalContexType>({} as GlobalContexType);
@@ -19,12 +23,37 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
     const [reload, setReload] = useState("");
     const {siteSettings, setSiteSettings, setReaderSettings} = useSettingsStore();
 
+    const navigate = useNavigate();
+
+    const ttuConnector = useRef<HTMLIFrameElement>(null);
+
     function forceReload(key:string):void {
         setReload(key);
         setTimeout(()=>{
             setReload("");
         }, 500);
     }
+
+    useEffect(() => {
+        async function handleMessage(e:MessageEvent):Promise<void> {
+            if (e.data.event === "finished") {
+                const bookId = await findBookId(e.data.title);
+
+                if (e.data.mouse) {
+                    window.open(`/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`, "_blank")?.focus();
+                    return;
+                }
+
+                goTo(navigate, `/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`);
+            }
+        }
+
+        window.addEventListener("message", handleMessage);
+
+        return () => {
+            window.removeEventListener("message", handleMessage);
+        };
+    }, [navigate]);
 
     useEffect(() => {
         // Limpia el almacenamiento de mokuro
@@ -66,8 +95,9 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
     }, [setSiteSettings, setReaderSettings]);
 
     return (
-        <GlobalContext.Provider value={{forceReload:forceReload, reloaded:reload}}>
+        <GlobalContext.Provider value={{forceReload:forceReload, reloaded:reload, ttuConnector}}>
             {children}
+            <iframe ref={ttuConnector} src="/ebook/manage" className="hidden"/>
         </GlobalContext.Provider>
     );
 }

@@ -6,10 +6,15 @@ import {ComponentScroller} from "../../../components/ComponentScroller/Component
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {RestorePage} from "@mui/icons-material";
 
-function NewBooksScroller():React.ReactElement {
+interface NewBooksScrollerProps {
+    variant:"manga" | "novela";
+}
+
+function NewBooksScroller({variant}:NewBooksScrollerProps):React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:recentBooks, refetch:recentRefetch, isLoading} = useQuery("recentbooks", async()=> {
-        const res = await api.get<BookWithProgress[]>("books?sort=!_id&limit=15");
+    const {data:recentBooks, refetch:recentRefetch, isLoading} = useQuery(["recentbooks", variant], async()=> {
+        const res = await api.get<BookWithProgress[]>(`books/${variant}?sort=!_id&limit=15`);
+
         return res;
     });
 
@@ -41,7 +46,7 @@ function NewBooksScroller():React.ReactElement {
     if (!recentBooks) return <></>;
 
     return (
-        <ComponentScroller type="books" title="Libros nuevos" components={recentBooks}/>
+        <ComponentScroller type="books" title={`${variant === "manga" ? "Mangas nuevos" : "Novelas nuevas"}`} components={recentBooks}/>
     );
 }
 

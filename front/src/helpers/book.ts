@@ -2,7 +2,17 @@ import {api} from "../api/api";
 import {Book, BookWithProgress} from "../types/book";
 import {SerieWithProgress} from "../types/serie";
 
-export async function nextBook(book:Book):Promise<void> {
+type MoveBook = {
+    book:Book;
+} & ({
+    variant:"manga",
+} | {
+    variant:"novela",
+    iframe?:HTMLIFrameElement | null;
+});
+
+export async function nextBook(props:MoveBook):Promise<void> {
+    const {book, variant} = props;
     window.localStorage.removeItem(book._id);
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/next`);
 
@@ -16,11 +26,36 @@ export async function nextBook(book:Book):Promise<void> {
         window.location.href = `/app/series/${book.serie}?finished=true`;
         return;
     }
-    window.location.href = `/reader/${foundBook._id}`;
-    return;
+    if (variant === "manga") {
+        window.location.href = `/reader/${foundBook._id}`;
+        return;
+    }
+
+    // NOVELA
+    const {iframe} = props;
+
+    if (!iframe) return;
+
+    // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
+    const response = await fetch(`/api/static/novelas/${foundBook.seriePath}/${foundBook.path}.epub`);
+
+    if (!response.ok) {
+        console.error("Failed to fetch epub file");
+        return;
+    }
+
+    // Send as a File
+    const blob = await response.blob();
+
+    const file = new File([blob], `${foundBook.path}.epub`, {type: blob.type});
+
+    // Send via postmessage
+    iframe.contentWindow?.postMessage({book:file, yomiyasuId:foundBook._id, mouse:false}, "*");
 }
 
-export async function prevBook(book:Book):Promise<void> {
+export async function prevBook(props:MoveBook):Promise<void> {
+    const {book, variant} = props;
+
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/prev`);
 
     if (!foundBook) return;
@@ -33,8 +68,31 @@ export async function prevBook(book:Book):Promise<void> {
         window.location.href = `/app/series/${book.serie}`;
         return;
     }
-    window.location.href = `/reader/${foundBook._id}`;
-    return;
+    if (variant === "manga") {
+        window.location.href = `/reader/${foundBook._id}`;
+        return;
+    }
+
+    // NOVELA
+    const {iframe} = props;
+
+    if (!iframe) return;
+
+    // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
+    const response = await fetch(`/api/static/novelas/${foundBook.seriePath}/${foundBook.path}.epub`);
+
+    if (!response.ok) {
+        console.error("Failed to fetch epub file");
+        return;
+    }
+
+    // Send as a File
+    const blob = await response.blob();
+
+    const file = new File([blob], `${foundBook.path}.epub`, {type: blob.type});
+
+    // Send via postmessage
+    iframe.contentWindow?.postMessage({book:file, yomiyasuId:foundBook._id, mouse:false}, "*");
 }
 
 export function iBook(serieData:SerieWithProgress):void {

@@ -5,10 +5,14 @@ import {ComponentScroller} from "../../../components/ComponentScroller/Component
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {SeriesFilter} from "../../../types/serie";
 
-function NewSeriesScroller():React.ReactElement {
+interface NewSeriesScrollerProps {
+    variant:"manga" | "novela";
+}
+
+function NewSeriesScroller({variant}:NewSeriesScrollerProps):React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:newSeries = [], refetch:newSeriesRefetch} = useQuery("newseries", async()=> {
-        const res = await api.get<SeriesFilter>("series?sort=!_id&limit=15");
+    const {data:newSeries = [], refetch:newSeriesRefetch} = useQuery(["newseries", variant], async()=> {
+        const res = await api.get<SeriesFilter>(`series/${variant}?sort=!_id&limit=15`);
 
         if (!res) return [];
 
@@ -32,7 +36,7 @@ function NewSeriesScroller():React.ReactElement {
     if (!newSeries || newSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller type="series" title="Series nuevas" components={newSeries}/>
+        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} nuevas`} components={newSeries}/>
     );
 }
 

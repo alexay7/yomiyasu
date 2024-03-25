@@ -7,7 +7,11 @@ import {api} from "../../../api/api";
 import {SerieWithProgress} from "../../../types/serie";
 import {toast} from "react-toastify";
 
-export function LibraryRandom():React.ReactElement {
+interface LibraryRandomProps {
+    variant:"manga" | "novela"
+}
+
+export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
     const [open, setOpen] = useState(false);
     const [difficulty, setDifficulty] = useState<number[]>([0, 10]);
     const [genre, setGenre] = useState<string | null>(null);
@@ -28,7 +32,7 @@ export function LibraryRandom():React.ReactElement {
     async function filterSeries(e:React.FormEvent<HTMLFormElement>):Promise<void> {
         e.preventDefault();
 
-        let link = "series/random?";
+        let link = `series/${variant}/random?`;
 
         if (genre && genre !== "") {
             link += `genre=${genre}&`;

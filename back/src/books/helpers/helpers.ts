@@ -1,6 +1,7 @@
 import {promises as fs} from "fs";
 import {dirname, join} from "path";
 import {load} from "cheerio";
+import EPub from "epub2";
 
 async function extractFirstFileNameFromFolder(folderPath: string): Promise<string | null> {
     try {
@@ -28,6 +29,57 @@ async function extractFirstFileNameFromFolder(folderPath: string): Promise<strin
 async function countFilesInFolder(folderPath: string): Promise<number> {
     const files = await fs.readdir(folderPath);
     return files.length;
+}
+
+export async function getNovelCharacterCount(book:EPub): Promise<number> {
+    const chapters = book.flow.map((chapter) => {
+        if (!chapter.id) return "";
+        return book.getChapterRawAsync(chapter.id);
+    });
+
+    const chapterContents = await Promise.all(chapters);
+
+    // Parse the html content and get the characters inside <p class="calibre"> tags
+    const japaneseRegex = /[\u3040-\u30FF\u4E00-\u9FFF]/g; // Expresión regular para kanji (U+4E00 - U+9FFF) y kana (U+3040 - U+30FF)
+
+    let japaneseCharacterCount = 0;
+
+    chapterContents.forEach((chapterContent) => {
+        const $ = load(chapterContent);
+
+        $("p").each((index, element) => {
+            const text = $(element).text();
+
+            const japaneseCharacters = text.match(japaneseRegex);
+
+            if (japaneseCharacters) {
+                // Output to file output.txt for debugging
+                fs.appendFile("output.txt", japaneseCharacters.join("") + "\n", "utf8");
+            
+                japaneseCharacterCount += japaneseCharacters.length;
+            }
+        });
+    });
+
+    return japaneseCharacterCount;
+}
+
+export async function getNovelCover(book:EPub, bookPath:string, bookName:string):Promise<boolean> {
+    const images = book.listImage();
+
+    const [cover] = images;
+
+    if (!cover.id) return false;
+
+    const [coverImage] = await book.getImageAsync(cover.id);
+
+    if (!coverImage) return false;
+
+    const coverPath = join(dirname(bookPath), bookName + ".jpg");
+
+    await fs.writeFile(coverPath, coverImage);
+
+    return true;
 }
 
 export async function getCharacterCount(bookPath:string, applyBorders?:boolean):Promise<{total:number, pages:number[]}> {

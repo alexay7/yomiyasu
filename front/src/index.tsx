@@ -22,14 +22,14 @@ root.render(
     <React.StrictMode>
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
             <QueryClientProvider client={queryClient}>
-                <GlobalProvider>
-                    <AuthProvider>
-                        <BrowserRouter>
+                <AuthProvider>
+                    <BrowserRouter>
+                        <GlobalProvider>
                             <ToastContainer/>
                             <App/>
-                        </BrowserRouter>
-                    </AuthProvider>
-                </GlobalProvider>
+                        </GlobalProvider>
+                    </BrowserRouter>
+                </AuthProvider>
             </QueryClientProvider>
         </LocalizationProvider>
     </React.StrictMode>

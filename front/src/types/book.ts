@@ -7,7 +7,8 @@ export type BookWithProgress = {
         time: number,
         currentPage: number,
         status: ProgressStatus,
-        endDate?: Date
+        endDate?: Date,
+        characters?:number
     }
     , status: "reading" | "unread" | "completed",
     readlist:boolean,
@@ -30,6 +31,7 @@ export interface Book {
     lastModifiedDate:Date;
     characters?:number;
     pageChars?:number[];
+    variant: "manga" | "novela";
 }
 
 export interface BookProgress {

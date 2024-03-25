@@ -71,12 +71,15 @@ function Calendar():React.ReactElement {
         const rows:LogData[] = [];
 
         res.forEach((progress)=>{
+            const thumbnail = progress.variant === "manga" ? `/mangas/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}` : `/novelas/${progress.bookInfo.seriePath}/${progress.bookInfo.thumbnailPath}`;
+
             rows.push({
                 id:progress._id,
                 bookId:progress.bookInfo._id,
-                image:`/api/static/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`,
+                image:`/api/static/${thumbnail}`,
                 book:progress.bookInfo.visibleName,
                 serie:progress.serieInfo.visibleName,
+                tipo:progress.variant,
                 status:progress.status,
                 currentPage:progress.currentPage,
                 startDate:progress.startDate,
