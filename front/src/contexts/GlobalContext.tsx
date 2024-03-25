@@ -39,12 +39,18 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
             if (e.data.event === "finished") {
                 const bookId = await findBookId(e.data.title);
 
+                let link = `/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`;
+
+                if (e.data.incognito) {
+                    link += "&private=true";
+                }
+
                 if (e.data.mouse) {
-                    window.open(`/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`, "_blank")?.focus();
+                    window.open(link, "_blank")?.focus();
                     return;
                 }
 
-                goTo(navigate, `/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`);
+                goTo(navigate, link);
             }
         }
 

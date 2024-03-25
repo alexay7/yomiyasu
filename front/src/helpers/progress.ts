@@ -7,7 +7,12 @@ export async function createProgress(bookData:Book, page?:number, time?:number, 
     const paramsString = window.location.search;
     const searchParams = new URLSearchParams(paramsString);
 
-    if (searchParams.has("private")) return;
+    if (searchParams.has("private")) {
+        if (bookData.variant === "novela") {
+            await deleteBookBookmark(ttuId);
+        }
+        return;
+    }
 
     if ((bookData.variant === "manga" && (page && page <= 1)) || (bookData.variant === "novela" && characters === 0)) {
         return;

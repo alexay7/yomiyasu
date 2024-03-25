@@ -20,10 +20,11 @@ interface BookSettingsProps {
     read:boolean;
     setRead:(v:React.SetStateAction<boolean>)=>void;
     deck?:boolean;
+    goToBook:(mouse?:boolean, incognito?:boolean)=>void;
 }
 
 export function BookSettings(props:BookSettingsProps):React.ReactElement {
-    const {bookData, insideSerie, read, setRead, deck} = props;
+    const {bookData, insideSerie, read, setRead, deck, goToBook} = props;
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -126,7 +127,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                 open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
             >
                 <MenuItem onClick={()=>{
-                    goTo(navigate, `/reader/${bookData._id}?private=true`);
+                    goToBook(undefined, true);
                 }}
                 >
                     Leer en incógnito

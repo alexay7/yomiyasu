@@ -45,7 +45,7 @@ export async function getNovelCharacterCount(book:EPub): Promise<number> {
     let japaneseCharacterCount = 0;
 
     chapterContents.forEach((chapterContent) => {
-        const $ = load(chapterContent);
+        const $ = load(chapterContent, {xmlMode:true});
 
         $("p").each((index, element) => {
             const text = $(element).text();

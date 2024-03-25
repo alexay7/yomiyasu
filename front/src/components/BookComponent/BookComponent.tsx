@@ -61,7 +61,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
         }
     }, [bookData, read]);
 
-    async function goToBook(mouse?:boolean):Promise<void> {
+    async function goToBook(mouse?:boolean, incognito?:boolean):Promise<void> {
         if (bookData.variant === "manga") {
             // MANGA
             if (siteSettings.openHTML) {
@@ -84,11 +84,18 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             if (read && bookData.status === "completed") {
                 if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
             }
+
+            let link = `/reader/${bookData._id}`;
+
+            if (incognito) {
+                link += "?private=true";
+            }
+
             if (mouse) {
-                window.open(`/reader/${bookData._id}`, "_blank")?.focus();
+                window.open(link, "_blank")?.focus();
                 return;
             }
-            goTo(navigate, `/reader/${bookData._id}`);
+            goTo(navigate, link);
             return;
         }
 
@@ -112,7 +119,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
         const file = new File([blob], `${bookData.path}.epub`, {type: blob.type});
 
         // Send via postmessage
-        iframe.contentWindow?.postMessage({book:file, yomiyasuId:bookData._id, mouse}, "*");
+        iframe.contentWindow?.postMessage({book:file, yomiyasuId:bookData._id, mouse, incognito}, "*");
     }
 
     function renderBookInfo():string {
@@ -207,7 +214,9 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 )}
                 <div className="flex items-center justify-between text-sm">
                     <p className="dark:text-gray-300 text-sm lg:text-xs">{renderBookInfo()}</p>
-                    <BookSettings bookData={bookData} insideSerie={insideSerie} read={read} setRead={setRead} deck={deck}/>
+                    <BookSettings bookData={bookData} insideSerie={insideSerie} read={read} setRead={setRead}
+                        deck={deck} goToBook={goToBook}
+                    />
                 </div>
             </div>
         </div>
