@@ -12,6 +12,7 @@ import {EditBook} from "../../EditBook/EditBook";
 import {BookInfo} from "../../BookInfo/BookInfo";
 import {EditProgress} from "./BookProgresses/BookProgresses";
 import {toast} from "react-toastify";
+import {BookCovers} from "./BookCovers";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -155,6 +156,9 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         >Recalcular caracteres (con bordes)
                         </MenuItem>
                     ]
+                )}
+                {userData?.admin && bookData.variant === "novela" && (
+                    <BookCovers key="covers" bookData={bookData}/>
                 )}
                 {!insideSerie && (
                     <MenuItem key="serie" onClick={()=>{

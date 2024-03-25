@@ -22,3 +22,8 @@ export class UpdateBookDto implements Partial<Book> {
     @IsOptional()
     pageChars?: number[];
 }
+
+export class UpdateCoverDto {
+    @IsString()
+    cover:string;
+}

@@ -71,7 +71,7 @@ export async function getNovelCover(book:EPub, bookPath:string, bookName:string)
 
     if (!cover.id) return false;
 
-    const [coverImage] = await book.getImageAsync(cover.id);
+    const [coverImage] = await book.getImageAsync(book.metadata.cover || cover.id);
 
     if (!coverImage) return false;
 

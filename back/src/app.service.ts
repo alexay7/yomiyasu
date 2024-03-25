@@ -109,21 +109,21 @@ export class AppService {
 
           // Añade las series nuevas a la base de datos
           if (foldersToAddInDb.length > 0) {
+              // Promise to wait for the series to be created
               this.logger.log("\x1b[34mEncontradas series de manga nuevas");
               areChanges = true;
-              foldersToAddInDb.forEach(async(elem) => {
-                  const newSeries = {
-                      path: elem,
-                      visibleName: elem,
-                      sortName: elem,
-                      alternativeNames:[elem],
-                      variant:"manga"
-                  };
-                  await this.seriesService.updateOrCreate(newSeries);
-                  setTimeout(()=>{
-                  // Esperando a que se cree la serie
-                  }, 1000);
-              });
+              await Promise.all(
+                  foldersToAddInDb.map(async(elem) => {
+                      const newSeries = {
+                          path: elem,
+                          visibleName: elem,
+                          sortName: elem,
+                          alternativeNames:[elem],
+                          variant:"manga"
+                      };
+                      await this.seriesService.updateOrCreate(newSeries);
+                  })
+              );
           }
 
           // Marca las series no encontradas como desaparecidas
@@ -201,7 +201,7 @@ export class AppService {
               });
           }
           // FIN PROCESO DE LIBROS
-    
+          this.logger.log("\x1b[34mProceso de búsqueda de mangas finalizado");
           if (areChanges) {
               // Avisar al frontend si hay cambios
               this.websocketsGateway.sendNotificationToClient({action:"LIBRARY_UPDATE"});
@@ -280,19 +280,21 @@ export class AppService {
           if (foldersToAddInDb.length > 0) {
               this.logger.log("\x1b[34mEncontradas series de novela nuevas");
               areChanges = true;
-              foldersToAddInDb.forEach(async(elem) => {
-                  const newSeries = {
-                      path: elem,
-                      visibleName: elem,
-                      sortName: elem,
-                      alternativeNames:[elem],
-                      variant:"novela"
-                  };
-                  await this.seriesService.updateOrCreate(newSeries);
-                  setTimeout(()=>{
-                  // Esperando a que se cree la serie
-                  }, 1000);
-              });
+              
+              // Promise to wait for the series to be created
+              await Promise.all(
+                  foldersToAddInDb.map(async(elem) => {
+                      const newSeries = {
+                          path: elem,
+                          visibleName: elem,
+                          sortName: elem,
+                          alternativeNames:[elem],
+                          variant:"novela"
+                      };
+                      await this.seriesService.updateOrCreate(newSeries);
+                  })
+              );
+
           }
 
           // Marca las series no encontradas como desaparecidas
@@ -330,13 +332,13 @@ export class AppService {
 
           // Añade los libros nuevos a la base de datos
           if (booksToAddInDb.length > 0) {
-              this.logger.log("\x1b[34mEncontradas novelas nuevos");
+              this.logger.log("\x1b[34mEncontradas novelas nuevas");
               areChanges = true;
 
               booksToAddInDb.forEach(async(elem) => {
                   if (elem.bookPath) {
                       const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath, "novela");
-                      await this.seriesService.increaseBookCount(foundSerie._id);
+                      await this.seriesService.increaseBookCount(foundSerie);
                       const book = await EPub.createAsync(elem.bookPath);
 
                       const chars = await getNovelCharacterCount(book);
@@ -369,7 +371,7 @@ export class AppService {
               });
           }
           // FIN PROCESO DE LIBROS
-          
+          this.logger.log("\x1b[34mProceso de búsqueda de novelas finalizado");
           if (areChanges) {
               // Avisar al frontend si hay cambios
               this.websocketsGateway.sendNotificationToClient({action:"LIBRARY_UPDATE"});

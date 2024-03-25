@@ -8,7 +8,7 @@ import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {ParseObjectIdPipe} from "../validation/objectId";
 import {UsersService} from "../users/users.service";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
-import {UpdateBookDto} from "./dto/update-book.dto";
+import {UpdateBookDto, UpdateCoverDto} from "./dto/update-book.dto";
 import {getCharacterCount, getNovelCharacterCount} from "./helpers/helpers";
 import {join} from "path";
 import {CacheInterceptor, CacheTTL, CACHE_MANAGER} from "@nestjs/cache-manager";
@@ -110,6 +110,54 @@ export class BooksController {
         const chars = await getNovelCharacterCount(bookEpub);
 
         return this.booksService.editBook(book, {characters:chars});
+    }
+
+    @Get(":id/images")
+    async getEbookImages(@Req() req:Request, @Param("id", ParseObjectIdPipe) book:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        const foundBook = await this.booksService.findById(book);
+
+        if (!foundBook) throw new NotFoundException();
+
+        const mainFolderPath = join(process.cwd(), "..", "exterior");
+
+        const ebookFile = join(mainFolderPath, "novelas", foundBook.seriePath, foundBook.path + ".epub");
+
+        const bookEpub = await EPub.createAsync(ebookFile) as EPub;
+
+        return bookEpub.listImage();
+    }
+
+    @Patch(":id/cover")
+    async updateCover(@Req() req:Request, @Param("id", ParseObjectIdPipe) book:Types.ObjectId, @Body() body:UpdateCoverDto) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        const foundBook = await this.booksService.findById(book);
+
+        if (!foundBook) throw new NotFoundException();
+
+        const mainFolderPath = join(process.cwd(), "..", "exterior");
+
+        const bookEpub = await EPub.createAsync(join(mainFolderPath, "novelas", foundBook.seriePath, foundBook.path + ".epub")) as EPub;
+
+        const [image] = await bookEpub.getImageAsync(body.cover);
+
+        if (!image) throw new NotFoundException();
+
+        const cover = join(mainFolderPath, "novelas", foundBook.seriePath, foundBook.path + ".jpg");
+
+        await fs.writeFile(cover, image);
+
+        return {status:"ok"};
     }
 
     @Get("book/:id")
