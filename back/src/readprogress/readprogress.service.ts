@@ -156,7 +156,7 @@ export class ReadprogressService {
                     $addToSet: {
                         $cond: [
                             {$eq: ["$variant", "manga"]},
-                            "$series",
+                            "$serie",
                             null
                         ]
                     }
@@ -165,7 +165,7 @@ export class ReadprogressService {
                     $addToSet: {
                         $cond: [
                             {$eq: ["$variant", "novela"]},
-                            "$series",
+                            "$serie",
                             null
                         ]
                     }
@@ -185,8 +185,8 @@ export class ReadprogressService {
                     _id: 0,
                     totalMangaBooks: 1,
                     totalNovelaBooks: 1,
-                    totalMangaSeries: {$size: "$mangaSeries"},
-                    totalNovelaSeries: {$size: "$novelaSeries"},
+                    totalMangaSeries: "$mangaSeries",
+                    totalNovelaSeries: "$novelaSeries",
                     totalPagesRead: 1,
                     totalCharacters:1,
                     totalTimeRead: {
@@ -196,7 +196,9 @@ export class ReadprogressService {
             );
 
         if (res) {
-            return res[0];
+            const [result] = res as {totalMangaBooks:number, totalNovelaBooks:number, totalMangaSeries:Types.ObjectId[], totalNovelaSeries:Types.ObjectId[], totalPagesRead:number, totalCharacters:number, totalTimeRead:number}[];
+
+            return {...result, totalMangaSeries:result.totalMangaSeries.filter(x=>!!x).length, totalNovelaSeries:result.totalNovelaSeries.filter(x=>!!x).length};
         }
         return {};
     }
