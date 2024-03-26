@@ -19,7 +19,7 @@ import SpeedGraph from "./components/SpeedGraph";
 
 function Serie():React.ReactElement {
     const {id} = useParams();
-    const {reloaded} = useGlobal();
+    const {reloaded, ttuConnector} = useGlobal();
     const {userData} = useAuth();
     const [readMore, setReadMore] = useState(false);
     const [textOverflows, setTextOverflows] = useState(false);
@@ -175,7 +175,7 @@ function Serie():React.ReactElement {
                                 <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
                                 <p className="text py-4 pt-2 text-sm">{getCharacterCount()}</p>
                                 {serieBooks && serieBooks.length > 0 && (
-                                    <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={()=>{
+                                    <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={async()=>{
                                         if (unreadBooks === 0) {
                                             if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
                                         }
@@ -186,7 +186,32 @@ function Serie():React.ReactElement {
                                                 return;
                                             }
                                         });
-                                        goTo(navigate, `/reader/${serieBooks[bookId]._id}`);
+                                        if (serieData.variant === "manga") {
+                                            goTo(navigate, `/reader/${serieBooks[bookId]._id}`);
+                                            return;
+                                        }
+
+                                        // NOVELA
+                                        if (!ttuConnector.current) return;
+
+                                        const iframe = ttuConnector.current;
+
+                                        // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
+
+                                        const response = await fetch(`/api/static/novelas/${serieBooks[bookId].seriePath}/${serieBooks[bookId].path}.epub`);
+
+                                        if (!response.ok) {
+                                            console.error("Failed to fetch epub file");
+                                            return;
+                                        }
+
+                                        // Send as a File
+                                        const blob = await response.blob();
+
+                                        const file = new File([blob], `${serieBooks[bookId].path}.epub`, {type: blob.type});
+
+                                        // Send via postmessage
+                                        iframe.contentWindow?.postMessage({book:file, yomiyasuId:serieBooks[bookId]._id, mouse:false, incognito:false}, "*");
                                     }}
                                     >{getReadButtonText()}
                                     </Button>

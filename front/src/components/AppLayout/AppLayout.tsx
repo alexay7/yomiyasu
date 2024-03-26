@@ -52,7 +52,7 @@ export function AppLayout():React.ReactElement {
                         <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>navigate("/app")}>YomiYasu</h1>
                     </div>
                     <Divider/>
-                    <ul className="mt-4 select-none h-[calc(100vh-8rem)] overflow-y-auto">
+                    <ul className="mt-4 select-none h-[calc(100svh-8rem)] overflow-y-auto">
                         <LateralListItem toggleMenu={toggleMenu} text="Inicio" link="/app" Icon={Home}/>
                         <LateralListItem toggleMenu={toggleMenu} text="Mangas" link="/app/library/manga" Icon={PhotoAlbum}/>
                         <LateralListItem toggleMenu={toggleMenu} text="Novelas" link="/app/library/novels" Icon={Book}/>

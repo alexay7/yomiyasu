@@ -56,6 +56,11 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
                     return;
                 }
 
+                if (siteSettings.openHTML) {
+                    window.location.href = `/ebook/b?id=${bookId}`;
+                    return;
+                }
+
                 goTo(navigate, link);
             }
         }
@@ -65,7 +70,7 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
         return () => {
             window.removeEventListener("message", handleMessage);
         };
-    }, [navigate]);
+    }, [navigate, siteSettings]);
 
     useEffect(() => {
         // Limpia el almacenamiento de mokuro

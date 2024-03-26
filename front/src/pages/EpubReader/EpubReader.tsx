@@ -82,7 +82,7 @@ export default function EpubReader():React.ReactElement {
     }, [changedTab, timerOn]);
 
     useEffect(() => {
-        if (!iframe.current || !iframe.current.contentWindow) return;
+        if (!iframe.current) return;
 
         const ifr = iframe.current;
 
@@ -92,13 +92,33 @@ export default function EpubReader():React.ReactElement {
 
         // Muestra/oculta las barras superior/inferior haciendo doble click al documento
         ifr.contentWindow?.document.addEventListener("dblclick", handleDoubleClick);
-        document.addEventListener("dblclick", handleDoubleClick);
 
         return () => {
             ifr.contentWindow?.document.removeEventListener("dblclick", handleDoubleClick);
-            document.removeEventListener("dblclick", handleDoubleClick);
         };
     }, [iframe]);
+
+    useEffect(() => {
+        function handleDoubleClick():void {
+            setShowToolbar((prev) => !prev);
+        }
+        window.addEventListener("dblclick", handleDoubleClick);
+
+        function handleKeyDown(ev:KeyboardEvent):void {
+            switch (ev.key) {
+                case "p":{
+                    setTimerOn((prev) => !prev);
+                    break;
+                }
+            }
+        }
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("dblclick", handleDoubleClick);
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
 
     useEffect(()=>{
         if (timer % 60 !== 0 || timer === 0) return;
@@ -163,7 +183,7 @@ export default function EpubReader():React.ReactElement {
                 </div>
             )}
             <div className={twMerge("select-none", showToolBar ? "lg:mt-[3rem] mt-[3.5rem]" : "")}>
-                <iframe className={twMerge("w-full", showToolBar ? "h-[calc(100svh-6rem)] lg:h-[calc(100svh-5.5rem)]" : "h-screen")} ref={iframe} src={`/ebook/b?id=${id}`}/>
+                <iframe className={twMerge("w-full", showToolBar ? "h-[calc(100svh-7rem)] lg:h-[calc(100svh-5.5rem)]" : "h-screen")} ref={iframe} src={`/ebook/b?id=${id}`}/>
             </div>
             {showToolBar && !!bookData && (
                 <div className="dark:bg-[#101010] bg-[#ebe8e3] h-10 w-full dark:text-[#ebe8e3] flex justify-between items-center fixed bottom-0 py-2 lg:py-0" >

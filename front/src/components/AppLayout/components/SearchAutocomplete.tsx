@@ -31,8 +31,16 @@ export function SearchAutocomplete():React.ReactElement {
 
             if (!res) return;
 
+            // Sort by variant, mangas first
+            res.data.sort((a, b)=>{
+                if (a.variant === "manga" && b.variant === "novela") return -1;
+                if (a.variant === "novela" && b.variant === "manga") return 1;
+                return 0;
+            });
+
             setFoundSeries(res.data);
         }
+
         async function getBooks():Promise<void> {
             if (searchQuery.length < 2) {
                 setFoundBooks([]);
@@ -41,6 +49,13 @@ export function SearchAutocomplete():React.ReactElement {
             const res = await api.get<BookWithProgress[]>(`books/all?name=${searchQuery}&limit=10&page=1&sort=sortName`);
 
             if (!res) return;
+
+            // Sort by variant, mangas first
+            res.sort((a, b)=>{
+                if (a.variant === "manga" && b.variant === "novela") return -1;
+                if (a.variant === "novela" && b.variant === "manga") return 1;
+                return 0;
+            });
 
             setFoundBooks(res);
         }
