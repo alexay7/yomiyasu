@@ -137,7 +137,7 @@ export class ReadprogressService {
                 totalMangaBooks: {
                     $sum: {
                         $cond: [
-                            {$and: [{$ne: ["$status", "unread"]}, {$eq: ["$variant", "manga"]}]},
+                            {$and: [{$eq: ["$status", "completed"]}, {$eq: ["$variant", "manga"]}]},
                             1,
                             0
                         ]
@@ -146,7 +146,7 @@ export class ReadprogressService {
                 totalNovelaBooks: {
                     $sum: {
                         $cond: [
-                            {$and: [{$ne: ["$status", "unread"]}, {$eq: ["$variant", "novela"]}]},
+                            {$and: [{$eq: ["$status", "completed"]}, {$eq: ["$variant", "novela"]}]},
                             1,
                             0
                         ]
@@ -155,7 +155,7 @@ export class ReadprogressService {
                 mangaSeries: {
                     $addToSet: {
                         $cond: [
-                            {$eq: ["$variant", "manga"]},
+                            {$and:[{$eq: ["$variant", "manga"]}, {$eq: ["$status", "completed"]}]},
                             "$serie",
                             null
                         ]
@@ -164,7 +164,7 @@ export class ReadprogressService {
                 novelaSeries: {
                     $addToSet: {
                         $cond: [
-                            {$eq: ["$variant", "novela"]},
+                            {$and:[{$eq: ["$variant", "novela"]}, {$eq: ["$status", "completed"]}]},
                             "$serie",
                             null
                         ]
