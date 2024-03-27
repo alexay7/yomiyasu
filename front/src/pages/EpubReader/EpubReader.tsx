@@ -134,6 +134,12 @@ export default function EpubReader():React.ReactElement {
         void saveProgress();
     }, [timer, bookData, id]);
 
+    async function refreshProgress():Promise<number> {
+        const currentChars =   await saveProgressGlobal(timer, id, (iframe.current || undefined), bookData);
+        setChars(currentChars);
+        return currentChars;
+    }
+
     useEffect(()=>{
         if (siteSettings.autoCrono) {
             setTimerOn(true);
@@ -181,6 +187,8 @@ export default function EpubReader():React.ReactElement {
                         <StopWatchMenu characters={chars} oldProgress={bookProgress}
                             timer={timer} setTimer={setTimer}
                             timerOn={timerOn} setTimerOn={setTimerOn}
+                            refreshProgress={refreshProgress}
+                            bookData={bookData}
                         />
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 import {Timer, TimerOff} from "@mui/icons-material";
-import {IconButton, Menu, MenuItem, Tooltip} from "@mui/material";
+import {Alert, IconButton, Menu, MenuItem, Snackbar, Tooltip} from "@mui/material";
 import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 import {createProgress} from "../../../helpers/progress";
@@ -14,10 +14,14 @@ interface StopWatchMenuProps {
     setTimer:(v:React.SetStateAction<number>)=>void;
     timerOn:boolean;
     setTimerOn:(v:React.SetStateAction<boolean>)=>void;
+    currentPage?:number;
+    refreshProgress?:()=>Promise<number>;
 }
 
-export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn, bookData, oldProgress}:StopWatchMenuProps):React.ReactElement {
+export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn, bookData, oldProgress,
+    currentPage, refreshProgress}:StopWatchMenuProps):React.ReactElement {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [copied, setCopied] = useState(false);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
@@ -64,12 +68,51 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
                     <p style={{textAlign:"center"}}>Tiempo: {formatTime(timer)}</p>
                 </li>
                 <hr/>
-                <li className="flex flex-col items-center justify-center">
-                    <p>Sesión Actual</p>
-                    <p className="text-xs">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</p>
-                    <p className="text-xs">Caracteres: {characters - (oldProgress?.characters || 0)}</p>
+                <li className="flex flex-col items-center justify-center gap-1">
+                    <Tooltip title="Haz click para copiar el log de tu sesión actual">
+                        <div className="cursor-cell w-full flex flex-col items-center justify-center" onClick={async()=>{
+                            if (!bookData) return;
+
+                            let text = "";
+
+                            let currentChars = characters - (oldProgress?.characters || 0);
+
+                            if (refreshProgress) {
+                                // Actualizar el progreso antes de copiar
+                                currentChars = await refreshProgress() - (oldProgress?.characters || 0);
+                            }
+
+                            if (bookData?.variant === "novela") {
+                                text = `.log lectura ${currentChars} ${bookData?.visibleName}`;
+                            } else if (bookData?.variant === "manga" && !!currentPage) {
+                                const readPages = currentPage - (oldProgress?.currentPage || 0);
+                                text = `.log manga ${readPages} ${bookData.visibleName}`;
+                            }
+
+                            const currentTime = timer - (oldProgress?.time || 0);
+
+                            if (timer > 59) {
+                                text += `;${Math.floor(currentTime / 60)}`;
+                            }
+
+                            if (currentChars > 0 && bookData?.variant === "manga") {
+                                text += `&${currentChars}`;
+                            }
+
+                            void navigator.clipboard.writeText(text);
+                            setCopied(true);
+                        }}
+                        >
+                            <p>Sesión Actual</p>
+                            <p className="text-xs">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</p>
+                            <p className="text-xs">Caracteres: {characters - (oldProgress?.characters || 0)}</p>
+                        </div>
+                    </Tooltip>
                 </li>
                 <hr />
+                {!!refreshProgress && (
+                    <MenuItem onClick={refreshProgress}>Actualizar caracteres leídos</MenuItem>
+                )}
                 {!timerOn ? (
                     <MenuItem onClick={startTimer}>Iniciar Cronómetro</MenuItem>
                 ) : (
@@ -77,6 +120,13 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
                 )}
                 <MenuItem onClick={resetTimer}>Reiniciar Cronómetro</MenuItem>
             </Menu>
+            <Snackbar
+                open={copied}
+                autoHideDuration={2000}
+                onClose={()=>setCopied(false)}
+            >
+                <Alert severity="success">Log copiado al portapapeles</Alert>
+            </Snackbar>
         </div>
     );
 }

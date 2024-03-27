@@ -241,7 +241,9 @@ function Reader():React.ReactElement {
                 if (!event.target) return;
                 const target = event.target as HTMLElement;
                 const text = target.textContent;
-                if (!text || target.tagName !== "P") return;
+                // Check if the target has the data dontsearch attribute
+                const searchable = target.getAttribute("data-searchable");
+                if (!text || target.tagName !== "P" || !searchable) return;
                 const clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
                 if (clickedPosition !== undefined) {
                     const extracted = text.slice(clickedPosition);
@@ -762,6 +764,7 @@ function Reader():React.ReactElement {
                                 <StopWatchMenu characters={calculateCurrentCharacters()} oldProgress={bookProgress} bookData={bookData}
                                     timer={timer} setTimer={setTimer}
                                     timerOn={timerOn} setTimerOn={setTimerOn}
+                                    currentPage={currentPage}
                                 />
                                 {/* <IconButton>
                                     <Translate/>
