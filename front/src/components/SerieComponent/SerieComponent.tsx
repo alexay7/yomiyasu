@@ -34,7 +34,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img className={twMerge("group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300")} loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
+                    <img className={twMerge("group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300 h-full object-cover w-full")} loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {unreadBooks > 0 && (
@@ -64,7 +64,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 </Fade>
             </div>
 
-            <div className="dark:bg-[#1E1E1E] dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
+            <div className="dark:bg-[#1E1E1E] bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
                 <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12" onClick={()=>{
                     window.localStorage.setItem("origin", window.location.pathname);
                 }}

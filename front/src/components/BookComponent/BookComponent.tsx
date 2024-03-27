@@ -167,7 +167,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img className={twMerge(blurred && siteSettings.antispoilers ? "blur" : "", "group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300")} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
+                    <img className={twMerge(blurred && siteSettings.antispoilers ? "blur" : "", "group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300 h-full object-cover w-full")} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {!read && (
@@ -190,7 +190,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 </Fade>
             </div>
 
-            <div className="dark:bg-[#1E1E1E] dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
+            <div className="dark:bg-[#1E1E1E] bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
                 {bookData.variant === "manga" && (
                     <a href={siteSettings.openHTML ? `/api/static/mangas/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
                         className="line-clamp-2 h-12" onClick={()=>{
@@ -200,7 +200,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                     </a>
                 )}
                 {bookData.variant === "novela" && (
-                    <button className="text-left bg-transparent border-0 text-white p-0 hover:underline hover:cursor-pointer text-base">
+                    <button className="text-left bg-transparent border-0 dark:text-white p-0 hover:underline hover:cursor-pointer text-base">
                         <p className="line-clamp-2 h-12" onMouseDown={(e)=>{
                             if (e.button !== 1 || e.target === e.currentTarget) return;
                             void goToBook(true);
