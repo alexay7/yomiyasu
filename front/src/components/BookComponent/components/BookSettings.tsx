@@ -140,8 +140,8 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Pausar serie
                     </MenuItem>
                 )}
-                {bookData.lastProgress && (
-                    <EditProgress key="editprogress" bookData={bookData}/>
+                {(bookData.lastProgress || !!read) && (
+                    <EditProgress key="editprogress" bookData={bookData} setRead={setRead}/>
                 )}
                 {userData?.admin && (
                     [

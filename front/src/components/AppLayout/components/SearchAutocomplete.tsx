@@ -81,6 +81,15 @@ export function SearchAutocomplete():React.ReactElement {
         return `novelas/${option.thumbnailPath}`;
     }
 
+    function getMoreInfo(option:BookWithProgress | SerieWithProgress):string {
+        if (isSerie(option)) {
+            return `(${option.bookCount  }vols)`;
+        } else if (option.variant === "manga") {
+            return `(${option.pages} pags)`;
+        }
+        return `(${option.characters} caracteres)`;
+    }
+
     return (
         <Autocomplete options={[...foundSeries, ...foundBooks]}
             renderOption={(props, option)=>(
@@ -100,7 +109,7 @@ export function SearchAutocomplete():React.ReactElement {
                     }}
                 >
                     <img loading="lazy" width="50" src={`/api/static/${getThumbnail(option)}`} alt={option.visibleName} />
-                    <p className="w-2/3 flex-grow">{option.visibleName} <sup className="text-xs">({isSerie(option) ? `${option.bookCount} vols` : `${option.pages} pags`})</sup></p>
+                    <p className="w-2/3 flex-grow">{option.visibleName} <sup className="text-xs">{getMoreInfo(option)}</sup></p>
                     {/* If option is SerieWithProgress */}
                     {isSerie(option) && option.difficulty > 0 && (
                         <div className="text-center font-semibold bg-white m-1 rounded-full flex justify-center items-center p-1">
@@ -121,7 +130,6 @@ export function SearchAutocomplete():React.ReactElement {
                     <Search className="dark:text-white"/>
                     <TextField {...params} placeholder="Buscar" variant="standard"
                         InputProps={{...params.InputProps, disableUnderline:true}}
-                        value={searchQuery}
                     />
                 </div>
             )}
@@ -137,7 +145,13 @@ export function SearchAutocomplete():React.ReactElement {
                 }
                 return "Novelas";
             }}
-            onInputChange={(e, v)=>setSearchQuery(v)}
+            onInputChange={(e, v, r)=>{
+                if (r === "reset") {
+                    setSearchQuery("");
+                    return;
+                }
+                setSearchQuery(v);
+            }}
             isOptionEqualToValue={(option, value)=>option.visibleName === value.visibleName || option.sortName === value.sortName}
             getOptionLabel={(option)=>option.visibleName}
             filterOptions={(options) => options}
@@ -156,6 +170,7 @@ export function SearchAutocomplete():React.ReactElement {
                 }
             }}
             noOptionsText="Busca series o libros de la biblioteca aquí"
+            inputValue={searchQuery}
         />
     );
 }

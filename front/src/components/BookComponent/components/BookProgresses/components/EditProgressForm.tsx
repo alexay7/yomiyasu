@@ -6,17 +6,16 @@ import dayjs, {Dayjs} from "dayjs";
 import {toast} from "react-toastify";
 import {api} from "../../../../../api/api";
 import {Delete} from "@mui/icons-material";
-import {useGlobal} from "../../../../../contexts/GlobalContext";
 
 interface EditProgressProps {
     progressDetails:BookProgress,
     closeAccordion:()=>void,
-    refetch:()=>void
+    modifyProgress:(id:string, progress:BookProgress)=>void,
+    delProgress:(id:string)=>void
 }
 
 function EditProgressForm(props:EditProgressProps):React.ReactElement {
-    const {progressDetails, closeAccordion, refetch} = props;
-    const {forceReload} = useGlobal();
+    const {progressDetails, closeAccordion, modifyProgress, delProgress} = props;
     const [startDate, setStartDate] = useState<Dayjs | null>(dayjs(progressDetails.startDate || null));
     const [endDate, setEndDate] = useState<Dayjs | null>(dayjs(progressDetails.endDate || null));
     const [time, setTime] = useState((progressDetails.time || 0) / 60);
@@ -44,7 +43,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
         const response = await api.patch<Partial<BookProgress>, BookProgress>(`readprogress/${progressDetails._id}`, body);
         if (response) {
             toast.success("Cambios guardados con éxito");
-            forceReload("all");
+            modifyProgress(response._id!, response);
             closeAccordion();
         }
     }
@@ -54,8 +53,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
 
         if (res) {
             toast.success("Progreso borrado con éxito");
-            refetch();
-            forceReload("all");
+            delProgress(progressDetails._id!);
             closeAccordion();
         }
     }
@@ -65,7 +63,7 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
         <form className="flex flex-col gap-4" onSubmit={saveChanges}>
             <FormControl fullWidth>
                 <InputLabel id="progress-status">Estado</InputLabel>
-                <Select required className="text-white" fullWidth value={status} onChange={(e)=>{
+                <Select required className="dark:text-white" fullWidth value={status} onChange={(e)=>{
                     setStatus(e.target.value as "reading" | "unread" | "completed");
                 }} labelId="progress-status"
                 >

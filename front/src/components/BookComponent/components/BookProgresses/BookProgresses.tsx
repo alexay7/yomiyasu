@@ -10,20 +10,40 @@ import {ExpandMore} from "@mui/icons-material";
 interface EditProgressProps {
     bookData:BookWithProgress;
     handleClose?:()=>void
+    setRead:(v:React.SetStateAction<boolean>)=>void;
 }
 
 export function EditProgress(props:EditProgressProps):React.ReactElement {
-    const {bookData, handleClose} = props;
+    const {bookData, handleClose, setRead} = props;
     const [open, setOpen] = useState(false);
     const [selectedProgress, setSelectedProgress] = useState("");
 
-    const {data:progressData = [], refetch} = useQuery(`${bookData._id}-progress`, async()=>{
+    const {data:progressData = []} = useQuery(`${bookData._id}-progress`, async()=>{
         if (!bookData) return;
         return api.get<BookProgress[]>(`readprogress/book/${bookData._id}`);
     }, {enabled:open});
 
     function closePopup():void {
         setOpen(false);
+    }
+
+    function modifyProgress(id:string, progress:BookProgress):void {
+        const index = progressData.findIndex((p)=>p._id === id);
+        if (index !== -1) {
+            progressData[index] = progress;
+        }
+    }
+
+    function deleteProgress(id:string):void {
+        const index = progressData.findIndex((p)=>p._id === id);
+        if (index !== -1) {
+            progressData.splice(index, 1);
+        }
+
+        // If this book has no progresses, mark it as unread
+        if (progressData.length === 0) {
+            setRead(false);
+        }
     }
 
     return (
@@ -52,7 +72,7 @@ export function EditProgress(props:EditProgressProps):React.ReactElement {
                                 <p>{new Date(progress.endDate || 0).toLocaleString("es")} ({progress.status})</p>
                             </AccordionSummary>
                             <AccordionDetails>
-                                <EditProgressForm progressDetails={progress} closeAccordion={()=>setSelectedProgress("")} refetch={()=>void refetch()}/>
+                                <EditProgressForm progressDetails={progress} closeAccordion={()=>setSelectedProgress("")} modifyProgress={modifyProgress} delProgress={deleteProgress}/>
                             </AccordionDetails>
                         </Accordion>
                     ))}
