@@ -52,12 +52,15 @@ export default function EpubReader():React.ReactElement {
 
     const {data:bookProgress} = useQuery(`progress-${bookId}`, async()=>{
         const res = await api.get<BookProgress>(`readprogress?book=${bookId}&status=reading`);
-        setTimer(bookProgress && bookProgress.time && bookProgress.time !== 0 ? bookProgress.time : 0);
         return res;
     }, {refetchOnMount:false, refetchOnReconnect:false, refetchOnWindowFocus:false, enabled:!!bookData,
-        onSuccess:async()=>{
+        onSuccess:async(data)=>{
             const currentChars = await getBookProgress(parseInt(id || ""));
             setChars(currentChars);
+
+            if (!data) return;
+
+            setTimer(data.time || 0);
         }
     });
 
