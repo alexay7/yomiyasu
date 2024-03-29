@@ -8,6 +8,8 @@ import {useNavigate} from "react-router-dom";
 import {goTo} from "../../../helpers/helpers";
 import {useSettingsStore} from "../../../stores/SettingsStore";
 import {getFlameColor} from "../../../helpers/series";
+import {openNovel} from "../../../helpers/ttu";
+import {useGlobal} from "../../../contexts/GlobalContext";
 
 function isSerie(option:BookWithProgress | SerieWithProgress):option is SerieWithProgress {
     return option.type === "serie";
@@ -15,6 +17,7 @@ function isSerie(option:BookWithProgress | SerieWithProgress):option is SerieWit
 
 export function SearchAutocomplete():React.ReactElement {
     const {siteSettings} = useSettingsStore();
+    const {ttuConnector} = useGlobal();
     const [searchQuery, setSearchQuery] = useState("");
     const [foundSeries, setFoundSeries] = useState<SerieWithProgress[]>([]);
     const [foundBooks, setFoundBooks] = useState<BookWithProgress[]>([]);
@@ -94,14 +97,20 @@ export function SearchAutocomplete():React.ReactElement {
         <Autocomplete options={[...foundSeries, ...foundBooks]}
             renderOption={(props, option)=>(
                 <Box component="li" sx={{"& > img": {mr: 2, flexShrink: 0}}} {...props}
-                    onMouseDown={(e)=>{
+                    onMouseDown={async(e)=>{
                         if (e.button === 1) {
                             if (option.type === "book") {
-                                if (siteSettings.openHTML) {
-                                    window.open(`/api/static/mangas/${option.seriePath}/${option.path}.html`, "_href");
+                                if (option.variant === "manga") {
+                                    if (siteSettings.openHTML) {
+                                        window.open(`/api/static/mangas/${option.seriePath}/${option.path}.html`, "_href");
+                                        return;
+                                    }
+                                    window.open(`/reader/${option._id}`, "_href");
                                     return;
                                 }
-                                window.open(`/reader/${option._id}`, "_href");
+
+                                // Novela
+                                await openNovel(ttuConnector, option, true, false);
                             } else {
                                 window.open(`/app/series/${option._id}`, "_href");
                             }
@@ -155,15 +164,20 @@ export function SearchAutocomplete():React.ReactElement {
             isOptionEqualToValue={(option, value)=>option.visibleName === value.visibleName || option.sortName === value.sortName}
             getOptionLabel={(option)=>option.visibleName}
             filterOptions={(options) => options}
-            onChange={(e, v)=>{
+            onChange={async(e, v)=>{
                 // Redirigir a la página de la serie
                 if (v) {
                     if (v.type === "book") {
-                        if (siteSettings.openHTML) {
-                            window.location.href = `/api/static/mangas/${v.seriePath}/${v.path}.html`;
+                        if (v.variant === "manga") {
+                            if (siteSettings.openHTML) {
+                                window.location.href = `/api/static/mangas/${v.seriePath}/${v.path}.html`;
+                                return;
+                            }
+                            goTo(navigate, `/reader/${v._id}`);
                             return;
                         }
-                        goTo(navigate, `/reader/${v._id}`);
+                        // Novela
+                        await openNovel(ttuConnector, v, false, false);
                     } else {
                         goTo(navigate, `/app/series/${v._id}`);
                     }

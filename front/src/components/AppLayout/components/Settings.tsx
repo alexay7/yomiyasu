@@ -70,6 +70,13 @@ export function Settings():React.ReactElement {
                     } label="Iniciar cronómetro automáticamente al cambiar de página"
                     />
                     <FormControlLabel className="select-none" control={
+                        <Checkbox checked={siteSettings.showCrono} onChange={(e, c)=>{
+                            modifySiteSettings("showCrono", c);
+                        }}
+                        />
+                    } label="Mostrar indicador de cronómetro activo"
+                    />
+                    <FormControlLabel className="select-none" control={
                         <Checkbox checked={siteSettings.antispoilers} onChange={(e, c)=>{
                             modifySiteSettings("antispoilers", c);
                         }}

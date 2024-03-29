@@ -39,7 +39,8 @@ export const useSettingsStore = create<SettingsState>()(
                 autoCrono: false,
                 antispoilers: false,
                 startCronoOnPage: false,
-                mainView: "both"
+                mainView: "both",
+                showCrono: false
             },
             setSiteSettings: (v) => set({siteSettings:v}),
             modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}})

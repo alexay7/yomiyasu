@@ -1,4 +1,4 @@
-import {ArrowBack, ArrowCircleLeft, ArrowCircleRight} from "@mui/icons-material";
+import {ArrowBack, ArrowCircleLeft, ArrowCircleRight, Timer} from "@mui/icons-material";
 import {IconButton, Tooltip} from "@mui/material";
 import React, {useEffect, useRef, useState} from "react";
 import {Helmet} from "react-helmet";
@@ -168,7 +168,7 @@ export default function EpubReader():React.ReactElement {
                 <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
             </Helmet>
             {showToolBar && (
-                <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-10 dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
+                <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-10 dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
                     <div className="flex items-center gap-2 px-2 shrink lg:w-1/2">
                         <Tooltip title="Volver atrás">
                             <IconButton onClick={async()=>{
@@ -196,13 +196,18 @@ export default function EpubReader():React.ReactElement {
             <div className={twMerge("select-none", showToolBar ? "lg:mt-[3rem] mt-[3.5rem]" : "")}>
                 <iframe className={twMerge("w-full", showToolBar ? "h-[calc(100svh-7rem)] lg:h-[calc(100svh-5.5rem)]" : "h-screen")} ref={iframe} src={`/ebook/b?id=${id}`}/>
             </div>
+            {siteSettings.showCrono && timerOn && (
+                <div className="opacity-30 z-10">
+                    <Timer className="text-primary w-4 h-4 animate-pulse absolute top-2 right-2"/>
+                </div>
+            )}
             {showToolBar && !!bookData && (
                 <div className="dark:bg-[#101010] bg-[#ebe8e3] h-10 w-full dark:text-[#ebe8e3] flex justify-between items-center fixed bottom-0 py-2 lg:py-0" >
                     <div className="justify-between flex items-center">
                         <Tooltip title="Ir al siguiente libro">
                             <IconButton onClick={async()=>{
                                 await saveProgressGlobal(timer, id, (iframe.current || undefined), bookData);
-                                void nextBook({book:bookData, variant:"novela", iframe:ttuConnector.current});
+                                void nextBook({book:bookData, variant:"novela", connector:ttuConnector});
                             }}
                             className="dark:text-[#ebe8e3] text-[#0000008a]"
                             >
@@ -214,7 +219,7 @@ export default function EpubReader():React.ReactElement {
                         <Tooltip title="It al libro anterior">
                             <IconButton onClick={async()=>{
                                 await saveProgressGlobal(timer, id, (iframe.current || undefined), bookData);
-                                void prevBook({book:bookData, variant:"novela", iframe:ttuConnector.current});
+                                void prevBook({book:bookData, variant:"novela", connector:ttuConnector});
                             }}
                             className="dark:text-[#ebe8e3] text-[#0000008a]"
                             >

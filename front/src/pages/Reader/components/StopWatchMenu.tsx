@@ -1,4 +1,4 @@
-import {Timer, TimerOff} from "@mui/icons-material";
+import {ArrowDropDown, ArrowDropUp, Timer, TimerOff} from "@mui/icons-material";
 import {Alert, IconButton, Menu, MenuItem, Snackbar, Tooltip} from "@mui/material";
 import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
@@ -22,6 +22,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
     currentPage, refreshProgress}:StopWatchMenuProps):React.ReactElement {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [copied, setCopied] = useState(false);
+    const [showAdjustTime, setShowAdjustTime] = useState(false);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
@@ -41,13 +42,23 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
 
     function resetTimer():void {
         // Confirmation from the user
-        if (!window.confirm("¿Estás seguro de que quieres reiniciar el cronómetro?")) return;
+        if (!window.confirm("¿Estás seguro de que quieres reiniciar el cronómetro?, esto reiniciará el tiempo de lectura del libro entero.")) return;
 
         if (bookData) {
             void createProgress(bookData, undefined, 1);
             window.localStorage.removeItem(bookData._id);
         }
         setTimer(0);
+    }
+
+    function modifyTime(minutes:number):void {
+        const currentSessionTime = timer - (oldProgress?.time || 0);
+
+        if (currentSessionTime + (minutes * 60) < 0) {
+            return;
+        }
+
+        setTimer((prev)=>prev + (minutes * 60));
     }
 
     return (
@@ -109,6 +120,28 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
                         </div>
                     </Tooltip>
                 </li>
+                <hr />
+                <div className="flex flex-col gap-2">
+                    <div className="flex flex-col items-center">
+                        <button className="bg-transparent text-white border-none cursor-pointer text-base" onClick={()=>setShowAdjustTime((prev)=>!prev)}>
+                            <p className="flex items-center">Ajustar tiempo {showAdjustTime ? <ArrowDropDown/> : <ArrowDropUp/>}</p>
+                        </button>
+                        {showAdjustTime && (
+                            <div className="flex flex-col">
+                                <div className="flex justify-around text-sm">
+                                    <p>Restar</p>
+                                    <p>Sumar</p>
+                                </div>
+                                <div>
+                                    <button className="bg-white text-black border-primary border-solid border-r-0 rounded-l-md hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(-5)}>-5m</button>
+                                    <button className="bg-white text-black border-primary border-solid border-l-0 hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(-1)}>-1m</button>
+                                    <button className="bg-white text-black border-primary border-solid border-r-0 hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(1)}>+1m</button>
+                                    <button className="bg-white text-black border-primary border-solid border-l-0 rounded-r-md hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(5)}>+5m</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
                 <hr />
                 {!!refreshProgress && (
                     <MenuItem onClick={refreshProgress}>Actualizar caracteres leídos</MenuItem>

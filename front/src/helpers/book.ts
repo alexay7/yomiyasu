@@ -1,6 +1,7 @@
 import {api} from "../api/api";
 import {Book, BookWithProgress} from "../types/book";
 import {SerieWithProgress} from "../types/serie";
+import {openNovel} from "./ttu";
 
 type MoveBook = {
     book:Book;
@@ -8,7 +9,7 @@ type MoveBook = {
     variant:"manga",
 } | {
     variant:"novela",
-    iframe?:HTMLIFrameElement | null;
+    connector:React.RefObject<HTMLIFrameElement>,
 });
 
 export async function nextBook(props:MoveBook):Promise<void> {
@@ -32,25 +33,9 @@ export async function nextBook(props:MoveBook):Promise<void> {
     }
 
     // NOVELA
-    const {iframe} = props;
+    const {connector} = props;
 
-    if (!iframe) return;
-
-    // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
-    const response = await fetch(`/api/static/novelas/${foundBook.seriePath}/${foundBook.path}.epub`);
-
-    if (!response.ok) {
-        console.error("Failed to fetch epub file");
-        return;
-    }
-
-    // Send as a File
-    const blob = await response.blob();
-
-    const file = new File([blob], `${foundBook.path}.epub`, {type: blob.type});
-
-    // Send via postmessage
-    iframe.contentWindow?.postMessage({book:file, yomiyasuId:foundBook._id, mouse:false}, "*");
+    await openNovel(connector, foundBook, false, false);
 }
 
 export async function prevBook(props:MoveBook):Promise<void> {
@@ -74,25 +59,9 @@ export async function prevBook(props:MoveBook):Promise<void> {
     }
 
     // NOVELA
-    const {iframe} = props;
+    const {connector} = props;
 
-    if (!iframe) return;
-
-    // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
-    const response = await fetch(`/api/static/novelas/${foundBook.seriePath}/${foundBook.path}.epub`);
-
-    if (!response.ok) {
-        console.error("Failed to fetch epub file");
-        return;
-    }
-
-    // Send as a File
-    const blob = await response.blob();
-
-    const file = new File([blob], `${foundBook.path}.epub`, {type: blob.type});
-
-    // Send via postmessage
-    iframe.contentWindow?.postMessage({book:file, yomiyasuId:foundBook._id, mouse:false}, "*");
+    await openNovel(connector, foundBook, false, false);
 }
 
 export function iBook(serieData:SerieWithProgress):void {

@@ -1,3 +1,5 @@
+import {Book} from "../types/book";
+
 export async function findBookId(title:string):Promise<number | null> {
     // Search for the book in indexedDB with title equal to 涼宮ハルヒの驚愕（後） 「涼宮ハルヒ」シリーズ (角川スニーカー文庫)
 
@@ -104,4 +106,28 @@ export async function deleteBookBookmark(bookId?:number):Promise<void> {
             };
         };
     });
+}
+
+export async function openNovel(connector:React.RefObject<HTMLIFrameElement>, bookData:Book, mouse?:boolean, incognito?:boolean):Promise<void> {
+    // NOVELA
+    if (!connector.current) return;
+
+    const iframe = connector.current;
+
+    // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
+
+    const response = await fetch(`/api/static/novelas/${bookData.seriePath}/${bookData.path}.epub`);
+
+    if (!response.ok) {
+        console.error("Failed to fetch epub file");
+        return;
+    }
+
+    // Send as a File
+    const blob = await response.blob();
+
+    const file = new File([blob], `${bookData.path}.epub`, {type: blob.type});
+
+    // Send via postmessage
+    iframe.contentWindow?.postMessage({book:file, yomiyasuId:bookData._id, mouse, incognito}, "*");
 }

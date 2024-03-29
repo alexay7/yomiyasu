@@ -9,6 +9,7 @@ import {goTo, formatTime} from "../../helpers/helpers";
 import {defaultSets, useSettingsStore} from "../../stores/SettingsStore";
 import {twMerge} from "tailwind-merge";
 import {useGlobal} from "../../contexts/GlobalContext";
+import {openNovel} from "../../helpers/ttu";
 
 
 interface BookComponentProps {
@@ -100,26 +101,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
         }
 
         // NOVELA
-        if (!ttuConnector.current) return;
-
-        const iframe = ttuConnector.current;
-
-        // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
-
-        const response = await fetch(`/api/static/novelas/${bookData.seriePath}/${bookData.path}.epub`);
-
-        if (!response.ok) {
-            console.error("Failed to fetch epub file");
-            return;
-        }
-
-        // Send as a File
-        const blob = await response.blob();
-
-        const file = new File([blob], `${bookData.path}.epub`, {type: blob.type});
-
-        // Send via postmessage
-        iframe.contentWindow?.postMessage({book:file, yomiyasuId:bookData._id, mouse, incognito}, "*");
+        await openNovel(ttuConnector, bookData, mouse, incognito);
     }
 
     function renderBookInfo():string {

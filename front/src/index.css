@@ -164,3 +164,8 @@ canvas {
   border: 2px solid var(--primary-color);
   color: white !important;
 }
+
+button {
+  font-family: "Montserrat", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+}

@@ -4,7 +4,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {IconButton, ThemeProvider, Tooltip, createTheme} from "@mui/material";
-import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight, ArrowBackIosNew, ArrowForwardIos, Translate} from "@mui/icons-material";
+import {SkipNext, SkipPrevious, ArrowBack, Settings, ViewSidebar, ArrowCircleLeft, ArrowCircleRight, ArrowBackIosNew, ArrowForwardIos, Translate,  Timer} from "@mui/icons-material";
 import {ReaderSettings} from "./components/ReaderSettings";
 import {ReaderConfig} from "../../types/settings";
 import {StopWatchMenu} from "./components/StopWatchMenu";
@@ -740,7 +740,7 @@ function Reader():React.ReactElement {
             {bookData && (
                 <Fragment>
                     {showToolBar && (
-                        <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-[5vh] dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1">
+                        <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-[5vh] dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
                             <div className="flex items-center gap-2 px-2 shrink lg:w-1/2">
                                 <Tooltip title="Volver atrás">
                                     <IconButton onClick={async()=>{
@@ -788,6 +788,11 @@ function Reader():React.ReactElement {
                         className="w-full measure"
                         onLoad={injectCustomScript}
                     />
+                    {siteSettings.showCrono && timerOn && (
+                        <div className="opacity-30 z-10">
+                            <Timer className="text-primary w-4 h-4 animate-pulse absolute top-2 right-2"/>
+                        </div>
+                    )}
                     {!showToolBar && isTabletOrMobile && (
                         <div className="fixed bottom-0 flex justify-around items-center w-full py-2 opacity-70">
                             <IconButton onClick={()=>{

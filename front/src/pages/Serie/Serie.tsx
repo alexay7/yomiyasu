@@ -16,6 +16,7 @@ import {Reviews} from "./components/Reviews";
 import {addToReadlist, getFlameColor, removeFromReadlist} from "../../helpers/series";
 import {Helmet} from "react-helmet";
 import SpeedGraph from "./components/SpeedGraph";
+import {openNovel} from "../../helpers/ttu";
 
 function Serie():React.ReactElement {
     const {id} = useParams();
@@ -192,26 +193,7 @@ function Serie():React.ReactElement {
                                         }
 
                                         // NOVELA
-                                        if (!ttuConnector.current) return;
-
-                                        const iframe = ttuConnector.current;
-
-                                        // Download epub file from /api/static/ranobe/haruhi.epub and send it to the iframe via message
-
-                                        const response = await fetch(`/api/static/novelas/${serieBooks[bookId].seriePath}/${serieBooks[bookId].path}.epub`);
-
-                                        if (!response.ok) {
-                                            console.error("Failed to fetch epub file");
-                                            return;
-                                        }
-
-                                        // Send as a File
-                                        const blob = await response.blob();
-
-                                        const file = new File([blob], `${serieBooks[bookId].path}.epub`, {type: blob.type});
-
-                                        // Send via postmessage
-                                        iframe.contentWindow?.postMessage({book:file, yomiyasuId:serieBooks[bookId]._id, mouse:false, incognito:false}, "*");
+                                        await openNovel(ttuConnector, serieBooks[bookId], false, false);
                                     }}
                                     >{getReadButtonText()}
                                     </Button>
