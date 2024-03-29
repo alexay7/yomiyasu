@@ -127,7 +127,10 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
                             <p className="flex items-center">Ajustar tiempo {showAdjustTime ? <ArrowDropDown/> : <ArrowDropUp/>}</p>
                         </button>
                         {showAdjustTime && (
-                            <div className="flex flex-col">
+                            <div className="flex flex-col" onDoubleClick={(e)=>{
+                                e.stopPropagation();
+                            }}
+                            >
                                 <div className="flex justify-around text-sm">
                                     <p>Restar</p>
                                     <p>Sumar</p>
