@@ -28,4 +28,5 @@ export interface SiteConfig {
     startCronoOnPage:boolean;
     mainView:"manga" | "novels" | "both";
     showCrono:boolean;
+    kindleEmail:string | undefined;
 }

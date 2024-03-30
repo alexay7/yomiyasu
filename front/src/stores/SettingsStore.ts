@@ -10,6 +10,8 @@ interface SettingsState {
     siteSettings:SiteConfig;
     setSiteSettings:(v:SiteConfig)=>void;
     modifySiteSettings:<K extends keyof SiteConfig>(key:K, value:SiteConfig[K])=>void;
+    openSettings:boolean;
+    setOpenSettings:(v:boolean)=>void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -40,10 +42,13 @@ export const useSettingsStore = create<SettingsState>()(
                 antispoilers: false,
                 startCronoOnPage: false,
                 mainView: "both",
-                showCrono: false
+                showCrono: false,
+                kindleEmail: undefined
             },
             setSiteSettings: (v) => set({siteSettings:v}),
-            modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}})
+            modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}}),
+            openSettings: false,
+            setOpenSettings: (v) => set({openSettings: v})
         }),
         {
             name:"yomiyasu-settings",

@@ -13,6 +13,7 @@ import {BookInfo} from "../../BookInfo/BookInfo";
 import {EditProgress} from "./BookProgresses/BookProgresses";
 import {toast} from "react-toastify";
 import {BookCovers} from "./BookCovers";
+import {useSettingsStore} from "../../../stores/SettingsStore";
 
 interface BookSettingsProps {
     bookData:BookWithProgress;
@@ -28,6 +29,7 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const {siteSettings, setOpenSettings} = useSettingsStore();
 
     const navigate = useNavigate();
 
@@ -223,6 +225,23 @@ export function BookSettings(props:BookSettingsProps):React.ReactElement {
                         Descargar Libro
                     </MenuItem>
                 </div>
+                {bookData.variant === "novela" && (
+                    <MenuItem key="kindle" onClick={()=>{
+                        if (!siteSettings.kindleEmail) {
+                            setOpenSettings(true);
+                            toast.info("Debes configurar el email de tu kindle para poder enviar el libro");
+                            return;
+                        }
+                        window.open(`/api/books/${bookData._id}/download`);
+
+                        toast.info("Se ha descargado el libro a tu dispositivo, ahora se abrirá tu cliente de correo. Añade el libro como archivo adjunto para recibirlo en el kindle. Si recibes un correo de que no se ha podido enviar contacta con el administrador de la página.");
+
+                        // Redirect to mail:to url with the book attached
+                        window.open(`mailto:${  siteSettings.kindleEmail  }?subject=${  bookData.visibleName  }`);
+                    }}
+                    >Enviar al kindle
+                    </MenuItem>
+                )}
                 <BookInfo bookdata={bookData}/>
             </Menu>
         </div>
