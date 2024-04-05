@@ -789,8 +789,8 @@ function Reader():React.ReactElement {
                         onLoad={injectCustomScript}
                     />
                     {siteSettings.showCrono && timerOn && (
-                        <div className="opacity-30 z-10">
-                            <Timer className="text-primary w-4 h-4 animate-pulse absolute top-2 right-2"/>
+                        <div className="opacity-60 z-10">
+                            <Timer className="text-primary w-6 h-6 animate-pulse absolute top-2 right-2"/>
                         </div>
                     )}
                     {!showToolBar && isTabletOrMobile && (
