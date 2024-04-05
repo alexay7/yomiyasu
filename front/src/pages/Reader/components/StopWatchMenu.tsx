@@ -4,6 +4,7 @@ import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 import {createProgress} from "../../../helpers/progress";
 import {Book, BookProgress} from "../../../types/book";
+import {useQueryClient} from "react-query";
 
 
 interface StopWatchMenuProps {
@@ -24,6 +25,8 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
     const [copied, setCopied] = useState(false);
     const [showAdjustTime, setShowAdjustTime] = useState(false);
 
+    const queryClient = useQueryClient();
+
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
     }
@@ -40,13 +43,14 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
         setTimerOn(true);
     }
 
-    function resetTimer():void {
+    async function resetTimer():Promise<void> {
         // Confirmation from the user
         if (!window.confirm("¿Estás seguro de que quieres reiniciar el cronómetro?, esto reiniciará el tiempo de lectura del libro entero.")) return;
 
         if (bookData) {
-            void createProgress(bookData, undefined, 1);
+            await createProgress(bookData, undefined, 1);
             window.localStorage.removeItem(bookData._id);
+            await queryClient.invalidateQueries([`progress-${bookData._id}`]);
         }
         setTimer(0);
     }
