@@ -36,7 +36,7 @@ function RecentSeriesScroller({variant}:RecentSeriesScrollerProps):React.ReactEl
     if (!recentSeries || recentSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} con volúmenes nuevos`} components={recentSeries}/>
+        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} con volúmenes nuevos`} components={recentSeries} noVariantIndicator/>
     );
 }
 

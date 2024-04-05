@@ -7,16 +7,19 @@ import {useNavigate} from "react-router-dom";
 import {goTo} from "../../helpers/helpers";
 import {getFlameColor} from "../../helpers/series";
 import {twMerge} from "tailwind-merge";
+import {useSettingsStore} from "../../stores/SettingsStore";
 
 interface SerieComponentProps {
     serieData:SerieWithProgress,
-    variant?:"manga" | "novela"
+    variant?:"manga" | "novela",
+    noVariantIndicator?:boolean
 }
 
 export function SerieComponent(props:SerieComponentProps):React.ReactElement {
-    const {serieData, variant} = props;
+    const {serieData, variant, noVariantIndicator} = props;
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
+    const {siteSettings} = useSettingsStore();
     const [unreadBooks, setUnreadBooks] = useState(serieData.unreadBooks);
 
     const navigate = useNavigate();
@@ -68,7 +71,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12" onClick={()=>{
                     window.localStorage.setItem("origin", window.location.pathname);
                 }}
-                >{serieData.visibleName}
+                >{siteSettings.mainView === "both" && !noVariantIndicator ? serieData.variant === "manga" ? "[漫]" : "[小]" : ""} {serieData.visibleName}
                 </a>
                 <div className="flex items-center justify-between">
                     <p className="dark:text-gray-300 text-sm lg:text-xs">{serieData.bookCount} libros</p>

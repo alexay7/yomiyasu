@@ -46,7 +46,7 @@ function NewBooksScroller({variant}:NewBooksScrollerProps):React.ReactElement {
     if (!recentBooks) return <></>;
 
     return (
-        <ComponentScroller type="books" title={`${variant === "manga" ? "Mangas nuevos" : "Novelas nuevas"}`} components={recentBooks}/>
+        <ComponentScroller type="books" title={`${variant === "manga" ? "Mangas nuevos" : "Novelas nuevas"}`} components={recentBooks} noVariantIndicator/>
     );
 }
 

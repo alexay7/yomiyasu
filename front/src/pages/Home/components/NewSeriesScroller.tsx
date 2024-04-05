@@ -36,7 +36,7 @@ function NewSeriesScroller({variant}:NewSeriesScrollerProps):React.ReactElement 
     if (!newSeries || newSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} nuevas`} components={newSeries}/>
+        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} nuevas`} components={newSeries} noVariantIndicator/>
     );
 }
 

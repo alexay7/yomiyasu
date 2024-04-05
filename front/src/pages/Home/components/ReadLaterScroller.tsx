@@ -33,7 +33,7 @@ function ReadLaterScroller({variant}:ReadLaterScrollerProps):React.ReactElement 
     if (!readlist || readlist.length === 0) return <></>;
 
     return (
-        <ComponentScroller type="series" variant={variant} title={`"Leer más tarde" ${variant}`} components={readlist}/>
+        <ComponentScroller type="series" variant={variant} title={`"Leer más tarde" ${variant}`} components={readlist} noVariantIndicator/>
     );
 }
 

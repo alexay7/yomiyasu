@@ -18,10 +18,11 @@ interface BookComponentProps {
     forceRead?:boolean;
     deck?:boolean;
     blurred?:boolean;
+    noVariantIndicator?:boolean;
 }
 
 export function BookComponent(props:BookComponentProps):React.ReactElement {
-    const {bookData, insideSerie, forceRead, deck, blurred} = props;
+    const {bookData, insideSerie, forceRead, deck, blurred, noVariantIndicator} = props;
     const {siteSettings} = useSettingsStore();
     const lastProgressRef = useRef<HTMLDivElement>(null);
     const [onItem, setOnItem] = useState(false);
@@ -138,7 +139,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
     return (
         <div className="w-[9rem] flex-shrink-0">
-            <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80 group"
+            <div className="h-[13rem] rounded-t-sm bg-contain bg-repeat-round relative cursor-pointer duration-150 hover:shadow-[inset_0_0_0_4px_var(--primary-color)] hover:opacity-80 group overflow-hidden"
                 onMouseDown={(e)=>{
                     if (e.button !== 1 || e.target === e.currentTarget) return;
                     void goToBook(true);
@@ -178,7 +179,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                         className="line-clamp-2 h-12" onClick={()=>{
                             window.localStorage.setItem("origin", window.location.pathname);
                         }}
-                    >{bookData.visibleName}
+                    >{siteSettings.mainView === "both" && !noVariantIndicator ? "[漫]" : ""} {bookData.visibleName}
                     </a>
                 )}
                 {bookData.variant === "novela" && (
@@ -190,7 +191,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                         onClick={()=>{
                             void goToBook();
                         }}
-                        >{bookData.visibleName}
+                        >{siteSettings.mainView === "both" && !noVariantIndicator ? "[小]" : ""} {bookData.visibleName}
                         </p>
                     </button>
                 )}
