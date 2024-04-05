@@ -62,7 +62,7 @@ function Calendar():React.ReactElement {
         );
     }
 
-    const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", selectedDay], async()=>{
+    const {data:progressData = [], refetch:refetchProgress, isLoading, isSuccess} = useQuery(["progresses", selectedDay], async()=>{
         if (!selectedDay) return [];
         const res = await api.get<UserProgress[]>(`readprogress/logs/${selectedDay.year()}/${selectedDay.month() + 1}/${selectedDay.date()}`);
 
@@ -124,7 +124,7 @@ function Calendar():React.ReactElement {
                 <div className="mx-4">
                     <h2 className="dark:text-white">Logs del {selectedDay?.toDate().toLocaleDateString("es", {year:"numeric", month:"long", day:"numeric"})}</h2>
                 </div>
-                <LogGrid data={progressData} refetch={refetchProgress} />
+                <LogGrid data={progressData} refetch={refetchProgress} loading={isLoading || !isSuccess}/>
             </div>
         </div>
     );

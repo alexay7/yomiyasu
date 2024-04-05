@@ -15,7 +15,7 @@ function History():React.ReactElement {
     });
     const [copied, setCopied] = useState(false);
 
-    const {data:progressData = [], refetch:refetchProgress} = useQuery(["progresses", paginationModel, sortField], async()=>{
+    const {data:progressData = [], refetch:refetchProgress, isSuccess, isLoading} = useQuery(["progresses", paginationModel, sortField], async()=>{
         const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}&sort=${sortField}`);
 
         if (!res) return [];
@@ -62,7 +62,7 @@ function History():React.ReactElement {
             <div className="flex flex-col py-4">
                 <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
                 <LogGrid data={progressData} total={total} setSortField={setSortField} setPaginationModel={setPaginationModel}
-                    refetch={()=>void refetchProgress()} setCopied={setCopied}
+                    refetch={()=>void refetchProgress()} setCopied={setCopied} loading={isLoading || !isSuccess}
                 />
             </div>
         </div>
