@@ -86,8 +86,6 @@ export class SerieprogressService {
             paused:false
         };
 
-        console.log(serieBooks[0]);
-
         if (serieBooks[0].mokured) {
             result.thumbnailPath = `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}`;
         }
