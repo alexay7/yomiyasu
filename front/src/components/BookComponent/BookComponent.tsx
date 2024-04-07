@@ -1,8 +1,8 @@
 import React, {useEffect, useRef, useState} from "react";
 import {BookWithProgress} from "../../types/book";
-import {PlayCircle} from "@mui/icons-material";
+import {PlayCircle, Warning} from "@mui/icons-material";
 import "./styles.css";
-import {Fade, IconButton} from "@mui/material";
+import {Fade, IconButton, Tooltip} from "@mui/material";
 import {BookSettings} from "./components/BookSettings";
 import {useNavigate} from "react-router-dom";
 import {goTo, formatTime} from "../../helpers/helpers";
@@ -159,6 +159,14 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {!read && (
                     <div className={`absolute top-0 right-0 w-0 h-0 border-solid border-y-transparent border-l-transparent ${bookData.readlist ? "border-r-accent" : "border-r-primary"}`} style={{borderWidth:"0 35px 35px 0"}}/>
+                )}
+
+                {bookData.mokured && (
+                    <div className="absolute top-1 left-1">
+                        <Tooltip title="Esta novela ha sido generada con mokuro, ¡NO es un epub!" placement="top">
+                            <Warning color="warning"/>
+                        </Tooltip>
+                    </div>
                 )}
 
                 <Fade in={onItem}>
