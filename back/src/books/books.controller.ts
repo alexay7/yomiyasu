@@ -99,8 +99,8 @@ export class BooksController {
 
         const mainFolderPath = join(process.cwd(), "..", "exterior");
 
-        if (foundBook.variant === "manga") {
-            const characters = await getCharacterCount(join(mainFolderPath, foundBook.seriePath, foundBook.path + ".html"), borders);
+        if (foundBook.mokured || foundBook.variant === "manga") {
+            const characters = await getCharacterCount(join(mainFolderPath, foundBook.mokured ? "novelas" : "mangas", foundBook.seriePath, foundBook.path + ".html"), borders);
 
             return this.booksService.editBook(book, {characters:characters.total, pageChars:characters.pages});
         }

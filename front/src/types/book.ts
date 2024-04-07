@@ -32,6 +32,7 @@ export interface Book {
     characters?:number;
     pageChars?:number[];
     variant: "manga" | "novela";
+    mokured?:boolean;
 }
 
 export interface BookProgress {

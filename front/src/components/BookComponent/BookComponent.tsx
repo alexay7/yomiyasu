@@ -38,7 +38,11 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
 
     const navigate = useNavigate();
 
-    const thumbnailUrl = bookData.variant === "manga" ? `/api/static/mangas/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}` : `/api/static/novelas/${bookData.seriePath}/${bookData.thumbnailPath}` ;
+    let thumbnailUrl = bookData.variant === "manga" ? `/api/static/mangas/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}` : `/api/static/novelas/${bookData.seriePath}/${bookData.thumbnailPath}` ;
+
+    if (bookData.mokured) {
+        thumbnailUrl = `/api/static/novelas/${bookData.seriePath}/${bookData.imagesFolder}/${bookData.thumbnailPath}`;
+    }
 
     useEffect(()=>{
         if (lastProgressRef.current && bookData.lastProgress) {
@@ -52,7 +56,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             }
             let value = 0;
             // Sets the lastProgress bar
-            if (bookData.variant === "manga") {
+            if (bookData.variant === "manga" || bookData.mokured) {
                 value = bookData.lastProgress.currentPage * 100 / bookData.pages;
                 value = value < 100 ? value : 100;
             } else {
@@ -64,7 +68,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
     }, [bookData, read]);
 
     async function goToBook(mouse?:boolean, incognito?:boolean):Promise<void> {
-        if (bookData.variant === "manga") {
+        if (bookData.variant === "manga" || bookData.mokured) {
             // MANGA
             if (siteSettings.openHTML) {
                 let settings = defaultSets() as {backgroundColor:string};
@@ -174,7 +178,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
             </div>
 
             <div className="dark:bg-[#1E1E1E] bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
-                {bookData.variant === "manga" && (
+                {(bookData.variant === "manga" || bookData.mokured) && (
                     <a href={siteSettings.openHTML ? `/api/static/mangas/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
                         className="line-clamp-2 h-12" onClick={()=>{
                             window.localStorage.setItem("origin", window.location.pathname);

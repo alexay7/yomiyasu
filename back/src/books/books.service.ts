@@ -128,15 +128,27 @@ export class BooksService {
       if (readingBooks.length > 0) {
           thumbnail = variant === "manga" ?  `${readingBooks[0].seriePath}/${readingBooks[0].imagesFolder}/${readingBooks[0].thumbnailPath}` : `${readingBooks[0].seriePath}/${readingBooks[0].thumbnailPath}`;
           currentBook = readingBooks[0]._id;
+
+          if (readingBooks[0].mokured) {
+              thumbnail = `${readingBooks[0].seriePath}/${readingBooks[0].imagesFolder}/${readingBooks[0].thumbnailPath}`;
+          }
       }
       else if (unreadBooks.length === 0) {
           if (serieBooks.length > 0) {
               thumbnail = variant === "manga" ?  `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}` : `${serieBooks[0].seriePath}/${serieBooks[0].thumbnailPath}`;   
               currentBook = serieBooks[0]._id;
+
+              if (serieBooks[0].mokured) {
+                  thumbnail = `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}`;
+              }
           }
       } else {
           thumbnail = variant === "manga" ?  `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}` : `${unreadBooks[0].seriePath}/${unreadBooks[0].thumbnailPath}`;  
           currentBook = unreadBooks[0]._id;
+
+          if (unreadBooks[0].mokured) {
+              thumbnail = `${unreadBooks[0].seriePath}/${unreadBooks[0].imagesFolder}/${unreadBooks[0].thumbnailPath}`;
+          }
       }
 
       if (thumbnail) {

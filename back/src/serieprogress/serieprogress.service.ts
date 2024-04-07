@@ -86,6 +86,12 @@ export class SerieprogressService {
             paused:false
         };
 
+        console.log(serieBooks[0]);
+
+        if (serieBooks[0].mokured) {
+            result.thumbnailPath = `${serieBooks[0].seriePath}/${serieBooks[0].imagesFolder}/${serieBooks[0].thumbnailPath}`;
+        }
+
         const serieProgress = serieData.serieprogress;
 
         if (!serieProgress) {
@@ -112,6 +118,11 @@ export class SerieprogressService {
         const currentBook = unreadBooks[0];
         result.currentBook = currentBook;
         result.thumbnailPath = serieData.variant === "manga" ? `${currentBook.seriePath}/${currentBook.imagesFolder}/${currentBook.thumbnailPath}` : `${currentBook.seriePath}/${currentBook.thumbnailPath}`;
+
+        if (currentBook.mokured) {
+            result.thumbnailPath = `${currentBook.seriePath}/${currentBook.imagesFolder}/${currentBook.thumbnailPath}`;
+        }
+
         return result;
     }
 }

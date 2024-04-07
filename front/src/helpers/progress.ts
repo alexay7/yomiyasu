@@ -14,7 +14,7 @@ export async function createProgress(bookData:Book, page?:number, time?:number, 
         return;
     }
 
-    if ((bookData.variant === "manga" && (page && page <= 1)) || (bookData.variant === "novela" && characters === 0)) {
+    if (((bookData.variant === "manga" || bookData.mokured) && (page && page <= 1)) || (bookData.variant === "novela" && characters === 0)) {
         return;
     }
 
@@ -33,7 +33,7 @@ export async function createProgress(bookData:Book, page?:number, time?:number, 
         characters:characters
     };
 
-    if (bookData.variant === "manga" && currentPage) {
+    if ((bookData.variant === "manga" || bookData.mokured) && currentPage) {
         if (bookData.pages <= currentPage) {
         // Libro terminado
             newProgress.status = "completed";
@@ -55,7 +55,7 @@ export async function createProgress(bookData:Book, page?:number, time?:number, 
         }
     }
 
-    if (bookData.variant === "manga" && !page) {
+    if ((bookData.variant === "manga" || bookData.mokured) && !page) {
         newProgress.status = "reading";
     }
 

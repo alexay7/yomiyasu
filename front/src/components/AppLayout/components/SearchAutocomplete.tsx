@@ -79,6 +79,9 @@ export function SearchAutocomplete():React.ReactElement {
             return `mangas/${option.thumbnailPath}`;
         }
         if (option.type === "book") {
+            if (option.mokured) {
+                return `novelas/${option.seriePath}/${option.imagesFolder}/${option.thumbnailPath}`;
+            }
             return `novelas/${option.seriePath}/${option.thumbnailPath}`;
         }
         return `novelas/${option.thumbnailPath}`;
@@ -100,7 +103,7 @@ export function SearchAutocomplete():React.ReactElement {
                     onMouseDown={async(e)=>{
                         if (e.button === 1) {
                             if (option.type === "book") {
-                                if (option.variant === "manga") {
+                                if (option.variant === "manga" || option.mokured) {
                                     if (siteSettings.openHTML) {
                                         window.open(`/api/static/mangas/${option.seriePath}/${option.path}.html`, "_href");
                                         return;
@@ -168,7 +171,7 @@ export function SearchAutocomplete():React.ReactElement {
                 // Redirigir a la página de la serie
                 if (v) {
                     if (v.type === "book") {
-                        if (v.variant === "manga") {
+                        if (v.variant === "manga" || v.mokured) {
                             if (siteSettings.openHTML) {
                                 window.location.href = `/api/static/mangas/${v.seriePath}/${v.path}.html`;
                                 return;

@@ -27,7 +27,7 @@ export async function nextBook(props:MoveBook):Promise<void> {
         window.location.href = `/app/series/${book.serie}?finished=true`;
         return;
     }
-    if (variant === "manga") {
+    if (variant === "manga" || book.mokured) {
         window.location.href = `/reader/${foundBook._id}`;
         return;
     }
@@ -53,7 +53,7 @@ export async function prevBook(props:MoveBook):Promise<void> {
         window.location.href = `/app/series/${book.serie}`;
         return;
     }
-    if (variant === "manga") {
+    if (variant === "manga" || book.mokured) {
         window.location.href = `/reader/${foundBook._id}`;
         return;
     }

@@ -103,7 +103,7 @@ function Reader():React.ReactElement {
             const initial = defaultSets() as {page_idx:number};
 
             initial.page_idx = page;
-            window.localStorage.setItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
+            window.localStorage.setItem(`mokuro_/api/static/${bookData.variant}s/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
 
             setCurrentPage(page - 1);
         }
@@ -143,7 +143,7 @@ function Reader():React.ReactElement {
          * la configuración anterior del volumen
          */
         if (bookData) {
-            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string;
+            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/${bookData.variant}s/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string;
             if (rawProgress) {
                 const progress = JSON.parse(rawProgress) as {"page_idx":number, "singlePageView":boolean};
                 setDoublePages(!progress.singlePageView);
@@ -622,7 +622,7 @@ function Reader():React.ReactElement {
 
         // Establece los ajustes del usuario
         if (!bookData) return;
-        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/mangas/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
+        const currentSettings = JSON.parse(window.localStorage.getItem(`mokuro_/api/static/${bookData.variant}s/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string) as ReaderConfig;
 
         if (readerSettings.r2l !== currentSettings.r2l) {
             iframe.current.contentWindow.postMessage({action:"setSettings", property:"r2l"});
@@ -784,7 +784,7 @@ function Reader():React.ReactElement {
                     )}
                     <iframe
                         ref={iframe}
-                        src={`/api/static/mangas/${bookData?.seriePath}/${bookData?.path}.html`}
+                        src={`/api/static/${bookData.variant}s/${bookData?.seriePath}/${bookData?.path}.html`}
                         className="w-full measure"
                         onLoad={injectCustomScript}
                     />

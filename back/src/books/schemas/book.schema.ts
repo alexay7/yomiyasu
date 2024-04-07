@@ -52,6 +52,9 @@ export class Book {
 
   @Prop({type:String, enum:["manga", "novela"], required:true})
   variant:"manga" | "novela";
+
+  @Prop({type:Boolean, default:false})
+  mokured:boolean;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);
