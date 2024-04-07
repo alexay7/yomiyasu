@@ -1,12 +1,13 @@
-import {Dialog, DialogContent, DialogTitle, Divider, IconButton} from "@mui/material";
+import {Dialog, DialogContent, DialogTitle, Divider, IconButton, Tooltip} from "@mui/material";
 import React, {Fragment, useEffect, useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {DicionaryResult} from "../../../types/dictionary";
 import {toast} from "react-toastify";
-import {ExitToApp} from "@mui/icons-material";
+import {ExitToApp, Save} from "@mui/icons-material";
 import {HttpError} from "../../../types/error";
 import {useSettingsStore} from "../../../stores/SettingsStore";
+import {UserWord} from "../../../types/word";
 
 interface DictionaryProps {
     searchWord:string;
@@ -70,9 +71,35 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
         return text;
     }
 
+    async function saveWord(word:string, display:string, reading:string, definitions:string[], frequency:number, pitch:number[]):Promise<void> {
+        const sentence = wordDefinitions?.map((x)=>x.display).join("") || "";
+
+        const wordData:UserWord = {
+            word,
+            reading,
+            display,
+            meaning:definitions,
+            frequency:frequency,
+            sentence,
+            pitch:pitch
+        };
+
+        try {
+            const result = await api.post<UserWord, {modifiedCount:number}>("userwords", wordData);
+
+            if (!result || result.modifiedCount === 0) {
+                toast.error("Ya tienes esta palabra guardada");
+                return;
+            }
+            toast.success("Palabra guardada correctamente");
+        } catch (e) {
+            toast.error("No se ha podido guardar la palabra");
+        }
+    }
+
     return (
         <Fragment>
-            <Dialog className="select-none" hideBackdrop open={searchWord !== "" && readerSettings.nativeDictionary} onClose={(e, r)=>{
+            <Dialog hideBackdrop open={searchWord !== "" && readerSettings.nativeDictionary} onClose={(e, r)=>{
                 if (r === "escapeKeyDown" || canClose) {
                     setSearchWord("");
                 }
@@ -92,19 +119,40 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
                                         <Fragment key={definition.id}>
                                             <li>
                                                 <ul className="relative flex flex-col">
-                                                    <IconButton className="absolute right-0 top-0" size="small"
-                                                        onClick={()=>{
-                                                            const word = definition.kanji.length > 0 ? encodeURI(definition.kanji[0].text) :
-                                                                encodeURI(definition.kana[0].text);
-                                                            const reading = encodeURI(definition.kana[0].text);
-                                                            const definitions = definition.sense[0].gloss.map((x)=>x.text);
+                                                    <div className="absolute right-0 top-0 flex flex-col">
+                                                        <Tooltip title="Guardar palabra" placement="right">
+                                                            <IconButton size="small"
+                                                                onClick={()=>{
+                                                                    const word = definition.kanji.length > 0 ? definition.kanji[0].text :
+                                                                        definition.kana[0].text;
+                                                                    const {display} = wordDefinitions[selectedIndex];
+                                                                    const reading = definition.kana[0].text;
+                                                                    const definitions = definition.sense[0].gloss.map((x)=>x.text);
+                                                                    const frequency = definition.frequency ? parseInt(definition.frequency) : 0;
+                                                                    const pitch = definition.pitches ? definition.pitches.map((x)=>x.position) : [];
 
-                                                            window.open(`/ankiexport?word=${word}&reading=${reading}&definition=${encodeURI(definitions.join("\n"))}`,
-                                                                "YomiYasu - Exportar a Anki", "height=600,width=500,resizable=no,menubar=no,toolbar=no,location=no,status=no");
-                                                        }}
-                                                    >
-                                                        <ExitToApp/>
-                                                    </IconButton>
+                                                                    void saveWord(word, display, reading, definitions, frequency, pitch);
+                                                                }}
+                                                            >
+                                                                <Save/>
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Añadir a Anki" placement="right">
+                                                            <IconButton size="small"
+                                                                onClick={()=>{
+                                                                    const word = definition.kanji.length > 0 ? encodeURI(definition.kanji[0].text) :
+                                                                        encodeURI(definition.kana[0].text);
+                                                                    const reading = encodeURI(definition.kana[0].text);
+                                                                    const definitions = definition.sense[0].gloss.map((x)=>x.text);
+
+                                                                    window.open(`/ankiexport?word=${word}&reading=${reading}&definition=${encodeURI(definitions.join("\n"))}`,
+                                                                        "YomiYasu - Exportar a Anki", "height=600,width=500,resizable=no,menubar=no,toolbar=no,location=no,status=no");
+                                                                }}
+                                                            >
+                                                                <ExitToApp/>
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </div>
                                                     {definition.kanji.length > 0 ? (
                                                         <h2 className="mb-1">{definition.kanji[0].text} <span className="text-xs align-top underline">{getWordThings(definition.frequency, definition.pitches)}</span></h2>
                                                     ) : (

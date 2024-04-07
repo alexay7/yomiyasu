@@ -5,6 +5,7 @@ import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/ma
 import {Close} from "@mui/icons-material";
 import {toast} from "react-toastify";
 import {useSettingsStore} from "../../../stores/SettingsStore";
+import {useMediaQuery} from "react-responsive";
 
 interface SettingsItemProps extends LiHTMLAttributes<HTMLLIElement> {
     label:string;
@@ -36,6 +37,7 @@ interface ReaderSettingsProps {
 export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
     const {readerSettings, modifyReaderSettings} = useSettingsStore();
     const {showMenu, iframeWindow, closeSettings} = props;
+    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
     function setRightToLeft():void {
         iframeWindow.postMessage({action:"setSettings", property:"r2l"});
@@ -175,7 +177,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                     <Checkbox id="dict" onClick={setDictionary} checked={readerSettings.nativeDictionary}/>
                                 </div>
                             </SettingsItem>
-                            {readerSettings.nativeDictionary && (
+                            {readerSettings.nativeDictionary && !isTabletOrMobile && (
                                 <SettingsItem className="dark:text-white" label="Versión de diccionario" childrenId="dictver">
                                     <div className="flex justify-end">
                                         <Select className="w-full" variant="standard" id="dictver" value={readerSettings.dictionaryVersion}

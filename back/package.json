@@ -1,6 +1,6 @@
 {
   "name": "tfgback",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "",
   "author": "",
   "private": true,
@@ -59,6 +59,7 @@
     "leveldown": "^6.1.1",
     "levelup": "^5.1.1",
     "mongoose": "^7.3.2",
+    "nlcst-parse-japanese": "^1.4.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

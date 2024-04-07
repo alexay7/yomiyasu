@@ -1,4 +1,4 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List, PhotoAlbum} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List, PhotoAlbum, Translate} from "@mui/icons-material";
 import {Divider, IconButton, useTheme} from "@mui/material";
 import React, {Fragment, useContext, useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
@@ -11,12 +11,14 @@ import {SearchAutocomplete} from "./components/SearchAutocomplete";
 import {Settings} from "./components/Settings";
 import {AccountSettings} from "./components/AccountSettings";
 import {ColorModeContext} from "../../contexts/ColorModeContext";
+import {useSettingsStore} from "../../stores/SettingsStore";
 
 export function AppLayout():React.ReactElement {
     const theme = useTheme();
     const colorMode = useContext(ColorModeContext);
     const {toggleColorMode} = colorMode;
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
+    const {modifyReaderSettings} = useSettingsStore();
 
     const {userData, logoutUser} = useAuth();
     const [showMenu, setShowMenu] = useState(!isTabletOrMobile);
@@ -25,7 +27,8 @@ export function AppLayout():React.ReactElement {
 
     useEffect(()=>{
         setShowMenu(!isTabletOrMobile);
-    }, [isTabletOrMobile, setShowMenu]);
+        modifyReaderSettings("dictionaryVersion", "sentence");
+    }, [isTabletOrMobile, setShowMenu, modifyReaderSettings]);
 
     function toggleMenu():void {
         setShowMenu((prev)=>!prev);
@@ -63,6 +66,7 @@ export function AppLayout():React.ReactElement {
                             <LateralListItem sub toggleMenu={toggleMenu} text="Calendario" link="/app/calendar" Icon={CalendarMonth}/>
                         </Fragment>
                         <LateralListItem toggleMenu={toggleMenu} text="Estadísticas" link="/app/profile" Icon={PieChart}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Palabras Guardadas" link="/app/words" Icon={Translate}/>
                         <AccountSettings/>
                         <Settings/>
                         {userData?.admin && (

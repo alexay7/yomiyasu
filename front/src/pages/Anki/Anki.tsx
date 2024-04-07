@@ -164,14 +164,14 @@ function Anki():React.ReactElement {
     }
 
     return (
-        <div className="flex w-full justify-center dark:text-white flex-col items-center py-5 overflow-x-hidden">
+        <div className="flex w-full dark:text-white flex-col items-center overflow-x-hidden h-[100svh]">
             <Helmet>
                 <title>YomiYasu - Añadir carta a Anki</title>
             </Helmet>
             <Tooltip title="Haz click para reconectar">
                 <Button className="my-2" onClick={()=>void refetch()} color={connected ? "success" : "error"}>Anki está {connected ? "conectado" : "desconectado"}</Button>
             </Tooltip>
-            <form onSubmit={sendToAnki} className="flex flex-col max-w-md px-4 w-full gap-4 items-center">
+            <form onSubmit={sendToAnki} className="flex flex-col w-11/12 gap-4 items-center py-4">
                 <FormControl fullWidth>
                     <InputLabel id="deck-label">Deck destino</InputLabel>
                     <Select required className="text-white" fullWidth value={deck} onChange={(e)=>setDeck(e.target.value)} labelId="deck-label">
@@ -295,7 +295,7 @@ function Anki():React.ReactElement {
                 <Button type="submit" disabled={!connected}>Crear carta</Button>
             </form>
             {!connected && (
-                <p className="mx-4 text-sm">* Asegúrate de añadir {window.location.host} a la lista de hosts de confianza en la configuración de AnkiConnect.
+                <p className="mx-4 text-sm pb-4">* Asegúrate de añadir {window.location.host} a la lista de hosts de confianza en la configuración de AnkiConnect.
                     Debe estar en el campo &quot;webCorsOriginList&quot;
                 </p>
             )}

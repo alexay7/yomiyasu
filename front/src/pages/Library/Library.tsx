@@ -240,7 +240,7 @@ function Library({variant}:LibraryProps):React.ReactElement {
                             {series.data.length > 0 ? (
                                 <ul className="flex flex-wrap p-8 py-4 gap-4">
                                     {series.data.map((serie)=>(
-                                        <SerieComponent variant={variant} key={serie._id} serieData={serie}/>
+                                        <SerieComponent variant={variant} key={serie._id} serieData={serie} noVariantIndicator/>
                                     ))}
                                 </ul>
 

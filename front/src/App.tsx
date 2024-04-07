@@ -11,6 +11,7 @@ import Calendar from "./pages/History/pages/Calendar";
 import {esES} from "@mui/material/locale";
 import {esES as dateEsEs} from "@mui/x-date-pickers";
 import {esES as gridEsEs} from "@mui/x-data-grid";
+import Words from "./pages/Words/Words";
 
 const Login = lazy(() => import("./pages/Login/Login"));
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -81,6 +82,7 @@ export function App():React.ReactElement {
                                 <Route path="novels" element={<React.Suspense fallback={<Loading/>}><Library variant="novela"/></React.Suspense>}/>
                             </Route>
                             <Route path="series/:id" element={<React.Suspense fallback={<Loading/>}><Serie/></React.Suspense>}/>
+                            <Route path="words" element={<React.Suspense fallback={<Loading/>}><Words/></React.Suspense>}/>
                             <Route path="history" element={<React.Suspense fallback={<Loading/>}><History/></React.Suspense>}/>
                             <Route path="profile" element={<React.Suspense fallback={<Loading/>}><Stats/></React.Suspense>}/>
                             <Route path="calendar" element={<React.Suspense fallback={<Loading/>}><Calendar/></React.Suspense>}/>

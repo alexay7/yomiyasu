@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, InternalServerErrorException} from "@nestjs/common";
+import {Injectable, InternalServerErrorException} from "@nestjs/common";
 import {AbstractIterator, AbstractLevelDOWN} from "abstract-leveldown";
 import {Word, kanjiBeginning, readingBeginning, setup as setupJmdict} from "jmdict-simplified-node";
 import levelup from "levelup";
@@ -6,7 +6,7 @@ import {join} from "path";
 import {WordWithDisplay} from "./interfaces/word";
 import deinflectRules from "../utils/Trie";
 import {promises as fs} from "fs";
-
+import {JapaneseParser} from "nlcst-parse-japanese";
 
 interface FreqWord extends Word {
     frequency?:string;
@@ -60,6 +60,14 @@ export class DictionaryService {
               newDefs.push(def);
           });
           newWord.words = newDefs.filter((v, i, a)=>a.findIndex(x=>(x.id === v.id)) === i);
+
+          //   Sort by frequency
+          newWord.words.sort((a, b)=>{
+              if (a.frequency && b.frequency) {
+                  return parseInt(a.frequency) - parseInt(b.frequency);
+              }
+              return 0;
+          });
           newWords.push(newWord);
       });
       return newWords;
@@ -107,7 +115,6 @@ export class DictionaryService {
   }
 
   convertKana(text:string) {
-
       let result = "";
       let i = 0;
       while (i < text.length) {
@@ -134,58 +141,37 @@ export class DictionaryService {
       return result.replaceAll("るる", "る");
   }
 
-  async searchBySelection(word:string) {
-      if (word.length > 30) {
-          throw new BadRequestException("Texto demasiado largo");
-      }
+  async searchBySelection(w:string) {
+      const japaneseParser = new JapaneseParser();
 
-      const prevResult = await this.getWordMeaning(word);
+      await japaneseParser.ready();
 
-      if (prevResult &&  prevResult.words.length > 0) {
-          return this.returnWords([prevResult]);
-      }
+      const result = japaneseParser.parse(w);
 
       const words:WordWithDisplay[] = [];
 
-      const regex = /[^\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
+      const paragraph = result.children[0];
 
-      let auxWord = word.replace(regex, "").trim();
-
-      while (auxWord.length > 0) {
-          for (let index = auxWord.length; index >= 0; index--) {
-              const text = auxWord.substring(0, index);
-        
-              const result = await this.getWordMeaning(text);
-
-              if (result?.words && result?.words.length > 0) {
-                  let exactMatch = false;
-                  result.words.forEach((definition)=>{
-                      definition.kana.forEach((kanaDef)=>{
-                          if (text === kanaDef.text) {
-                              exactMatch = true;
-                          }
-                      });
-                      definition.kanji.forEach((kanjiDef)=>{
-                          if (text === kanjiDef.text) {
-                              exactMatch = true;
-                          }
-                      });
-                  });
-                  if (exactMatch) {
-                      result.words = result.words.filter((v, i, a)=>a.findIndex(x=>x.id === v.id) === i);
-                      words.push(result);
-                      auxWord = auxWord.replace(result.display || "", "");
-                      break;
+      for (const sentence of paragraph.children) {
+          for (const word of sentence.children) {
+              if (word.type === "WordNode") {
+                  let text = word.children[0];
+                  if (["動詞", "形容詞"].includes(text.data.pos)) {
+                      text = text.data.basic_form;
+                  } else {
+                      text = text.value;
                   }
-              }
-
-              if (text.length === 1) {
-                  words.push({display:auxWord, words:[]});
-                  auxWord = "";
-                  break;
+                  const def = await this.getWordMeaning(text);
+    
+                  if (def && def?.words.length > 0) {
+                      words.push({display:word.children[0].value, words:def.words});
+                  } else {
+                      words.push({display:word.children[0].value, words:[]});
+                  }
               }
           }
       }
+
       return this.returnWords(words);
   }
 

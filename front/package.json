@@ -1,6 +1,6 @@
 {
   "name": "tfgfront",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",

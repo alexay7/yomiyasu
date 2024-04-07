@@ -17,6 +17,7 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
+    "@typescript-eslint/no-non-null-assertion": "off",
     '@darraghor/nestjs-typed/should-specify-forbid-unknown-values': 'off',
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'error',

@@ -250,6 +250,9 @@ function Reader():React.ReactElement {
                     setSearchWord(extracted);
                 }
             } else {
+                const target = event.target as HTMLElement;
+                const searchable = target.getAttribute("data-searchable");
+                if (!searchable) return;
                 const selection = window.getSelection();
                 if (selection && selection.toString() && readerSettings.nativeDictionary) {
                     getselectedText(selection.toString());
@@ -263,7 +266,9 @@ function Reader():React.ReactElement {
                 if (!e.target) return;
                 const target = e.target as HTMLElement;
                 const text = target.textContent;
-                if (!text || target.tagName !== "P") return;
+                // Check if the target has the data dontsearch attribute
+                const searchable = target.getAttribute("data-searchable");
+                if (!text || target.tagName !== "P" || !searchable) return;
                 const clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
                 if (clickedPosition) {
                     const extracted = text.slice(clickedPosition);
@@ -271,6 +276,9 @@ function Reader():React.ReactElement {
                 }
             } else {
                 e.stopImmediatePropagation();
+                const target = e.target as HTMLElement;
+                const searchable = target.getAttribute("data-searchable");
+                if (!searchable) return;
                 const selection = window.getSelection();
                 if (selection && selection.toString()) {
                 // Dar tiempo a quitar el dedo
