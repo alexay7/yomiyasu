@@ -87,7 +87,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 window.location.href = `/api/static/mangas/${bookData.seriePath}/${bookData.path}.html`;
                 return;
             }
-            if (read && bookData.status === "completed") {
+            if (read && bookData.status === "completed" && !incognito) {
                 if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
             }
 
@@ -154,7 +154,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img className={twMerge(blurred && siteSettings.antispoilers ? "blur" : "", "group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300 h-full object-cover w-full")} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
+                    <img className={twMerge(blurred && siteSettings.antispoilers ? "blur" : "", "group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300 h-full w-full")} loading="lazy" src={`${encodeURI(thumbnailUrl)}`} alt={bookData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {!read && (

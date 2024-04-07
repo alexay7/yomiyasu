@@ -37,7 +37,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 onMouseEnter={()=>setOnItem(true)} onMouseLeave={()=>setOnItem(false)}
             >
                 <div className="absolute top-0 w-full h-full overflow-hidden">
-                    <img className={twMerge("group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300 h-full object-cover w-full")} loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
+                    <img className={twMerge("group-hover:scale-110 group-hover:blur-[2px] scale-100 transition-all duration-300 h-full w-full")} loading="lazy" src={`${encodeURI(thumbnail)}`} alt={serieData.visibleName} />
                 </div>
                 <div ref={lastProgressRef} className="absolute bottom-0 bg-primary h-1"/>
                 {unreadBooks > 0 && (

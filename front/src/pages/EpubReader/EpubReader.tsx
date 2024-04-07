@@ -13,6 +13,7 @@ import {createProgress} from "../../helpers/progress";
 import {nextBook, prevBook} from "../../helpers/book";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {twMerge} from "tailwind-merge";
+import {Dictionary} from "../Reader/components/Dictionary";
 
 async function saveProgressGlobal(timer:number, bookId?:string, iframe?:HTMLIFrameElement, bookData?:Book):Promise<number> {
     if (!bookData || !bookId) return 0;
@@ -42,6 +43,7 @@ export default function EpubReader():React.ReactElement {
     const [timerOn, setTimerOn] = useState(false);
     const [chars, setChars] = useState(0);
     const [changedTab, setChangedTab] = useState(false);
+    const [searchWord, setSearchWord] = useState("");
 
     const iframe = useRef<HTMLIFrameElement>(null);
 
@@ -63,6 +65,32 @@ export default function EpubReader():React.ReactElement {
             setTimer(data.time || 0);
         }
     });
+
+    useEffect(()=>{
+        function getselectedText(text:string):void {
+            if (text !== "" && text !== "\n") {
+                document.body.style.cursor = "wait";
+                setSearchWord(text);
+                document.body.style.cursor = "default";
+            }
+        }
+
+        function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):void {
+            switch (e.data.action) {
+                case "selection":{
+                    const {value} = e.data as {value:string};
+                    getselectedText(value);
+                    break;
+                }
+            }
+        }
+        addEventListener("message", handleNewMessage);
+
+        return () => {
+            removeEventListener("message", handleNewMessage);
+        };
+    }, []);
+
 
     useEffect(() => {
 
@@ -167,6 +195,7 @@ export default function EpubReader():React.ReactElement {
             <Helmet>
                 <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
             </Helmet>
+            <Dictionary searchWord={searchWord} setSearchWord={setSearchWord}/>
             {showToolBar && (
                 <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-10 dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
                     <div className="flex items-center gap-2 px-2 shrink lg:w-1/2">
@@ -197,8 +226,8 @@ export default function EpubReader():React.ReactElement {
                 <iframe className={twMerge("w-full", showToolBar ? "h-[calc(100svh-7rem)] lg:h-[calc(100svh-5.5rem)]" : "h-screen")} ref={iframe} src={`/ebook/b?id=${id}`}/>
             </div>
             {siteSettings.showCrono && timerOn && (
-                <div className="opacity-30 z-10">
-                    <Timer className="text-primary w-4 h-4 animate-pulse absolute top-2 right-2"/>
+                <div className="opacity-60 z-10">
+                    <Timer className="text-primary w-6 h-6 animate-pulse absolute top-2 right-2"/>
                 </div>
             )}
             {showToolBar && !!bookData && (
