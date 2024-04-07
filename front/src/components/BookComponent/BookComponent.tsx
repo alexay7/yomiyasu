@@ -186,7 +186,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                     >{siteSettings.mainView === "both" && !noVariantIndicator ? "[漫]" : ""} {bookData.visibleName}
                     </a>
                 )}
-                {bookData.variant === "novela" && (
+                {bookData.variant === "novela" && !bookData.mokured && (
                     <button className="text-left bg-transparent border-0 dark:text-white p-0 hover:underline hover:cursor-pointer text-base">
                         <p className="line-clamp-2 h-12" onMouseDown={(e)=>{
                             if (e.button !== 1 || e.target === e.currentTarget) return;
