@@ -228,13 +228,13 @@ export class BooksService {
   }
 
   findMissing(variant:"manga" | "novela"): Promise<Book[]> {
-      return this.bookModel.find({missing: true, variant});
+      return this.bookModel.find({missing: true, variant, mokured:{$ne:true}});
   }
 
   markAsMissing(path: string, variant:"manga" | "novela"): Promise<Book | null> {
       this.logger.log("\x1b[34m" + path + " marcado como desaparecido.");
       return this.bookModel.findOneAndUpdate(
-          {path},
+          {path, variant},
           {missing: true},
           {new: true}
       );
