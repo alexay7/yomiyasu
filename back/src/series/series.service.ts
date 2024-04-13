@@ -237,7 +237,7 @@ export class SeriesService {
   }
 
   findNonMissing(variant:"manga" | "novela"): Promise<Serie[]> {
-      return this.seriesModel.find({missing: false, variant});
+      return this.seriesModel.find({missing: false, variant, mokured:{$ne:true}});
   }
 
   findMissing(variant:"manga" | "novela"): Promise<Serie[]> {
