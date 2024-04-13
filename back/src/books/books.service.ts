@@ -224,11 +224,11 @@ export class BooksService {
   }
 
   findNonMissing(variant:"manga" | "novela"): Promise<Book[]> {
-      return this.bookModel.find({missing: false, variant});
+      return this.bookModel.find({missing: false, variant, mokured:{$ne:true}});
   }
 
   findMissing(variant:"manga" | "novela"): Promise<Book[]> {
-      return this.bookModel.find({missing: true, variant, mokured:{$ne:true}});
+      return this.bookModel.find({missing: true, variant});
   }
 
   markAsMissing(path: string, variant:"manga" | "novela"): Promise<Book | null> {
