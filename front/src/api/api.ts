@@ -8,7 +8,7 @@ async function request<TResponse>(url:string, config:RequestInit):Promise<TRespo
 
         if (response.status > 399) {
             const errorData = await response.json() as {status:"ACCESS" | "REFRESH" | "NONE"};
-            if (response.status === 401 && !url.includes("auth")) {
+            if (response.status === 401 && !url.includes("auth") && !url.includes("invis")) {
                 try {
                     await checkRefreshToken();
                     const responseSecondTry = await fetch(`/api/${url}`, config);
@@ -28,7 +28,7 @@ async function request<TResponse>(url:string, config:RequestInit):Promise<TRespo
 
         switch (error.status) {
             case 401:{
-                if (!url.includes("auth")) {
+                if (!url.includes("auth") && !url.includes("invis")) {
                     await checkRefreshToken();
                     const responseSecondTry = await fetch(`/api/${url}`, config);
                     if (responseSecondTry) {

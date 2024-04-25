@@ -12,6 +12,7 @@ import {esES} from "@mui/material/locale";
 import {esES as dateEsEs} from "@mui/x-date-pickers";
 import {esES as gridEsEs} from "@mui/x-data-grid";
 import Words from "./pages/Words/Words";
+import Register from "./pages/Register/Register";
 
 const Login = lazy(() => import("./pages/Login/Login"));
 const Home = lazy(() => import("./pages/Home/Home"));
@@ -74,6 +75,7 @@ export function App():React.ReactElement {
                 {loading ? <Loading/> : (
                     <Routes>
                         <Route path="/login" element={<React.Suspense fallback={<Loading/>}><Login/></React.Suspense>}/>
+                        <Route path="/coderedeem" element={<React.Suspense fallback={<Loading/>}><Register/></React.Suspense>}/>
                         <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
                             <Route index element={<React.Suspense fallback={<Loading/>}><Home/></React.Suspense>}/>
                             <Route path="library">

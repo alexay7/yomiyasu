@@ -12,6 +12,7 @@ import {TokensModule} from "../tokens/tokens.module";
 @Module({
     imports: [UsersModule, PassportModule, TokensModule, JwtModule.register({})],
     providers: [AuthService, JwtStrategy, RefreshJwtStrategy],
-    controllers: [AuthController]
+    controllers: [AuthController],
+    exports: [AuthService]
 })
 export class AuthModule {}

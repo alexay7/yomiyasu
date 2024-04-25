@@ -21,7 +21,8 @@ import {ThrottlerModule, ThrottlerGuard} from "@nestjs/throttler";
 import {APP_GUARD, APP_PIPE} from "@nestjs/core";
 import {redisStore} from "cache-manager-redis-yet";
 import {SerieprogressModule} from "./serieprogress/serieprogress.module";
-import { UserwordsModule } from './userwords/userwords.module';
+import {UserwordsModule} from "./userwords/userwords.module";
+import {InvisModule} from "./invis/invis.module";
 
 @Module({
     imports: [
@@ -59,7 +60,8 @@ import { UserwordsModule } from './userwords/userwords.module';
         DictionaryModule,
         ReviewsModule,
         SerieprogressModule,
-        UserwordsModule
+        UserwordsModule,
+        InvisModule
     ],
 
     controllers: [AppController],
