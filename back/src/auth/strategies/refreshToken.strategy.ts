@@ -21,7 +21,7 @@ export class RefreshJwtStrategy extends PassportStrategy(Strategy, "jwt-ref") {
         });
     }
 
-    validate(req: Request, payload: any) {
+    validate(req: Request, payload: object) {
         const refreshToken = req.cookies.refresh_token;
         return {...payload, refreshToken};
     }

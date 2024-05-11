@@ -6,11 +6,11 @@ export class WebsocketsGateway {
   @WebSocketServer()
   server: Server;
 
-  afterInit() {
+  afterInit() { 
       console.log("WebSocket server initialized.");
   }
 
-  sendNotificationToClient(notification: any) {
+  sendNotificationToClient(notification: unknown) {
       this.server.emit("notification", notification);
   }
 }

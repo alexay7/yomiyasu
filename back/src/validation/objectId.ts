@@ -5,9 +5,14 @@ import {toMongoObjectId} from "../utils/objectId";
 import {ValidationOptions, registerDecorator} from "class-validator";
 
 @Injectable()
-export class ParseObjectIdPipe implements PipeTransform<any, Types.ObjectId | undefined> {
-    transform(value: any): Types.ObjectId | undefined {
+export class ParseObjectIdPipe implements PipeTransform<unknown, Types.ObjectId | undefined> {
+    transform(value: unknown): Types.ObjectId | undefined {
         if (!value) {
+            return undefined;
+        }
+
+        // If not string return
+        if (typeof value !== "string") {
             return undefined;
         }
 
@@ -28,7 +33,12 @@ export function IsMongoIdObject(validationOptions?: ValidationOptions) {
             constraints: [],
             options: validationOptions,
             validator: {
-                validate(value: any) {
+                validate(value: unknown) {
+                    // If not string return
+                    if (typeof value !== "string") {
+                        return false;
+                    }
+
                     const validObjectId = Types.ObjectId.isValid(value);
 
                     if (!validObjectId) {

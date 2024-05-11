@@ -20,8 +20,8 @@ export interface FreqDisplay {
 
 @Injectable()
 export class DictionaryService {
-    private readonly dbPromise: Promise<levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>>>;
-  private db: levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>> | null = null; // Once resolved, db will hold the actual object.
+    private readonly dbPromise: Promise<levelup.LevelUp<AbstractLevelDOWN<unknown, unknown>, AbstractIterator<unknown, unknown>>>;
+  private db: levelup.LevelUp<AbstractLevelDOWN<unknown, unknown>, AbstractIterator<unknown, unknown>> | null = null; // Once resolved, db will hold the actual object.
   private loadingDb: boolean;
   private freqDict:Record<string, {reading:string, freq:string}[]>;
   private pitchDict:Record<string, {reading:string, pitches:{position:number}[]}>;
@@ -73,7 +73,7 @@ export class DictionaryService {
       return newWords;
   }
 
-  private async setupDB(): Promise<levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>>> {
+  private async setupDB(): Promise<levelup.LevelUp<AbstractLevelDOWN<unknown, unknown>, AbstractIterator<unknown, unknown>>> {
 
       this.loadingDb = true;
       const dictFolder = join(process.cwd(), "..", "dicts");
@@ -91,7 +91,7 @@ export class DictionaryService {
       return db;
   }
 
-  async getDb(): Promise<levelup.LevelUp<AbstractLevelDOWN<any, any>, AbstractIterator<any, any>>> {
+  async getDb(): Promise<levelup.LevelUp<AbstractLevelDOWN<unknown, unknown>, AbstractIterator<unknown, unknown>>> {
       if (this.loadingDb) throw new InternalServerErrorException("Dictionary is being loaded into the cache");
 
       if (!this.db) {
