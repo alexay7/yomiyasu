@@ -16,10 +16,14 @@ RUN apt-get update && \
 RUN apt-get update && apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
 
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+# Install pnpm
+RUN npm install -g pnpm
 
-# Install app dependencies
-RUN npm install
+# Copy package.json and pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
+
+# Install app dependencies using pnpm
+RUN pnpm install
 
 # Bundle app source
 COPY . .

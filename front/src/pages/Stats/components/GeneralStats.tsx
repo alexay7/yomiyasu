@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {CSSTransition} from "react-transition-group";
@@ -37,6 +37,8 @@ function GeneralStats():React.ReactElement {
         return "Horas leídas";
     }
 
+    const extraInfoRef = useRef<HTMLDivElement>(null);
+
     return (
         <div>
             {generalStats === undefined ? <p>Cargando...</p> : (
@@ -69,8 +71,8 @@ function GeneralStats():React.ReactElement {
                             </div>
                         </div>
                     </div>
-                    <CSSTransition classNames="extrainfo" timeout={300} in={details} unmountOnExit>
-                        <div className="flex flex-wrap gap-4">
+                    <CSSTransition nodeRef={extraInfoRef} classNames="extrainfo" timeout={300} in={details} unmountOnExit>
+                        <div ref={extraInfoRef} className="flex flex-wrap gap-4">
                             <div className="flex flex-col gap-2">
                                 <h2 className="dark:text-white text-black">Estadísticas de manga</h2>
                                 <div className="flex flex-wrap gap-4 items-center">

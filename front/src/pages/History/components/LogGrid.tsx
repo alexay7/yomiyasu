@@ -1,6 +1,6 @@
 import React from "react";
 import {formatTime} from "../../../helpers/helpers";
-import {IconButton, LinearProgress} from "@mui/material";
+import {IconButton} from "@mui/material";
 import {toast} from "react-toastify";
 import {api} from "../../../api/api";
 import {BookProgress} from "../../../types/book";
@@ -125,28 +125,28 @@ function LogGrid(props:LogGridProps):React.ReactElement {
             field: "time",
             headerName: "Tiempo",
             width: 120,
-            valueFormatter:(params)=>formatTime(params.value),
+            valueFormatter:(value:number)=>formatTime(value),
             filterable:false
         },
         {
             field: "lastUpdateDate",
             headerName: "Última actualización",
             width: 160,
-            valueFormatter:(params)=>new Date(params.value).toLocaleString(),
+            valueFormatter:(value:Date)=>new Date(value).toLocaleString(),
             filterable:false
         },
         {
             field: "startDate",
             headerName: "Fecha de comienzo",
             width: 160,
-            valueFormatter:(params)=>new Date(params.value).toLocaleString(),
+            valueFormatter:(value:Date)=>new Date(value).toLocaleString(),
             filterable:false
         },
         {
             field: "endDate",
             headerName: "Fecha de finalización",
             width: 170,
-            valueFormatter:(params)=>params.value ? new Date(params.value).toLocaleString() : "",
+            valueFormatter:(value:Date)=>value ? new Date(value).toLocaleString() : "",
             filterable:false
         }
     ];
@@ -155,7 +155,7 @@ function LogGrid(props:LogGridProps):React.ReactElement {
         <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500 hover:cursor-cell" style={{height:loading ? "170px" : undefined, width:"100%"}}>
             <DataGrid
                 loading={loading}
-                rows={data} columns={columns} slots={{loadingOverlay: LinearProgress,
+                rows={data} columns={columns} slots={{
                     toolbar:setPaginationModel ? GridToolbar : null}} onRowClick={(row)=>{
                     const rowData = row.row as LogData;
                     let text = `.log manga ${rowData.currentPage} ${rowData.book}`;

@@ -42,13 +42,14 @@ export class ReadlistController {
 
     @Post("delete")
     @ApiOkResponse({status:HttpStatus.OK})
-    removeBookFromList(
+    async removeBookFromList(
     @Req() req: Request,
         @Body() body: {serie: Types.ObjectId}
-    ) {
+    ):Promise<void> {
         if (!req.user) throw new UnauthorizedException();
 
         const {userId} = req.user as {userId: Types.ObjectId};
-        return this.readlistService.removeSerieFromUserList(userId, body.serie);
+        await this.readlistService.removeSerieFromUserList(userId, body.serie);
+        return
     }
 }

@@ -59,8 +59,12 @@ function Login():React.ReactElement {
                         }}
                         />)} label="Recuérdame"
                     />
-                    <Button type="submit" className="bg-primary text-white">Iniciar Sesión</Button>
+                    <Button type="submit" variant="contained">Iniciar Sesión</Button>
                 </form>
+                <Divider className="w-full my-4"/>
+                <div className="w-1/2">
+                <Button variant="contained" className="bg-white text-[#2D2D2D] w-full" onClick={()=>goTo(navigate, "/offline")}>Lector Local</Button>
+                </div>
             </div>
         </div>
     );

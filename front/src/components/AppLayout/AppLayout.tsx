@@ -1,6 +1,6 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List, PhotoAlbum, Translate} from "@mui/icons-material";
+import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List, PhotoAlbum, Translate, SignalWifiOff} from "@mui/icons-material";
 import {Divider, IconButton, useTheme} from "@mui/material";
-import React, {Fragment, useContext, useEffect, useState} from "react";
+import React, {Fragment, useContext, useEffect, useRef, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
 import {CSSTransition} from "react-transition-group";
 import "./styles.css";
@@ -13,7 +13,7 @@ import {AccountSettings} from "./components/AccountSettings";
 import {ColorModeContext} from "../../contexts/ColorModeContext";
 import {useSettingsStore} from "../../stores/SettingsStore";
 
-export function AppLayout():React.ReactElement {
+export default function AppLayout():React.ReactElement {
     const theme = useTheme();
     const colorMode = useContext(ColorModeContext);
     const {toggleColorMode} = colorMode;
@@ -34,11 +34,15 @@ export function AppLayout():React.ReactElement {
         setShowMenu((prev)=>!prev);
     }
 
+    const searchBarRef = useRef(null);
+    const lateralRef = useRef(null);
+    const mainRef = useRef(null);
+
     return (
         <div className="h-[100svh]">
             {/* Barra de búsqueda */}
-            <CSSTransition classNames="searchbar" timeout={300} in={showMenu}>
-                <div className={`bg-[#EBE8E3] dark:bg-[#101010] h-16 ${isTabletOrMobile ? "left-0" : "left-[270px]"} fixed right-0 flex px-2 items-center justify-between z-10 gap-2`}>
+            <CSSTransition nodeRef={searchBarRef} classNames="searchbar" timeout={300} in={showMenu}>
+                <div ref={searchBarRef} className={`bg-[#EBE8E3] dark:bg-[#101010] h-16 ${isTabletOrMobile ? "left-0" : "left-[270px]"} fixed right-0 flex px-2 items-center justify-between z-10 gap-2`}>
                     <IconButton onClick={toggleMenu}>
                         <Menu className="dark:text-white p-1"/>
                     </IconButton>
@@ -49,8 +53,8 @@ export function AppLayout():React.ReactElement {
             </CSSTransition>
 
             {/* Barra lateral */}
-            <CSSTransition classNames="leftbar" timeout={300} in={showMenu} unmountOnExit>
-                <div className="w-[270px] bg-[#f7f7f7] dark:bg-[#212121] h-[100svh] fixed">
+            <CSSTransition nodeRef={lateralRef} classNames="leftbar" timeout={300} in={showMenu} unmountOnExit>
+                <div ref={lateralRef} className="w-[270px] bg-[#f7f7f7] dark:bg-[#212121] h-[100svh] fixed">
                     <div className="h-16 justify-center dark:text-white flex items-center bg-[#EBE8E3] dark:bg-[#101010]">
                         <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>navigate("/app")}>YomiYasu</h1>
                     </div>
@@ -67,6 +71,7 @@ export function AppLayout():React.ReactElement {
                         </Fragment>
                         <LateralListItem toggleMenu={toggleMenu} text="Estadísticas" link="/app/profile" Icon={PieChart}/>
                         <LateralListItem toggleMenu={toggleMenu} text="Palabras Guardadas" link="/app/words" Icon={Translate}/>
+                        <LateralListItem toggleMenu={toggleMenu} text="Lector Local" link="/offline" Icon={SignalWifiOff}/>
                         <AccountSettings/>
                         <Settings/>
                         {userData?.admin && (
@@ -96,14 +101,14 @@ export function AppLayout():React.ReactElement {
                         />
                     </ul>
                     <div className="absolute bottom-0 left-0 p-4">
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/yomiyasu" className="text-gray-600 dark:text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu {process.env.REACT_APP_VERSION}</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/yomiyasu" className="text-gray-600 dark:text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu {APP_VERSION}</a>
                     </div>
                 </div>
             </CSSTransition>
 
             {/* Contenido */}
-            <CSSTransition classNames="maincontent" timeout={300} in={showMenu}>
-                <div className={`h-[calc(100svh-4rem)] pt-16 ${isTabletOrMobile ? "pl-0" : "pl-[270px]"} dark:bg-[#121212] bg-[#ebe8e3]`}>
+            <CSSTransition nodeRef={mainRef} classNames="maincontent" timeout={300} in={showMenu}>
+                <div ref={mainRef} className={`h-[calc(100svh-4rem)] pt-16 ${isTabletOrMobile ? "pl-0" : "pl-[270px]"} dark:bg-[#121212] bg-[#ebe8e3]`}>
                     <Divider/>
                     <Outlet/>
                 </div>

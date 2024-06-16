@@ -84,7 +84,7 @@ export default function Admin():React.ReactElement {
             sortable:false,
             filterable:false,
             renderCell:(params)=>(
-                <Checkbox disabled={params.row.id === userData?._id} checked={params.value as boolean} onChange={(v, c)=>{
+                <Checkbox disabled={params.row.id === userData?._id} checked={params.value as boolean} onChange={(_, c)=>{
                     void makeAdmin(params.row, c);
                 }}
                 />

@@ -34,7 +34,7 @@ export function Settings():React.ReactElement {
                         </Select>
                     </div>
                     <FormControlLabel className="select-none" control={
-                        <Checkbox checked={siteSettings.openHTML} onChange={(e, c)=>{
+                        <Checkbox checked={siteSettings.openHTML} onChange={(_, c)=>{
                             if (c) {
                                 setOpenWarning(true);
                             } else {
@@ -45,21 +45,21 @@ export function Settings():React.ReactElement {
                     } label="Abrir HTML directamente (no usar lector nativo)"
                     />
                     <FormControlLabel className="select-none" control={
-                        <Checkbox checked={siteSettings.autoCrono} onChange={(e, c)=>{
+                        <Checkbox checked={siteSettings.autoCrono} onChange={(_, c)=>{
                             modifySiteSettings("autoCrono", c);
                         }}
                         />
                     } label="Iniciar cronómetro automáticamente al abrir libro"
                     />
                     <FormControlLabel className="select-none" control={
-                        <Checkbox checked={siteSettings.startCronoOnPage} onChange={(e, c)=>{
+                        <Checkbox checked={siteSettings.startCronoOnPage} onChange={(_, c)=>{
                             modifySiteSettings("startCronoOnPage", c);
                         }}
                         />
                     } label="Iniciar cronómetro automáticamente al cambiar de página"
                     />
                     <FormControlLabel className="select-none" control={
-                        <Checkbox checked={siteSettings.showCrono} onChange={(e, c)=>{
+                        <Checkbox checked={siteSettings.showCrono} onChange={(_, c)=>{
                             modifySiteSettings("showCrono", c);
                         }}
                         />
@@ -82,7 +82,7 @@ export function Settings():React.ReactElement {
                         </Select>
                     </div>
                     <FormControlLabel className="select-none" control={
-                        <Checkbox checked={siteSettings.antispoilers} onChange={(e, c)=>{
+                        <Checkbox checked={siteSettings.antispoilers} onChange={(_, c)=>{
                             modifySiteSettings("antispoilers", c);
                         }}
                         />

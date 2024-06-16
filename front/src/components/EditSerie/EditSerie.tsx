@@ -186,7 +186,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                             <MenuItem value="PUBLISHING">En progreso</MenuItem>
                         </Select>
                     </FormControl>
-                    <Autocomplete onChange={(e, v: readonly string[])=>setGenres(Array.from(v))}  value={genres} fullWidth freeSolo multiple
+                    <Autocomplete onChange={(_, v: readonly string[])=>setGenres(Array.from(v))}  value={genres} fullWidth freeSolo multiple
                         renderInput={(params)=>(
                             <TextField
                                 {...params}
@@ -196,7 +196,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                         )}
                         options={genresAndArtists.genres}
                     />
-                    <Autocomplete onChange={(e, v: readonly string[])=>setAuthors(Array.from(v))}  value={authors} fullWidth freeSolo multiple
+                    <Autocomplete onChange={(_, v: readonly string[])=>setAuthors(Array.from(v))}  value={authors} fullWidth freeSolo multiple
                         renderInput={(params)=>(
                             <TextField
                                 {...params}
@@ -206,7 +206,7 @@ export function EditSerie(props:EditSerieProps):React.ReactElement {
                         )}
                         options={genresAndArtists.authors}
                     />
-                    <Autocomplete onChange={(e, v: readonly string[])=>setAlternativeNames(Array.from(v))}  value={alternativeNames}
+                    <Autocomplete onChange={(_, v: readonly string[])=>setAlternativeNames(Array.from(v))}  value={alternativeNames}
                         fullWidth freeSolo multiple
                         renderInput={(params)=>(
                             <TextField

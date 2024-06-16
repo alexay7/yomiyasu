@@ -5,7 +5,7 @@ interface ProtectedLayoutProps {
     children:React.JSX.Element
 }
 
-export function ProtectedLayout(props:ProtectedLayoutProps):React.ReactElement {
+export default function ProtectedLayout(props:ProtectedLayoutProps):React.ReactElement {
     const {children} = props;
 
     return (

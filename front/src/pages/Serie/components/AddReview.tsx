@@ -108,10 +108,10 @@ export function ReviewForm(props:EditSerieProps):React.ReactElement {
                                 icon={<Whatshot color="primary"/>}
                                 emptyIcon={<Whatshot/>}
                                 getLabelText={getLabelText}
-                                onChange={(e, v)=>{
+                                onChange={(_, v)=>{
                                     setDifficulty(v);
                                 }}
-                                onChangeActive={(e, v)=>{
+                                onChangeActive={(_, v)=>{
                                     setHoverRating(v);
                                 }}
                             />
@@ -120,7 +120,7 @@ export function ReviewForm(props:EditSerieProps):React.ReactElement {
                     </div>
                     <div className="flex gap-2 flex-col">
                         <span className="font-semibold">¿Cuál es tu valoración personal del libro? (opcional)</span>
-                        <Rating value={(rating || 0) / 2} max={5} precision={0.5} onChange={(e, v)=>setRating((v || 0) * 2)}/>
+                        <Rating value={(rating || 0) / 2} max={5} precision={0.5} onChange={(_, v)=>setRating((v || 0) * 2)}/>
                     </div>
                     <div className="flex flex-col gap-2">
                         <span className="font-semibold">¿Tienes comentarios sobre el libro? (opcional)</span>

@@ -8,8 +8,8 @@ import {useQueryClient} from "react-query";
 
 
 interface StopWatchMenuProps {
-    oldProgress:BookProgress | undefined;
-    characters:number;
+    oldProgress?:BookProgress | undefined;
+    characters?:number;
     bookData?:Book;
     timer:number;
     setTimer:(v:React.SetStateAction<number>)=>void;
@@ -90,7 +90,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
 
                             let text = "";
 
-                            let currentChars = characters - (oldProgress?.characters || 0);
+                            let currentChars = characters||0 - (oldProgress?.characters || 0);
 
                             if (refreshProgress) {
                                 // Actualizar el progreso antes de copiar
@@ -120,7 +120,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
                         >
                             <p>Sesión Actual</p>
                             <p className="text-xs">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</p>
-                            <p className="text-xs">Caracteres: {characters - (oldProgress?.characters || 0)}</p>
+                            <p className="text-xs">Caracteres: {characters||0 - (oldProgress?.characters || 0)}</p>
                         </div>
                     </Tooltip>
                 </li>

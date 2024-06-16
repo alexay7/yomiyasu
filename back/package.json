@@ -1,6 +1,6 @@
 {
   "name": "tfgback",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "description": "",
   "author": "",
   "private": true,
@@ -52,19 +52,22 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
+    "cron": "^3.1.7",
     "epub2": "^3.0.2",
     "epubjs": "^0.3.93",
     "fs-extra": "^11.1.1",
     "jmdict-simplified-node": "^1.1.2",
     "leveldown": "^6.1.1",
     "levelup": "^5.1.1",
+    "mongodb": "^6.7.0",
     "mongoose": "^7.3.2",
     "nlcst-parse-japanese": "^1.4.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",

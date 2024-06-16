@@ -83,7 +83,7 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
                         <FormControl className="w-full">
                             <FormLabel>Dificultad</FormLabel>
                             <div className="flex gap-4 items-center">
-                                <Slider onChange={(e, v)=>{
+                                <Slider onChange={(_, v)=>{
                                     setDifficulty(v as number[]);
                                 }} value={difficulty} max={10} min={0} step={1}
                                 marks valueLabelDisplay="auto"
@@ -116,7 +116,7 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
                             <Autocomplete
                                 fullWidth
                                 value={genre}
-                                onChange={(e, v)=>{
+                                onChange={(_, v)=>{
                                     setGenre(v || null);
                                 }}
                                 renderInput={(params)=>(
@@ -134,7 +134,7 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
                             <Autocomplete
                                 fullWidth
                                 value={author}
-                                onChange={(e, v)=>{
+                                onChange={(_, v)=>{
                                     setAuthor(v || null);
                                 }}
                                 renderInput={(params)=>(
@@ -149,7 +149,7 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
                         </FormControl>
                         <FormControl className="py-4 w-full flex">
                             <FormControlLabel className="select-none" control={
-                                <Checkbox checked={readlist} onChange={(e, c)=>{
+                                <Checkbox checked={readlist} onChange={(_, c)=>{
                                     setReadlist(c);
                                 }}
                                 />
@@ -161,7 +161,7 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
                             <RadioGroup
                                 row
                                 value={readProgress}
-                                onChange={(e, v)=>{
+                                onChange={(_, v)=>{
                                     setReadProgress(v);
                                 }}
                             >

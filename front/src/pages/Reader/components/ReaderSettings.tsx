@@ -1,4 +1,4 @@
-import React, {LiHTMLAttributes, useEffect} from "react";
+import React, {LiHTMLAttributes, useEffect, useRef} from "react";
 import "./style.css";
 import {CSSTransition} from "react-transition-group";
 import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/material";
@@ -154,15 +154,18 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         };
     }, [iframeWindow, readerSettings, modifyReaderSettings]);
 
+    const blurredRef = useRef(null);
+    const menuRef = useRef(null);
+
     return (
         <>
-            <CSSTransition in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
-                <div className="dark:bg-black w-full h-[100svh] fixed top-0 left-0 z-10 opacity-40"
+            <CSSTransition nodeRef={blurredRef} in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
+                <div ref={blurredRef} className="dark:bg-black w-full h-[100svh] fixed top-0 left-0 z-10 opacity-40"
                     onClick={closeSettings}
                 />
             </CSSTransition>
-            <CSSTransition in={showMenu} timeout={300} classNames="readerconf" unmountOnExit>
-                <div className="w-full lg:w-1/2 max-w-screen-sm absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
+            <CSSTransition nodeRef={menuRef} in={showMenu} timeout={300} classNames="readerconf" unmountOnExit>
+                <div ref={menuRef} className="w-full lg:w-1/2 max-w-screen-sm absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
                     <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl text-[#ebe8e3] dark:text-[#101010]">
                         <IconButton onClick={closeSettings}>
                             <Close className="text-[#ebe8e3] dark:text-[#101010]"/>

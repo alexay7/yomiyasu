@@ -157,7 +157,7 @@ export function SearchAutocomplete():React.ReactElement {
                 }
                 return "Novelas";
             }}
-            onInputChange={(e, v, r)=>{
+            onInputChange={(_, v, r)=>{
                 if (r === "reset") {
                     setSearchQuery("");
                     return;
@@ -167,7 +167,7 @@ export function SearchAutocomplete():React.ReactElement {
             isOptionEqualToValue={(option, value)=>option.visibleName === value.visibleName || option.sortName === value.sortName}
             getOptionLabel={(option)=>option.visibleName}
             filterOptions={(options) => options}
-            onChange={async(e, v)=>{
+            onChange={async(_, v)=>{
                 // Redirigir a la página de la serie
                 if (v) {
                     if (v.type === "book") {

@@ -99,7 +99,7 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
 
     return (
         <Fragment>
-            <Dialog hideBackdrop open={searchWord !== "" && readerSettings.nativeDictionary} onClose={(e, r)=>{
+            <Dialog hideBackdrop open={searchWord !== "" && readerSettings.nativeDictionary} onClose={(_, r)=>{
                 if (r === "escapeKeyDown" || canClose) {
                     setSearchWord("");
                 }

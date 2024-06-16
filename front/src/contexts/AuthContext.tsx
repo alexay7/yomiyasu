@@ -8,7 +8,7 @@ import {checkRefreshToken} from "../helpers/helpers";
 import {setCookie} from "../helpers/cookies";
 
 export interface ContextProps {
-    children:React.ReactNode
+    children?:React.ReactNode
 }
 
 type AuthContextType = {

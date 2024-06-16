@@ -60,7 +60,7 @@ export function EditProgress(props:EditProgressProps):React.ReactElement {
             {open && (
                 <PopupWindow open={open} title={`Editar ${bookData.visibleName}`} closePopup={closePopup}>
                     {progressData?.map((progress)=>(
-                        <Accordion className="flex flex-col gap-4" key={progress._id} expanded={selectedProgress === progress._id} onChange={(ev, e)=>{
+                        <Accordion className="flex flex-col gap-4" key={progress._id} expanded={selectedProgress === progress._id} onChange={(_, e)=>{
                             if (e && progress._id) {
                                 setSelectedProgress(progress._id);
                             } else {

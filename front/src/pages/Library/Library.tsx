@@ -226,7 +226,7 @@ function Library({variant}:LibraryProps):React.ReactElement {
                 <div className="flex flex-col overflow-y-scroll h-[calc(100svh-10.5rem)]">
                     {series.pages > 1 && (
                         <div className="flex justify-center py-4">
-                            <Pagination onChange={(e, p)=>{
+                            <Pagination onChange={(_, p)=>{
                                 setCurrentPage(p);
                                 searchParams.set("page", `${p}`);
                                 setSearchParams(searchParams);
@@ -255,7 +255,7 @@ function Library({variant}:LibraryProps):React.ReactElement {
 
                     {series.pages > 1 && (
                         <div className="flex justify-center">
-                            <Pagination onChange={(e, p)=>{
+                            <Pagination onChange={(_, p)=>{
                                 setCurrentPage(p);
                                 searchParams.set("page", `${p}`);
                                 setSearchParams(searchParams);

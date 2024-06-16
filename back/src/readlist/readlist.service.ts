@@ -39,8 +39,8 @@ export class ReadlistService {
         
     }
 
-    removeSerieFromUserList(user: Types.ObjectId, serie: Types.ObjectId) {
-        return this.readListModel.deleteOne({user, serie});
+    async removeSerieFromUserList(user: Types.ObjectId, serie: Types.ObjectId) {
+        await this.readListModel.deleteOne({user, serie});
     }
 
     removeSerieWithId(id:Types.ObjectId) {

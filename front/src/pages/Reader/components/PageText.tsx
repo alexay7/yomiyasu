@@ -84,7 +84,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
 
     return (
         <Fragment>
-            <CSSTransition classNames="textbox" in={open} timeout={300} unmountOnExit>
+            <CSSTransition nodeRef={sidebarRef} classNames="textbox" in={open} timeout={300} unmountOnExit>
                 <div ref={sidebarRef} className="min-w-full lg:max-w-[80%] lg:min-w-[400px] max-h-[80%] lg:max-h-none min-h-[10%] pt-4 lg:h-full flex fixed lg:top-0 z-20 lg:pt-14 bg-black bg-opacity-70 justify-center border-0 border-r border-white border-solid">
                     {isTabletOrMobile ? (
                         <IconButton draggable={true} className="touch-none dragable mx-2 absolute top-0 translate-x-1/2 right-1/2 z-30 cursor-row-resize"
