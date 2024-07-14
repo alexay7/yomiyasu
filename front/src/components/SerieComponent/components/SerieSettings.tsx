@@ -8,6 +8,7 @@ import {useGlobal} from "../../../contexts/GlobalContext";
 import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 import {iBook} from "../../../helpers/book";
 import {api} from "../../../api/api";
+import { toast } from "react-toastify";
 
 interface SerieSettingsProps {
     serieData:SerieWithProgress;
@@ -48,6 +49,14 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
     async function resumeSerie():Promise<void> {
         await api.post<unknown, {status:string}>(`serieprogress/resume/${  serieData._id  }`, {});
         forceReload("all");
+    }
+
+    async function zipSerie():Promise<void> {
+     const response =   await api.post<void, {status:string}>(`series/${serieData._id}/zip`);
+
+        if (response) {
+            toast.success("Serie comprimida con éxito");
+        }   
     }
 
     return (
@@ -95,6 +104,9 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
                 )}
                 {userData?.admin && (
                     <MenuItem key="automatic" onClick={setNames}>Aplicar nombres automáticos</MenuItem>
+                )}
+                {userData?.admin && (
+                    <MenuItem key="zip" onClick={zipSerie}>Comprimir serie</MenuItem>
                 )}
                 {unreadBooks !== 0 && (
                     <div>

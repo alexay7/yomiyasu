@@ -3,6 +3,9 @@ import {InjectModel} from "@nestjs/mongoose";
 import {Book, BookDocument} from "./schemas/book.schema";
 import {Model, Types} from "mongoose";
 import {SearchQuery, UpdateBook, UserBook} from "./interfaces/query";
+import * as archiver from "archiver";
+import * as fs from "fs-extra";
+import * as path from "path";
 
 @Injectable()
 export class BooksService {
@@ -99,6 +102,47 @@ export class BooksService {
       const books = await aggregate as UserBook[];
 
       return books;
+  }
+
+  async zipBooksFromSerie(serie:Types.ObjectId){
+    const books = await this.bookModel.find({serie}).sort({sortName:1});
+
+    await Promise.all(books.map(async book=>{
+        const mainFolderPath = path.join(process.cwd(), "..", "exterior", "mangas");
+
+        const zipPath = path.join(mainFolderPath, book.seriePath,`${book.imagesFolder}.cbz`);
+        const folderPath = path.join(mainFolderPath, book.seriePath, book.imagesFolder);
+
+        // Check if zip exists
+        if (fs.existsSync(zipPath)) {
+            return;
+        }
+
+        await this.zipImagesFolder(folderPath, zipPath);
+  }))
+}
+
+  async zipImagesFolder(folderPath:string, zipPath:string){
+    // Create a zip file with the contents of the folder
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver("zip", {zlib: {level: 9}});
+    output.on("close", () => {
+        console.log(archive.pointer() + " total bytes");
+        console.log("archiver has been finalized and the output file descriptor has closed.");
+    });
+    archive.on("warning", (err) => {
+        if (err.code === "ENOENT") {
+            console.log(err);
+        } else {
+            throw err;
+        }
+    });
+    archive.on("error", (err) => {
+        throw err;
+    });
+    archive.pipe(output);
+    archive.directory(folderPath, false);
+    await archive.finalize();
   }
 
   async findById(id: Types.ObjectId): Promise<Book | null> {

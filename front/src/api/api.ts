@@ -54,7 +54,7 @@ export const api = {
     get: <TResponse>(url: string):Promise<TResponse | undefined> =>
         request<TResponse | undefined>(url, {method:"GET"}),
 
-    post: <TBody, TResponse>(url: string, body: TBody, keepAlive?:boolean):Promise<TResponse | undefined> =>
+    post: <TBody, TResponse>(url: string, body?: TBody, keepAlive?:boolean):Promise<TResponse | undefined> =>
         request<TResponse | undefined>(url, {method: "POST", body:JSON.stringify(body), headers:{"Content-Type":"application/json"}, keepalive:keepAlive}),
 
     patch: <TBody, TResponse>(url: string, body: TBody, keepAlive?:boolean):Promise<TResponse | undefined> =>

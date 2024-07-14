@@ -1,4 +1,4 @@
-import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body, Inject, UseInterceptors, BadRequestException, Res, StreamableFile, InternalServerErrorException} from "@nestjs/common";
+import {Controller, Get, Req, HttpStatus, Query, UseGuards, UnauthorizedException, Param, NotFoundException, Patch, Body, Inject, UseInterceptors, BadRequestException, Res, StreamableFile, InternalServerErrorException, Post} from "@nestjs/common";
 import {SeriesService} from "./series.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
@@ -38,6 +38,23 @@ export class SeriesController {
     @UseInterceptors(CacheInterceptor)
     async getGenresAndArtists() {
         return this.seriesService.getArtistsAndGenres();
+    }
+
+    @Post(":serieId/zip")
+    async zipSerie(@Req() req:Request, @Param("serieId", ParseObjectIdPipe) serie:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        const foundSerie = await this.seriesService.findById(serie);
+
+        if (!foundSerie) throw new NotFoundException();
+
+        await this.booksService.zipBooksFromSerie(foundSerie._id);
+
+        return {status:"OK"};
     }
 
     @Get(":variant")
