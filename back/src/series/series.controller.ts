@@ -54,6 +54,8 @@ export class SeriesController {
 
         await this.booksService.zipBooksFromSerie(foundSerie._id);
 
+        console.log("Finished series "+foundSerie.visibleName);
+
         return {status:"OK"};
     }
 
