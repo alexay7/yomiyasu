@@ -48,6 +48,7 @@ function Reader(props:ReaderProps):React.ReactElement {
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
     const [searchWord, setSearchWord] = useState("");
     const [changedTab, setChangedTab] = useState(false);
+    const [forceSave, setForceSave] = useState(false);
     
     const [bookData,setBookData]=useState<Book|undefined>(undefined);
 
@@ -70,11 +71,12 @@ function Reader(props:ReaderProps):React.ReactElement {
             reauth(true);
         }
 
-        if (!bookData || timer % 60 !== 0 || timer === 0) return;
+        if (!bookData || (timer % 60 !== 0 || timer === 0)&&!forceSave) return;
         window.localStorage.setItem(bookData._id, `${timer}`);
         void createProgress(bookData, currentPage, timer, bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0,
             !readerSettings.singlePageView);
-    }, [currentPage, timer, bookData, reauth, readerSettings,id]);
+        setForceSave(false);
+    }, [currentPage, timer, bookData, reauth, readerSettings,id,forceSave]);
 
     useEffect(()=>{
         if (siteSettings.autoCrono) {
@@ -207,12 +209,23 @@ function Reader(props:ReaderProps):React.ReactElement {
                         if(bookData){
                             if ((value < -1 && !readerSettings.singlePageView) || (value < 0 && readerSettings.singlePageView)) {
                                 if (!confirm("¿Volver al libro anterior?")) return;
-                                void prevBook({book:bookData, variant:"manga"});
+                                setForceSave(true);
+
+                                // Wait 500 ms
+                                setTimeout(()=>{
+                                    void prevBook({book:bookData, variant:"manga"});
+                                }, 500);
                                 return;
                             }
                             if (value >= bookData.pages) {
                                 if (!confirm("¿Pasar al siguiente libro?")) return;
-                                void nextBook({book:bookData, variant:"manga"});
+                                setForceSave(true);
+
+                                // Wait 500 ms
+                                setTimeout(()=>{
+                                    void nextBook({book:bookData, variant:"manga"});
+                                }, 500);
+
                                 return;
                             }
                         }
