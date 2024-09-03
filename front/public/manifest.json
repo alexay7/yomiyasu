@@ -25,7 +25,6 @@
             "type": "image/png"
         }
     ],
-    "orientation": "any",
     "display": "standalone",
     "dir": "auto",
     "lang": "es-ES",
