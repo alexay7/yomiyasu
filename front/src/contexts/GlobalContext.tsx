@@ -43,24 +43,17 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
     useEffect(() => {
         async function handleMessage(e:MessageEvent):Promise<void> {
             if (e.data.event === "finished") {
-                const bookList = e.data.bookList as {id:number,title:string}[];
 
-                console.log(bookList)
 
-                if (bookList.length === 0) {
-                    return;
-                }
 
-                let bookId = bookList.find((book) => book.title === e.data.title)?.id;
-
-                if (!bookId) {
+                if (!e.data.bookId) {
                     const id = await findBookId(e.data.title);
                     if (id) {
-                        bookId = id;
+                        e.data.bookId = id;
                     }
                 }
 
-                let link = `/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`;
+                let link = `/ranobe/${e.data.bookId}?yomiyasuId=${e.data.yomiyasuId}`;
 
                 if (e.data.incognito) {
                     link += "&private=true";
@@ -72,7 +65,7 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
                 }
 
                 if (siteSettings.openHTML) {
-                    window.location.href = `/ebook/b?id=${bookId}`;
+                    window.location.href = `/ebook/b?id=${e.data.bookId}`;
                     return;
                 }
 
