@@ -4,7 +4,7 @@ export async function findBookId(title:string):Promise<number | null> {
     // Search for the book in indexedDB with title equal to 涼宮ハルヒの驚愕（後） 「涼宮ハルヒ」シリーズ (角川スニーカー文庫)
 
     return new Promise<number | null>((resolve, reject) => {
-        const request = window.indexedDB.open("books", 5);
+        const request = window.indexedDB.open("books", 6);
 
         request.onerror = () => {
             reject(new Error("Error opening the database"));
