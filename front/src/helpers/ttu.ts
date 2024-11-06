@@ -38,7 +38,7 @@ export async function getBookProgress(bookId?:number):Promise<number> {
     if (!bookId) return 0;
 
     return new Promise<number>((resolve, reject) => {
-        const request = window.indexedDB.open("books", 5);
+        const request = window.indexedDB.open("books", 6);
 
         request.onerror = () => {
             reject(new Error("Error opening the database"));
@@ -73,7 +73,7 @@ export async function deleteBookBookmark(bookId?:number):Promise<void> {
     if (!bookId) return;
 
     return new Promise<void>((resolve, reject) => {
-        const request = window.indexedDB.open("books", 5);
+        const request = window.indexedDB.open("books", 6);
 
         request.onerror = () => {
             reject(new Error("Error opening the database"));
