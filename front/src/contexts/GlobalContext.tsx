@@ -45,6 +45,10 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
             if (e.data.event === "finished") {
                 const bookId = await findBookId(e.data.title);
 
+                const bookList = e.data.bookList
+
+                console.log(bookList)
+
                 let link = `/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`;
 
                 if (e.data.incognito) {
