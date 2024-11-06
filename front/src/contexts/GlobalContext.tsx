@@ -45,6 +45,8 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
             if (e.data.event === "finished") {
                 const bookList = e.data.bookList as {id:number,title:string}[];
 
+                console.log(bookList)
+
                 if (bookList.length === 0) {
                     return;
                 }
