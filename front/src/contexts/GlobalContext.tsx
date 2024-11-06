@@ -43,11 +43,20 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
     useEffect(() => {
         async function handleMessage(e:MessageEvent):Promise<void> {
             if (e.data.event === "finished") {
-                const bookId = await findBookId(e.data.title);
+                const bookList = e.data.bookList as {id:number,title:string}[];
 
-                const bookList = e.data.bookList
+                if (bookList.length === 0) {
+                    return;
+                }
 
-                console.log(bookList)
+                let bookId = bookList.find((book) => book.title === e.data.title)?.id;
+
+                if (!bookId) {
+                    const id = await findBookId(e.data.title);
+                    if (id) {
+                        bookId = id;
+                    }
+                }
 
                 let link = `/ranobe/${bookId}?yomiyasuId=${e.data.yomiyasuId}`;
 
