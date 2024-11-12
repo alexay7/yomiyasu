@@ -171,10 +171,10 @@ export class AppService {
 
                       if (imagesFolder) {
                         // Zip the imagesFolder into a zip file with the name of the folder and extension .cbz, save it at the same level as the folder
-                        const zipPath = join(mainFolderPath, elem.seriePath,imagesFolder.folderName + ".cbz");
-                        const folderPath = join(mainFolderPath,elem.seriePath, imagesFolder.folderName);
+                        // const zipPath = join(mainFolderPath, elem.seriePath,imagesFolder.folderName + ".cbz");
+                        // const folderPath = join(mainFolderPath,elem.seriePath, imagesFolder.folderName);
 
-                        await this.booksService.zipImagesFolder(folderPath, zipPath);
+                        // await this.booksService.zipImagesFolder(folderPath, zipPath);
 
 
                           const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath, "manga");
