@@ -17,3 +17,5 @@ db/*
 cloudflare/*
 ebook-reader/*
 ebook-reader
+ios
+.idea

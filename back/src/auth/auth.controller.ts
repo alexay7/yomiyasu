@@ -69,14 +69,29 @@ export class AuthController {
 
         await this.usersService.isAdmin(userId);
         
-        const authResult = await this.authService.signUp(createUserDto);
+        return await this.authService.signUp(createUserDto)
+    }
 
-        return authResult;
+    /**
+     * Los clientes nativos pueden pedir los tokens en el cuerpo de la respuesta
+     * enviando la cabecera "X-Token-Transport: body". El cliente web sigue
+     * recibiendo únicamente las cookies httpOnly.
+     */
+    private tokensInBody(
+        req: Request,
+        tokens: {accessToken?: string; refreshToken?: string}
+    ): {accessToken?: string; refreshToken?: string} {
+        if (req.headers["x-token-transport"] !== "body") return {};
+
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken
+        };
     }
 
     @Post("login")
     @ApiOkResponse({status:HttpStatus.OK})
-    async login(@Res() res: Response, @Body() body: AuthDto) {
+    async login(@Req() req: Request, @Res() res: Response, @Body() body: AuthDto) {
         if (!body) throw new UnauthorizedException();
 
         const authResult = await this.authService.signIn(body);
@@ -91,7 +106,8 @@ export class AuthController {
                 username:authResult.user.username,
                 email:authResult.user.email,
                 admin:authResult.user.admin
-            }
+            },
+            ...this.tokensInBody(req, authResult.tokens)
         }).send();
     }
 
@@ -136,7 +152,8 @@ export class AuthController {
 
         response.json({
             status: "ok",
-            uuid: body.uuid
+            uuid: body.uuid,
+            ...this.tokensInBody(req, tokens)
         }).send();
     }
 

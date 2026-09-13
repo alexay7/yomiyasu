@@ -22,7 +22,11 @@ export class RefreshJwtStrategy extends PassportStrategy(Strategy, "jwt-ref") {
     }
 
     validate(req: Request, payload: object) {
-        const refreshToken = req.cookies.refresh_token;
+        // Los clientes nativos envían el token en la cabecera Authorization
+        const refreshToken =
+      req.cookies?.refresh_token ||
+      ExtractJwt.fromAuthHeaderAsBearerToken()(req) ||
+      undefined;
         return {...payload, refreshToken};
     }
 

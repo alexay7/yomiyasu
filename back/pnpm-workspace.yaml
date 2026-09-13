@@ -1,0 +1,7 @@
+allowBuilds:
+  '@nestjs/core': false
+  argon2: true
+  core-js: false
+  es5-ext: false
+  leveldown: true
+  msgpackr-extract: true
