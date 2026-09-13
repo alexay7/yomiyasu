@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y mecab libmecab-dev mecab-ipadic-utf8
 RUN npm install -g pnpm
 
 # Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install app dependencies using pnpm
 RUN pnpm install
