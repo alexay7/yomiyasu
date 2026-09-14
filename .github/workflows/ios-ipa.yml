@@ -1,0 +1,78 @@
+name: iOS IPA
+
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-ipa.yml"
+  workflow_dispatch:
+
+jobs:
+  build-ipa:
+    name: Build unsigned IPA
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$XCODE_PATH" ]; then
+            sudo xcode-select -s "$XCODE_PATH"
+          fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: ios/DerivedData/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('ios/project.yml') }}
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build unsigned IPA
+        working-directory: ios
+        run: |
+          xcodebuild \
+            -project Yomiyasu.xcodeproj \
+            -scheme Yomiyasu \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath DerivedData \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+          mkdir -p build/Payload
+          cp -R DerivedData/Build/Products/Release-iphoneos/Yomiyasu.app build/Payload/
+          (cd build && zip -qr Yomiyasu.ipa Payload && rm -rf Payload)
+          mv build/Yomiyasu.ipa "build/Yomiyasu-${GITHUB_SHA:0:7}.ipa"
+
+      - name: Summary
+        working-directory: ios
+        run: |
+          ls -lh build/*.ipa
+          shasum -a 256 build/*.ipa
+          {
+            echo "### IPA generado"
+            echo ""
+            echo '```'
+            ls -lh build/*.ipa
+            shasum -a 256 build/*.ipa
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yomiyasu-ipa
+          path: ios/build/Yomiyasu-*.ipa
+          if-no-files-found: error
+          retention-days: 30

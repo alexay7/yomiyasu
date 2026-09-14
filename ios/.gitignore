@@ -1,0 +1,7 @@
+Yomiyasu.xcodeproj/
+DerivedData/
+.build/
+xcuserdata/
+.DS_Store
+*.xcresult
+LocalFixtures/

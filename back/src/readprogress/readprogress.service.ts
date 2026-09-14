@@ -336,8 +336,10 @@ export class ReadprogressService {
     async getMonthStreak(user:Types.ObjectId, year:number, month:number) {
         const startOfMonth = new Date(year, month);
         startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
         const endOfMonth = new Date(year, month);
         endOfMonth.setMonth(endOfMonth.getMonth() + 1, 0);
+        endOfMonth.setHours(23, 59, 59, 999);
 
         const aggregationResult = await this.readProgressModel.aggregate([
             {
