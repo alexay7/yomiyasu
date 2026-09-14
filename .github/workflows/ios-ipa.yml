@@ -7,6 +7,13 @@ on:
       - ".github/workflows/ios-ipa.yml"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-ipa
+  cancel-in-progress: true
+
 jobs:
   build-ipa:
     name: Build unsigned IPA
@@ -76,3 +83,23 @@ jobs:
           path: ios/build/Yomiyasu-*.ipa
           if-no-files-found: error
           retention-days: 30
+
+      - name: Preparar IPA para el release
+        working-directory: ios
+        run: |
+          mkdir -p build/release
+          cp build/Yomiyasu-*.ipa build/release/Yomiyasu-ios.ipa
+          ls -lh build/release
+
+      - name: Publicar release
+        working-directory: ios
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: latest
+          TITLE: "Últimas compilaciones"
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 \
+            || gh release create "$TAG" --title "$TITLE" --latest \
+                 --notes "Compilaciones automáticas de iOS (IPA) y Android (APK). Se actualizan con cada push." \
+            || true
+          gh release upload "$TAG" build/release/Yomiyasu-ios.ipa --clobber

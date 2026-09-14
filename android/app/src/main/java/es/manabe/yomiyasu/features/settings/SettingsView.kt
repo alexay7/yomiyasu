@@ -1,0 +1,397 @@
+package es.manabe.yomiyasu.features.settings
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import es.manabe.yomiyasu.BuildConfig
+import es.manabe.yomiyasu.app.DebugConfig
+import es.manabe.yomiyasu.app.ui.theme.ThemeMode
+import es.manabe.yomiyasu.core.models.MainView
+import es.manabe.yomiyasu.core.settings.AppSettings
+import es.manabe.yomiyasu.core.settings.AppSettingsData
+import es.manabe.yomiyasu.core.settings.BookViewMode
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val settings: AppSettings,
+) : ViewModel() {
+
+    val data: StateFlow<AppSettingsData> = settings.flow
+
+    fun setAppearance(value: ThemeMode) {
+        viewModelScope.launch { settings.setAppearance(value) }
+    }
+
+    fun setMainView(value: MainView) {
+        viewModelScope.launch { settings.setMainView(value) }
+    }
+
+    fun setAntispoilers(value: Boolean) {
+        viewModelScope.launch { settings.setAntispoilers(value) }
+    }
+
+    fun setBookView(value: BookViewMode) {
+        viewModelScope.launch { settings.setBookView(value) }
+    }
+
+    fun setAutoCrono(value: Boolean) {
+        viewModelScope.launch { settings.setAutoCrono(value) }
+    }
+
+    fun setShowCrono(value: Boolean) {
+        viewModelScope.launch { settings.setShowCrono(value) }
+    }
+}
+
+@Composable
+fun SettingsRoute(
+    isSocketConnected: Boolean,
+    onOpenAccount: () -> Unit,
+    onLogout: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
+    val settings by viewModel.data.collectAsStateWithLifecycle()
+
+    SettingsScreen(
+        settings = settings,
+        isSocketConnected = isSocketConnected,
+        onAppearanceChange = viewModel::setAppearance,
+        onMainViewChange = viewModel::setMainView,
+        onAntispoilersChange = viewModel::setAntispoilers,
+        onBookViewChange = viewModel::setBookView,
+        onAutoCronoChange = viewModel::setAutoCrono,
+        onShowCronoChange = viewModel::setShowCrono,
+        onOpenAccount = onOpenAccount,
+        onLogout = onLogout,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsScreen(
+    settings: AppSettingsData,
+    isSocketConnected: Boolean,
+    onAppearanceChange: (ThemeMode) -> Unit,
+    onMainViewChange: (MainView) -> Unit,
+    onAntispoilersChange: (Boolean) -> Unit,
+    onBookViewChange: (BookViewMode) -> Unit,
+    onAutoCronoChange: (Boolean) -> Unit,
+    onShowCronoChange: (Boolean) -> Unit,
+    onOpenAccount: () -> Unit,
+    onLogout: () -> Unit,
+) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = { TopAppBar(title = { Text("Ajustes") }) },
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .testTag("settingsList"),
+            contentPadding = PaddingValues(bottom = 24.dp),
+        ) {
+            item { SectionHeader("Apariencia") }
+            item {
+                AppearanceSelector(
+                    selected = settings.appearance,
+                    onSelect = onAppearanceChange,
+                )
+            }
+
+            item {
+                SectionHeader(
+                    title = "Vista principal",
+                    footer = "Filtra lo que aparece en Inicio y Lista de lectura.",
+                )
+            }
+            item {
+                ChoiceChips(
+                    options = MainView.entries,
+                    selected = settings.mainView,
+                    label = { it.title },
+                    onSelect = onMainViewChange,
+                )
+            }
+
+            item { SectionHeader("Biblioteca") }
+            item {
+                SwitchRow(
+                    title = "Ocultar spoilers de volúmenes no leídos",
+                    checked = settings.antispoilers,
+                    onCheckedChange = onAntispoilersChange,
+                )
+            }
+            item {
+                Text(
+                    text = "Info. de los libros",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
+            item {
+                ChoiceChips(
+                    options = BookViewMode.entries,
+                    selected = settings.bookView,
+                    label = { it.title },
+                    onSelect = onBookViewChange,
+                )
+            }
+
+            item { SectionHeader("Lectura") }
+            item {
+                SwitchRow(
+                    title = "Mostrar cronómetro en el lector",
+                    checked = settings.showCrono,
+                    onCheckedChange = onShowCronoChange,
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Iniciar cronómetro al abrir un libro",
+                    checked = settings.autoCrono,
+                    onCheckedChange = onAutoCronoChange,
+                )
+            }
+
+            item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+            item {
+                SettingsEntry(
+                    title = "Cuenta",
+                    icon = Icons.Filled.AccountCircle,
+                    onClick = onOpenAccount,
+                )
+            }
+            item {
+                SettingsEntry(
+                    title = "Cerrar sesión",
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    onClick = { showLogoutDialog = true },
+                    destructive = true,
+                )
+            }
+
+            if (BuildConfig.DEBUG) {
+                item { SectionHeader("Diagnóstico") }
+                item { DebugRow("Servidor", DebugConfig.serverUrl) }
+                item { DebugRow("Websocket", DebugConfig.socketUrl) }
+                item {
+                    DebugRow(
+                        "Conexión",
+                        if (isSocketConnected) "Conectado" else "Desconectado",
+                    )
+                }
+            }
+        }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("¿Cerrar sesión?") },
+            text = { Text("Se cerrará la sesión en este dispositivo.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                ) {
+                    Text("Cerrar sesión", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancelar") }
+            },
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, footer: String? = null) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        footer?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppearanceSelector(
+    selected: ThemeMode,
+    onSelect: (ThemeMode) -> Unit,
+) {
+    SingleChoiceSegmentedButtonRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        ThemeMode.entries.forEachIndexed { index, mode ->
+            SegmentedButton(
+                selected = mode == selected,
+                onClick = { onSelect(mode) },
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = ThemeMode.entries.size,
+                ),
+                label = { Text(mode.title) },
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> ChoiceChips(
+    options: List<T>,
+    selected: T,
+    label: (T) -> String,
+    onSelect: (T) -> Unit,
+) {
+    FlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        options.forEach { option ->
+            FilterChip(
+                selected = option == selected,
+                onClick = { onSelect(option) },
+                label = { Text(label(option)) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange,
+            )
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
+@Composable
+private fun SettingsEntry(
+    title: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    destructive: Boolean = false,
+) {
+    val contentColor = if (destructive) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+
+    ListItem(
+        headlineContent = { Text(title, color = contentColor) },
+        leadingContent = { Icon(imageVector = icon, contentDescription = null, tint = contentColor) },
+        modifier = Modifier.clickable(onClick = onClick),
+    )
+}
+
+@Composable
+private fun DebugRow(label: String, value: String) {
+    ListItem(
+        headlineContent = { Text(label) },
+        supportingContent = {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+    )
+}
+
+private val ThemeMode.title: String
+    get() = when (this) {
+        ThemeMode.System -> "Sistema"
+        ThemeMode.Light -> "Claro"
+        ThemeMode.Dark -> "Oscuro"
+    }
