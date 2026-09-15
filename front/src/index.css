@@ -24,11 +24,23 @@
   :root {
     --primary-color: #25502e;
     --accent-color: #3da0a4;
+    --app-bg: #ebe8e3;
+    --app-surface: #ffffff;
+    --app-chrome: #ebe8e3;
+    --app-sidebar: #f7f7f7;
+    --app-text: #0000008a;
+    --app-border: #0000001f;
   }
 
   :root[class~="dark"] {
     --primary-color: #308054;
     --accent-color: #5bbfc2;
+    --app-bg: #121212;
+    --app-surface: #1E1E1E;
+    --app-chrome: #101010;
+    --app-sidebar: #212121;
+    --app-text: #ebe8e3;
+    --app-border: #ffffff1f;
   }
 }
 

@@ -12,8 +12,10 @@ type GlobalContexType = {
     ttuConnector:React.RefObject<HTMLIFrameElement>
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const GlobalContext = createContext<GlobalContexType>({} as GlobalContexType);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useGlobal():GlobalContexType {
     return useContext(GlobalContext);
 }

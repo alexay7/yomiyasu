@@ -1,4 +1,4 @@
-import {Dialog, DialogContent, DialogTitle, Divider, IconButton, Tooltip} from "@mui/material";
+import {Alert, CircularProgress, Dialog, DialogContent, DialogTitle, Divider, IconButton, Tooltip} from "@mui/material";
 import React, {Fragment, useEffect, useState} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
@@ -18,9 +18,9 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
     const {searchWord, setSearchWord} = props;
     const {readerSettings} = useSettingsStore();
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const [canClose, setCanClose] = useState(false);
+    const [hint, setHint] = useState("");
 
-    const {data:wordDefinitions} = useQuery(searchWord, async()=>{
+    const {data:wordDefinitions, isFetching} = useQuery(["dictionary", readerSettings.dictionaryVersion, searchWord], async()=>{
         if (searchWord === "" || searchWord === "\n") return undefined;
 
         try {
@@ -29,30 +29,16 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
         } catch (e) {
             const error = e as HttpError;
             if (error.status === 500) {
-                toast.error("El diccionario todavía no está listo.");
+                setHint("El diccionario todavía no está listo.");
                 return;
             }
-            toast.error("El máximo de texto seleccionable es de 30 caracteres");
-            setSearchWord("");
+            setHint("El máximo de texto seleccionable es de 30 caracteres");
         }
-    });
+    }, {enabled: searchWord !== "" && searchWord !== "\n"});
 
     useEffect(()=>{
-        let timeout:NodeJS.Timeout | undefined = undefined;
-
         setSelectedIndex(0);
-        if (searchWord !== "") {
-            setCanClose(false);
-            timeout = setTimeout(()=>{
-                setCanClose(true);
-            }, 500);
-        }
-
-        return ()=>{
-            if (timeout) {
-                clearTimeout(timeout);
-            }
-        };
+        setHint("");
     }, [searchWord]);
 
     function getWordThings(frequency:string | undefined, pitches:{position:number}[] | undefined):string {
@@ -99,18 +85,18 @@ export function Dictionary(props:DictionaryProps):React.ReactElement {
 
     return (
         <Fragment>
-            <Dialog hideBackdrop open={searchWord !== "" && readerSettings.nativeDictionary} onClose={(_, r)=>{
-                if (r === "escapeKeyDown" || canClose) {
-                    setSearchWord("");
-                }
+            <Dialog hideBackdrop open={searchWord !== "" && readerSettings.nativeDictionary} onClose={()=>{
+                setSearchWord("");
             }}
             >
                 <DialogTitle>Diccionario: {wordDefinitions?.map((def, i)=>(
                     <span className={`cursor-pointer hover:font-semibold border-0 ${i === selectedIndex ? "border-b-2 border-solid border-primary font-semibold" : ""}`} key={i} onClick={()=>setSelectedIndex(i)}>{def.display}</span>
                 ))}
+                    {isFetching && <CircularProgress size={16} className="ml-2"/>}
                 </DialogTitle>
                 <Divider/>
                 <DialogContent>
+                    {hint && <Alert severity="warning" className="mb-2">{hint}</Alert>}
                     {wordDefinitions && wordDefinitions?.length > 0 && (
                         <div className="">
                             {wordDefinitions[selectedIndex].words.length > 0 ? (

@@ -6,6 +6,7 @@ import dayjs, {Dayjs} from "dayjs";
 import {toast} from "react-toastify";
 import {api} from "../../../../../api/api";
 import {Delete} from "@mui/icons-material";
+import {confirmDialog} from "../../../../../stores/ConfirmStore";
 
 interface EditProgressProps {
     progressDetails:BookProgress,
@@ -89,8 +90,8 @@ function EditProgressForm(props:EditProgressProps):React.ReactElement {
             }}
             />
             <div className="flex w-full justify-between">
-                <IconButton onClick={()=>{
-                    if (confirm("¿Seguro que quieres borrar el progreso?")) {
+                <IconButton onClick={async()=>{
+                    if (await confirmDialog("¿Seguro que quieres borrar el progreso?")) {
                         void deleteProgress();
                     }
                 }}

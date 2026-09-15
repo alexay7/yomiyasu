@@ -70,7 +70,7 @@ function Stats():React.ReactElement {
     });
 
     return (
-        <div className="flex flex-col w-full dark:bg-[#121212] overflow-y-scroll h-[calc(100svh-4rem)]">
+        <div className="flex flex-col w-full dark:bg-app-bg overflow-y-scroll h-[calc(100svh-4rem)]">
             <Helmet>
                 <title>YomiYasu - Estadísticas</title>
             </Helmet>

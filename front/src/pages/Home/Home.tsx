@@ -2,6 +2,7 @@ import React from "react";
 import {Helmet} from "react-helmet";
 import loadable from "@loadable/component";
 import {useSettingsStore} from "../../stores/SettingsStore";
+import {LazySection} from "../../components/LazySection/LazySection";
 
 const NewBooksScroller = loadable(() => import("./components/NewBooksScroller"));
 const ProgressScroller = loadable(() => import("./components/ProgressScroller"));
@@ -14,20 +15,7 @@ function Home():React.ReactElement {
     const {siteSettings} = useSettingsStore();
 
     return (
-        <div className="dark:bg-[#121212] bg-white overflow-y-scroll h-[calc(100svh-4rem)]"
-            onDragOver={(e)=>{
-                e.preventDefault();
-            }}
-            onDragEnter={(e)=>{
-                e.preventDefault();
-            }}
-            onDragEnd={(e)=>{
-                e.preventDefault();
-            }}
-            onDrop={(e)=>{
-                e.preventDefault();
-            }}
-        >
+        <div className="dark:bg-app-bg bg-white overflow-y-scroll h-[calc(100svh-4rem)]">
             <Helmet>
                 <title>YomiYasu</title>
             </Helmet>
@@ -35,28 +23,44 @@ function Home():React.ReactElement {
                 <ProgressScroller/>
                 <TableroScroller/>
                 {["both", "manga"].includes(siteSettings.mainView) && (
-                    <ReadLaterScroller variant="manga"/>
+                    <LazySection>
+                        <ReadLaterScroller variant="manga"/>
+                    </LazySection>
                 )}
                 {["both", "novels"].includes(siteSettings.mainView) && (
-                    <ReadLaterScroller variant="novela"/>
+                    <LazySection>
+                        <ReadLaterScroller variant="novela"/>
+                    </LazySection>
                 )}
                 {["both", "manga"].includes(siteSettings.mainView) && (
-                    <NewBooksScroller variant="manga"/>
+                    <LazySection>
+                        <NewBooksScroller variant="manga"/>
+                    </LazySection>
                 )}
                 {["both", "novels"].includes(siteSettings.mainView) && (
-                    <NewBooksScroller variant="novela"/>
+                    <LazySection>
+                        <NewBooksScroller variant="novela"/>
+                    </LazySection>
                 )}
                 {["both", "manga"].includes(siteSettings.mainView) && (
-                    <NewSeriesScroller variant="manga"/>
+                    <LazySection>
+                        <NewSeriesScroller variant="manga"/>
+                    </LazySection>
                 )}
                 {["both", "novels"].includes(siteSettings.mainView) && (
-                    <NewSeriesScroller variant="novela"/>
+                    <LazySection>
+                        <NewSeriesScroller variant="novela"/>
+                    </LazySection>
                 )}
                 {["both", "manga"].includes(siteSettings.mainView) && (
-                    <RecentSeriesScroller variant="manga"/>
+                    <LazySection>
+                        <RecentSeriesScroller variant="manga"/>
+                    </LazySection>
                 )}
                 {["both", "novels"].includes(siteSettings.mainView) && (
-                    <RecentSeriesScroller variant="novela"/>
+                    <LazySection>
+                        <RecentSeriesScroller variant="novela"/>
+                    </LazySection>
                 )}
             </div>
         </div>

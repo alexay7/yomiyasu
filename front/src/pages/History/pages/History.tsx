@@ -52,7 +52,7 @@ function History():React.ReactElement {
     });
 
     return (
-        <div className="dark:bg-[#121212] overflow-y-scroll h-[calc(100svh-4rem)] px-4">
+        <div className="dark:bg-app-bg overflow-y-scroll h-[calc(100svh-4rem)] px-4">
             <Helmet>
                 <title>YomiYasu - Historial</title>
             </Helmet>

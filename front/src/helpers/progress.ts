@@ -1,4 +1,5 @@
 import {api} from "../api/api";
+import {queryClient} from "../api/queryClient";
 import {Book, BookProgress} from "../types/book";
 import {deleteBookBookmark} from "./ttu";
 
@@ -60,4 +61,13 @@ export async function createProgress(bookData:Book, page?:number, time?:number, 
     }
 
     await api.post<BookProgress, Book>("readprogress", newProgress);
+
+    // Marca como obsoletas las listas que muestran progreso para que se refresquen
+    // la próxima vez que se monten (evita refetches continuos mientras se lee)
+    queryClient.invalidateQueries({
+        predicate: (query)=>{
+            const [key] = Array.isArray(query.queryKey) ? query.queryKey : [query.queryKey];
+            return key === "progreso" || key === "tablero" || key === "seriesData" || (typeof key === "string" && key.startsWith("serie-"));
+        }
+    });
 }

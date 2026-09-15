@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN npm install -g pnpm
 
 # Copy package.json and pnpm-lock.yaml
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install app dependencies using pnpm
 RUN pnpm install

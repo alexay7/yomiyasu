@@ -3,6 +3,7 @@ import {useQuery} from "react-query";
 import {BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
+import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {useSettingsStore} from "../../../stores/SettingsStore";
 
@@ -10,7 +11,7 @@ function TableroScroller():React.ReactElement {
     const {reloaded} = useGlobal();
     const {siteSettings} = useSettingsStore();
 
-    const {data:tableroData, refetch:tableroRefetch} = useQuery(["tablero", siteSettings.mainView], async()=> {
+    const {data:tableroData, refetch:tableroRefetch, isLoading, isError} = useQuery(["tablero", siteSettings.mainView], async()=> {
         const res = await api.get<BookWithProgress[]>("readprogress/tablero");
 
         if (!res) return [];
@@ -39,6 +40,14 @@ function TableroScroller():React.ReactElement {
             }, 1000);
         }
     }, [tableroRefetch, reloaded]);
+
+    if (isLoading) return <ScrollerSkeleton title="Tu tablero"/>;
+
+    if (isError) {
+        return <SectionError message="No se pudo cargar tu tablero" onRetry={()=>{
+            void tableroRefetch();
+        }}/>;
+    }
 
     if (!tableroData || tableroData.length === 0) return <></>;
 

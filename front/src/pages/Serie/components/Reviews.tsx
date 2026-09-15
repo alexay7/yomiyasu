@@ -7,6 +7,7 @@ import {useAuth} from "../../../contexts/AuthContext";
 import {api} from "../../../api/api";
 import {toast} from "react-toastify";
 import {useGlobal} from "../../../contexts/GlobalContext";
+import {confirmDialog} from "../../../stores/ConfirmStore";
 
 interface ReviewProps {
     serieData:FullSerie
@@ -38,8 +39,8 @@ export function Reviews(props:ReviewProps):React.ReactElement {
                     <Fragment key={review._id}>
                         <li className="relative flex flex-col py-2 gap-1">
                             {userData?._id === review.user && (
-                                <IconButton size="small" className="absolute top-0 right-0" onClick={()=>{
-                                    if (confirm("¿Seguro que quieres borrar la valoración?")) {
+                                <IconButton size="small" className="absolute top-0 right-0" onClick={async()=>{
+                                    if (await confirmDialog("¿Seguro que quieres borrar la valoración?")) {
                                         void deleteReview(review._id || "");
                                     }
                                 }}

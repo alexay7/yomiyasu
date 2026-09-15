@@ -5,6 +5,7 @@ import {formatTime} from "../../../helpers/helpers";
 import {createProgress} from "../../../helpers/progress";
 import {Book, BookProgress} from "../../../types/book";
 import {useQueryClient} from "react-query";
+import {confirmDialog} from "../../../stores/ConfirmStore";
 
 
 interface StopWatchMenuProps {
@@ -45,7 +46,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
 
     async function resetTimer():Promise<void> {
         // Confirmation from the user
-        if (!window.confirm("¿Estás seguro de que quieres reiniciar el cronómetro?, esto reiniciará el tiempo de lectura del libro entero.")) return;
+        if (!await confirmDialog("¿Estás seguro de que quieres reiniciar el cronómetro?, esto reiniciará el tiempo de lectura del libro entero.")) return;
 
         if (bookData) {
             await createProgress(bookData, undefined, 1);
@@ -68,7 +69,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
     return (
         <div className="">
             <Tooltip title="Cronómetro">
-                <IconButton onClick={handleClick} className="dark:text-[#ebe8e3] text-[#0000008a]">
+                <IconButton onClick={handleClick} className="text-app-text">
                     {timerOn ? (
                         <Timer/>
                     ) : (
@@ -90,7 +91,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
 
                             let text = "";
 
-                            let currentChars = characters||0 - (oldProgress?.characters || 0);
+                            let currentChars = (characters || 0) - (oldProgress?.characters || 0);
 
                             if (refreshProgress) {
                                 // Actualizar el progreso antes de copiar
@@ -120,7 +121,7 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
                         >
                             <p>Sesión Actual</p>
                             <p className="text-xs">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</p>
-                            <p className="text-xs">Caracteres: {characters||0 - (oldProgress?.characters || 0)}</p>
+                            <p className="text-xs">Caracteres: {(characters || 0) - (oldProgress?.characters || 0)}</p>
                         </div>
                     </Tooltip>
                 </li>

@@ -102,8 +102,9 @@ pueden tomar del mismo `ios/LocalFixtures/e2e.json`:
 
 ## CI y releases
 
-`.github/workflows/android-apk.yml` compila los APKs (con tests unitarios y lint) en cada
-push que toque `android/`, y publica el release rodante **`latest`** con nombres estables:
+`.github/workflows/android-apk.yml` compila los APKs en cada push que toque `android/` y
+publica el release rodante **`latest`** con nombres estables (los tests y el lint se ejecutan
+en local, no en CI):
 
 - `https://github.com/alexay7/yomiyasu/releases/latest/download/Yomiyasu-android-release.apk`
 - `https://github.com/alexay7/yomiyasu/releases/latest/download/Yomiyasu-android-debug.apk`

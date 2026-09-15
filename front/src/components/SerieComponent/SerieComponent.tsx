@@ -67,7 +67,7 @@ export function SerieComponent(props:SerieComponentProps):React.ReactElement {
                 </Fade>
             </div>
 
-            <div className="dark:bg-[#1E1E1E] bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
+            <div className="dark:bg-app-surface bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
                 <a href={`/app/series/${serieData._id}`} className="line-clamp-2 h-12" onClick={()=>{
                     window.localStorage.setItem("origin", window.location.pathname);
                 }}

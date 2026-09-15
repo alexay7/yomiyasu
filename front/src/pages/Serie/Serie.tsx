@@ -17,6 +17,8 @@ import {addToReadlist, getFlameColor, removeFromReadlist} from "../../helpers/se
 import {Helmet} from "react-helmet";
 import SpeedGraph from "./components/SpeedGraph";
 import {openNovel} from "../../helpers/ttu";
+import {SeriePageSkeleton, SectionError} from "../../components/Skeletons/Skeletons";
+import {confirmDialog} from "../../stores/ConfirmStore";
 
 function Serie():React.ReactElement {
     const {id} = useParams();
@@ -29,7 +31,7 @@ function Serie():React.ReactElement {
 
     const overflowingText = useRef<HTMLParagraphElement | null>(null);
 
-    const {data:serieData, refetch:serieRefetch} = useQuery(`serie-${id}`, async()=>{
+    const {data:serieData, refetch:serieRefetch, isLoading, isError} = useQuery(`serie-${id}`, async()=>{
         const response = await api.get<FullSerie>(`series/serie/${id}`);
 
         if (response) {
@@ -88,12 +90,30 @@ function Serie():React.ReactElement {
 
     const thumbnailUrl = serieData ? serieData.variant === "manga" ? `/api/static/mangas/${serieData.thumbnailPath}` : `/api/static/novelas/${serieData.thumbnailPath}` : "";
 
+    if (isLoading) {
+        return (
+            <div className="dark:bg-app-bg">
+                <SeriePageSkeleton/>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="dark:bg-app-bg">
+                <SectionError message="No se pudo cargar la serie" onRetry={()=>{
+                    void serieRefetch();
+                }}/>
+            </div>
+        );
+    }
+
     return (
-        <div className="dark:bg-[#121212] pb-4">
+        <div className="dark:bg-app-bg pb-4">
             <Helmet>
                 <title>{`YomiYasu - ${serieData?.visibleName ? serieData?.visibleName : "serie"}`}</title>
             </Helmet>
-            <div className="z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] flex items-center justify-between h-14 border-x border-0 border-solid border-[#0000001f]">
+            <div className="z-20 w-fill dark:bg-app-sidebar bg-app-sidebar flex items-center justify-between h-14 border-x border-0 border-solid border-app-border">
                 <div className="flex items-center mx-4 w-5/6 overflow-hidden">
                     <IconButton onClick={()=>goBack(navigate)}>
                         <ArrowBack/>
@@ -117,7 +137,7 @@ function Serie():React.ReactElement {
                             </IconButton>
                         </Tooltip>
                         {!serieData?.readlist ? (
-                            <Tooltip title="Añadir a &quot;Leer más tarder&quot;">
+                            <Tooltip title="Añadir a &quot;Leer más tarde&quot;">
                                 <IconButton onClick={async()=>{
                                     await addToReadlist(serieData._id, serieData.visibleName);
                                     queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:true});
@@ -127,7 +147,7 @@ function Serie():React.ReactElement {
                                 </IconButton>
                             </Tooltip>
                         ) : (
-                            <Tooltip title="Quitar de &quot;Leer más tarder&quot;">
+                            <Tooltip title="Quitar de &quot;Leer más tarde&quot;">
                                 <IconButton onClick={async()=>{
                                     await removeFromReadlist(serieData._id, serieData.visibleName);
                                     queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:false});
@@ -178,7 +198,7 @@ function Serie():React.ReactElement {
                                 {serieBooks && serieBooks.length > 0 && (
                                     <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={async()=>{
                                         if (unreadBooks === 0) {
-                                            if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+                                            if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
                                         }
                                         let bookId = 0;
                                         serieBooks.forEach((book, i)=>{

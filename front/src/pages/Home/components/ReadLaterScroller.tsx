@@ -2,6 +2,7 @@ import React, {useEffect} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
+import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {SerieWithProgress} from "../../../types/serie";
 
@@ -11,7 +12,7 @@ interface ReadLaterScrollerProps {
 
 function ReadLaterScroller({variant}:ReadLaterScrollerProps):React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:readlist, refetch:readlistRefetch} = useQuery(["readlist", variant], async()=> {
+    const {data:readlist, refetch:readlistRefetch, isLoading, isError} = useQuery(["readlist", variant], async()=> {
         const res = await api.get<SerieWithProgress[]>(`series/${variant}/readlist`);
         return res;
     });
@@ -29,6 +30,14 @@ function ReadLaterScroller({variant}:ReadLaterScrollerProps):React.ReactElement 
             }, 1000);
         }
     }, [readlistRefetch, reloaded]);
+
+    if (isLoading) return <ScrollerSkeleton title={`"Leer más tarde" ${variant}`}/>;
+
+    if (isError) {
+        return <SectionError message="No se pudo cargar la lista de lectura más tarde" onRetry={()=>{
+            void readlistRefetch();
+        }}/>;
+    }
 
     if (!readlist || readlist.length === 0) return <></>;
 

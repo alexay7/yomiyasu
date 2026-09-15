@@ -7,6 +7,7 @@ import {BookProgress} from "../../../types/book";
 import {DataGrid, GridColDef, GridToolbar} from "@mui/x-data-grid";
 import {Delete} from "@mui/icons-material";
 import {useNavigate} from "react-router-dom";
+import {confirmDialog} from "../../../stores/ConfirmStore";
 
 export interface LogData {
     id:string,
@@ -56,8 +57,8 @@ function LogGrid(props:LogGridProps):React.ReactElement {
             sortable:false,
             filterable:false,
             renderCell:(params)=>(
-                <IconButton color="error" onClick={()=>{
-                    if (confirm("¿Seguro que quieres borrar el progreso?")) {
+                <IconButton color="error" onClick={async()=>{
+                    if (await confirmDialog("¿Seguro que quieres borrar el progreso?")) {
                         window.localStorage.removeItem(params.row.bookId);
                         void deleteProgress(params.value);
                     }
@@ -72,9 +73,9 @@ function LogGrid(props:LogGridProps):React.ReactElement {
             headerName: "",
             renderCell:(params)=>(
                 <img className="cursor-pointer" loading="lazy" src={params.value as string} alt="" onClick={
-                    ()=> {
+                    async()=> {
                     // Confirmation from the user
-                        if (!confirm("¿Seguro que quieres abrir el libro?")) return;
+                        if (!await confirmDialog("¿Seguro que quieres abrir el libro?")) return;
 
                         navigate(`/reader/${params.row.bookId}`);
                     }
@@ -152,7 +153,7 @@ function LogGrid(props:LogGridProps):React.ReactElement {
     ];
 
     return (
-        <div className="dark:bg-[#1E1E1E] mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500 hover:cursor-cell" style={{height:loading ? "170px" : undefined, width:"100%"}}>
+        <div className="dark:bg-app-surface mx-4 flex justify-center shadow-lg dark:shadow-[#1E1E1E] shadow-gray-500 hover:cursor-cell" style={{height:loading ? "170px" : undefined, width:"100%"}}>
             <DataGrid
                 loading={loading}
                 rows={data} columns={columns} slots={{

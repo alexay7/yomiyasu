@@ -10,6 +10,7 @@ import {useAuth} from "../../contexts/AuthContext";
 import {UserCreator} from "./components/UserCreator";
 import {Delete, Person} from "@mui/icons-material";
 import {useNavigate} from "react-router-dom";
+import {confirmDialog} from "../../stores/ConfirmStore";
 
 export default function Admin():React.ReactElement {
     const {userData} = useAuth();
@@ -40,7 +41,7 @@ export default function Admin():React.ReactElement {
     });
 
     async function makeAdmin(user:{id:string, email:string}, checked:boolean):Promise<void> {
-        if (confirm(`¿Estás seguro de que quieres ${checked ? "dar" : "quitar"} permisos de administrador a ${user.email}?`)) {
+        if (await confirmDialog(`¿Estás seguro de que quieres ${checked ? "dar" : "quitar"} permisos de administrador a ${user.email}?`)) {
             const res = await api.post(`users/${user.id}/admin`, {admin:checked});
             if (res) {
                 await refetch();
@@ -51,7 +52,7 @@ export default function Admin():React.ReactElement {
     }
 
     async function deleteUser(user:{id:string, email:string}):Promise<void> {
-        if (confirm(`¿Estás seguro de que quieres eliminar a ${user.email} de la base de datos?`)) {
+        if (await confirmDialog(`¿Estás seguro de que quieres eliminar a ${user.email} de la base de datos?`)) {
             const res = await api.delete(`users/${user.id}`);
             if (res) {
                 await refetch();
@@ -118,7 +119,7 @@ export default function Admin():React.ReactElement {
     ];
 
     return (
-        <div className="flex flex-col w-full dark:bg-[#121212] gap-8 overflow-y-scroll h-[calc(100svh-4rem)]">
+        <div className="flex flex-col w-full dark:bg-app-bg gap-8 overflow-y-scroll h-[calc(100svh-4rem)]">
             <Helmet>
                 <title>YomiYasu - Panel Admin</title>
             </Helmet>
@@ -128,7 +129,7 @@ export default function Admin():React.ReactElement {
                     <h2 className="dark:text-white pt-2 text-2xl">Lista de usuarios</h2>
                     <UserCreator refetch={()=> void refetch()}/>
                 </div>
-                <DataGrid className="dark:bg-[#1E1E1E]" rows={data} columns={columns}
+                <DataGrid className="dark:bg-app-surface" rows={data} columns={columns}
                     rowCount={data.length}
                     sortingMode="server"
                     disableColumnFilter

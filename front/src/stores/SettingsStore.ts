@@ -43,7 +43,8 @@ export const useSettingsStore = create<SettingsState>()(
                 startCronoOnPage: false,
                 mainView: "both",
                 showCrono: false,
-                kindleEmail: undefined
+                kindleEmail: undefined,
+                libraryLimit: "25"
             },
             setSiteSettings: (v) => set({siteSettings:v}),
             modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}}),

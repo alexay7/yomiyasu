@@ -1,5 +1,5 @@
 import {Search, Whatshot} from "@mui/icons-material";
-import {Autocomplete, Box, Rating, TextField, Tooltip} from "@mui/material";
+import {Autocomplete, Box, CircularProgress, Rating, TextField, Tooltip} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {api} from "../../../api/api";
 import {SerieWithProgress, SeriesFilter} from "../../../types/serie";
@@ -21,18 +21,25 @@ export function SearchAutocomplete():React.ReactElement {
     const [searchQuery, setSearchQuery] = useState("");
     const [foundSeries, setFoundSeries] = useState<SerieWithProgress[]>([]);
     const [foundBooks, setFoundBooks] = useState<BookWithProgress[]>([]);
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
     useEffect(()=>{
+        if (searchQuery.length < 2) {
+            setFoundSeries([]);
+            setFoundBooks([]);
+            setLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+        setLoading(true);
+
         async function getSeries():Promise<void> {
-            if (searchQuery.length < 2) {
-                setFoundSeries([]);
-                return;
-            }
             const res = await api.get<SeriesFilter>(`series/all?name=${searchQuery}&sort=sortName`);
 
-            if (!res) return;
+            if (!res || cancelled) return;
 
             // Sort by variant, mangas first
             res.data.sort((a, b)=>{
@@ -45,13 +52,9 @@ export function SearchAutocomplete():React.ReactElement {
         }
 
         async function getBooks():Promise<void> {
-            if (searchQuery.length < 2) {
-                setFoundBooks([]);
-                return;
-            }
             const res = await api.get<BookWithProgress[]>(`books/all?name=${searchQuery}&limit=10&page=1&sort=sortName`);
 
-            if (!res) return;
+            if (!res || cancelled) return;
 
             // Sort by variant, mangas first
             res.sort((a, b)=>{
@@ -64,11 +67,15 @@ export function SearchAutocomplete():React.ReactElement {
         }
 
         const search = setTimeout(()=>{
-            void getSeries();
-            void getBooks();
-        }, 150);
+            void Promise.all([getSeries(), getBooks()]).finally(()=>{
+                if (!cancelled) setLoading(false);
+            });
+        }, 300);
 
-        return ()=>clearTimeout(search);
+        return ()=>{
+            cancelled = true;
+            clearTimeout(search);
+        };
     }, [searchQuery]);
 
     function getThumbnail(option:BookWithProgress | SerieWithProgress):string {
@@ -139,10 +146,11 @@ export function SearchAutocomplete():React.ReactElement {
             )}
             renderInput={(params) => (
                 <div className="flex items-center gap-4">
-                    <Search className="dark:text-white"/>
-                    <TextField {...params} placeholder="Buscar" variant="standard"
+                    <Search className="dark:text-white shrink-0"/>
+                    <TextField {...params} placeholder="Buscar" variant="standard" id="global-search-input"
                         InputProps={{...params.InputProps, disableUnderline:true}}
                     />
+                    {loading && <CircularProgress size={16} className="mr-2 shrink-0"/>}
                 </div>
             )}
             groupBy={(option)=>{
@@ -186,7 +194,7 @@ export function SearchAutocomplete():React.ReactElement {
                     }
                 }
             }}
-            noOptionsText="Busca series o libros de la biblioteca aquí"
+            noOptionsText={loading ? "Buscando..." : "Busca series o libros de la biblioteca aquí"}
             inputValue={searchQuery}
         />
     );

@@ -9,6 +9,7 @@ import {addToReadlist, removeFromReadlist} from "../../../helpers/series";
 import {iBook} from "../../../helpers/book";
 import {api} from "../../../api/api";
 import { toast } from "react-toastify";
+import {useNavigate} from "react-router-dom";
 
 interface SerieSettingsProps {
     serieData:SerieWithProgress;
@@ -21,6 +22,7 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
     const {userData} = useAuth();
     const {forceReload} = useGlobal();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const navigate = useNavigate();
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
@@ -72,7 +74,7 @@ export function SerieSettings(props:SerieSettingsProps):React.ReactElement {
             >
                 <MenuItem
                     onClick={()=>{
-                        void iBook(serieData);
+                        void iBook(serieData, navigate);
                     }}
                 >Leer siguiente volumen
                 </MenuItem>

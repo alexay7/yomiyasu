@@ -5,6 +5,7 @@ import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {UserWord} from "../../types/word";
 import {toast} from "react-toastify";
+import {confirmDialog} from "../../stores/ConfirmStore";
 
 export default function Words():React.ReactElement {
     const [sortBy, setSortBy] = useState<string>("new");
@@ -21,9 +22,9 @@ export default function Words():React.ReactElement {
 
     function frequencyText(freq:number):string {
         if (freq < 5000) return "Muy alta";
-        if (freq < 5000) return "Alta";
-        if (freq < 10000) return "Media";
-        if (freq < 20000) return "Baja";
+        if (freq < 10000) return "Alta";
+        if (freq < 20000) return "Media";
+        if (freq < 30000) return "Baja";
         return "Muy baja";
     }
 
@@ -92,8 +93,8 @@ export default function Words():React.ReactElement {
                                         }}
                                     >Añadir a Anki
                                     </MenuItem>
-                                    <MenuItem className="lg:h-1/2 bg-red-600 dark:bg-red-800 hover:bg-red-700 dark:hover:bg-red-600 transition-colors rounded-br-lg w-1/2 lg:w-auto justify-center lg:text-xl font-semibold" onClick={()=>{
-                                        if (confirm(`¿Estás seguro de que quieres eliminar la palabra "${ex.word}"?`)) {
+                                    <MenuItem className="lg:h-1/2 bg-red-600 dark:bg-red-800 hover:bg-red-700 dark:hover:bg-red-600 transition-colors rounded-br-lg w-1/2 lg:w-auto justify-center lg:text-xl font-semibold" onClick={async()=>{
+                                        if (await confirmDialog(`¿Estás seguro de que quieres eliminar la palabra "${ex.word}"?`)) {
                                             void deleteWord(ex.word);
                                         }
                                     }}

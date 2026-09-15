@@ -2,6 +2,7 @@ import React, {useEffect} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
+import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {SeriesFilter} from "../../../types/serie";
 
@@ -11,7 +12,7 @@ interface RecentSeriesScrollerProps {
 
 function RecentSeriesScroller({variant}:RecentSeriesScrollerProps):React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:recentSeries = [], refetch:recentSeriesRefetch} = useQuery(["recentseries", variant], async()=> {
+    const {data:recentSeries = [], refetch:recentSeriesRefetch, isLoading, isError} = useQuery(["recentseries", variant], async()=> {
         const res = await api.get<SeriesFilter>(`series/${variant}?sort=!lastModifiedDate&limit=15`);
 
         if (!res) return [];
@@ -33,10 +34,20 @@ function RecentSeriesScroller({variant}:RecentSeriesScrollerProps):React.ReactEl
         }
     }, [recentSeriesRefetch, reloaded]);
 
-    if (!recentSeries || recentSeries.length === 0) return <></>;
+    const title = `Series de ${variant === "manga" ? "manga" : "novelas"} con volúmenes nuevos`;
+
+    if (isLoading) return <ScrollerSkeleton title={title}/>;
+
+    if (isError) {
+        return <SectionError message="No se pudieron cargar las series con volúmenes nuevos" onRetry={()=>{
+            void recentSeriesRefetch();
+        }}/>;
+    }
+
+    if (recentSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} con volúmenes nuevos`} components={recentSeries} noVariantIndicator/>
+        <ComponentScroller variant={variant} type="series" title={title} components={recentSeries} noVariantIndicator/>
     );
 }
 

@@ -2,6 +2,7 @@ import React, {useEffect} from "react";
 import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
+import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
 import {useGlobal} from "../../../contexts/GlobalContext";
 import {SeriesFilter} from "../../../types/serie";
 
@@ -11,7 +12,7 @@ interface NewSeriesScrollerProps {
 
 function NewSeriesScroller({variant}:NewSeriesScrollerProps):React.ReactElement {
     const {reloaded} = useGlobal();
-    const {data:newSeries = [], refetch:newSeriesRefetch} = useQuery(["newseries", variant], async()=> {
+    const {data:newSeries = [], refetch:newSeriesRefetch, isLoading, isError} = useQuery(["newseries", variant], async()=> {
         const res = await api.get<SeriesFilter>(`series/${variant}?sort=!_id&limit=15`);
 
         if (!res) return [];
@@ -33,10 +34,20 @@ function NewSeriesScroller({variant}:NewSeriesScrollerProps):React.ReactElement 
         }
     }, [newSeriesRefetch, reloaded]);
 
-    if (!newSeries || newSeries.length === 0) return <></>;
+    const title = `Series de ${variant === "manga" ? "manga" : "novelas"} nuevas`;
+
+    if (isLoading) return <ScrollerSkeleton title={title}/>;
+
+    if (isError) {
+        return <SectionError message="No se pudieron cargar las series nuevas" onRetry={()=>{
+            void newSeriesRefetch();
+        }}/>;
+    }
+
+    if (newSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller variant={variant} type="series" title={`Series de ${variant === "manga" ? "manga" : "novelas"} nuevas`} components={newSeries} noVariantIndicator/>
+        <ComponentScroller variant={variant} type="series" title={title} components={newSeries} noVariantIndicator/>
     );
 }
 

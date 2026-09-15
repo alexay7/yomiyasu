@@ -1,30 +1,37 @@
-# React + TypeScript + Vite
+# Yomiyasu Front
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web (React 18 + Vite + MUI + Tailwind + zustand + react-query + socket.io-client)
+contra la API de Yomiyasu.
 
-Currently, two official plugins are available:
+## Desarrollo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```sh
+pnpm install
+pnpm dev       # servidor de desarrollo en http://localhost:5173
+pnpm build     # tsc && vite build (hace de typecheck)
+pnpm lint      # eslint con --max-warnings 0
+pnpm preview   # sirve dist/ en el puerto 5173
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Todas las llamadas usan rutas relativas (`/api/...`, `/socket.io`), así que el navegador
+habla siempre con el mismo origen y las cookies httpOnly de autenticación funcionan sin
+problemas. Es el servidor de Vite el que hace de proxy hacia el backend.
+
+## Apuntar a otro backend
+
+Por defecto el proxy apunta al backend local (`http://localhost:3001` para la API y
+`http://localhost:3002` para el websocket). Para usar otro backend de pruebas, copia
+`.env.example` a `.env.local` y ajusta:
+
+```sh
+# Backend en otra máquina de la red
+YOMIYASU_API_TARGET=http://192.168.1.50:3001
+YOMIYASU_WS_TARGET=http://192.168.1.50:3002
+
+# Servidor desplegado (nginx enruta /socket.io al puerto 3002)
+YOMIYASU_API_TARGET=https://manga.manabe.es
+YOMIYASU_WS_TARGET=https://manga.manabe.es
+```
+
+Reinicia `pnpm dev` tras cambiar los valores. `pnpm preview` hereda la misma configuración
+de proxy.

@@ -21,7 +21,9 @@ type AuthContextType = {
     reauth:(v:boolean)=>void;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth():AuthContextType {
     return useContext(AuthContext);
 }

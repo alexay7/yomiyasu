@@ -13,6 +13,8 @@ import {useAuth} from "../../contexts/AuthContext";
 import {LibraryFilter} from "./components/LibraryFilter";
 import {Helmet} from "react-helmet";
 import {LibraryRandom} from "./components/LibraryRandom";
+import {LibraryGridSkeleton, SectionError} from "../../components/Skeletons/Skeletons";
+import {useSettingsStore} from "../../stores/SettingsStore";
 
 interface LibraryProps {
     variant: "manga" | "novela";
@@ -26,70 +28,69 @@ function Library({variant}:LibraryProps):React.ReactElement {
     const min = searchParams.get("min");
     const max = searchParams.get("max");
     const readprogress = searchParams.get("readprogress");
-    const page = searchParams.get("page");
     const status = searchParams.get("status");
     const readlist = searchParams.get("readlist");
-    const limit = window.localStorage.getItem("limit");
+    const pageParam = parseInt(searchParams.get("page") || "1");
     const {reloaded} = useGlobal();
     const {userData} = useAuth();
+    const {siteSettings, modifySiteSettings} = useSettingsStore();
     const [selectedLetter, setSelectedLetter] = useState("ALL");
-    const [currentPage, setCurrentPage] = useState(parseInt(page || "1"));
-    const [elements, setElements] = useState(limit || "25");
+    const elements = siteSettings.libraryLimit || window.localStorage.getItem("limit") || "25";
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const navigate = useNavigate();
 
-    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading} = useQuery(["seriesData", variant, selectedLetter, currentPage, elements], async()=>{
-        let link = `series/${variant}?`;
+    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading, isError} = useQuery(
+        ["seriesData", variant, selectedLetter, pageParam, elements, genre, author, sortby, min, max, readprogress, status, readlist],
+        async()=>{
+            let link = `series/${variant}?`;
 
-        if (selectedLetter !== "ALL") {
-            if (currentPage !== 1) {
-                setCurrentPage(1);
-                return;
+            if (selectedLetter !== "ALL") {
+                link += `firstLetter=${selectedLetter.replace("#", "SPECIAL")}&`;
             }
-            link += `firstLetter=${selectedLetter.replace("#", "SPECIAL")}&`;
-        }
 
-        if (genre) {
-            link += `genre=${genre}&`;
-        }
+            if (genre) {
+                link += `genre=${genre}&`;
+            }
 
-        if (readprogress) {
-            link += `readprogress=${readprogress}&`;
-        }
+            if (readprogress) {
+                link += `readprogress=${readprogress}&`;
+            }
 
-        if (author) {
-            link += `author=${author}&`;
-        }
+            if (author) {
+                link += `author=${author}&`;
+            }
 
-        if (sortby) {
-            link += `sort=${sortby}&`;
-        } else {
-            link += "sort=sortName&";
-        }
+            if (sortby) {
+                link += `sort=${sortby}&`;
+            } else {
+                link += "sort=sortName&";
+            }
 
-        if (min) {
-            link += `min=${min}&`;
-        }
+            if (min) {
+                link += `min=${min}&`;
+            }
 
-        if (max) {
-            link += `max=${max}&`;
-        }
+            if (max) {
+                link += `max=${max}&`;
+            }
 
-        if (status) {
-            link += `status=${status}&`;
-        }
+            if (status) {
+                link += `status=${status}&`;
+            }
 
-        if (readlist) {
-            link += "readlist=true&";
-        }
+            if (readlist) {
+                link += "readlist=true&";
+            }
 
-        link += `page=${page || "1"}&limit=${elements}`;
+            link += `page=${pageParam}&limit=${elements}`;
 
-        return api.get<SeriesFilter>(link);
-    });
+            return api.get<SeriesFilter>(link);
+        },
+        {keepPreviousData:true}
+    );
 
-    const {data:alphabet, refetch:refetchAlphabet} = useQuery(["alphabet", variant], async()=>{
+    const {data:alphabet, refetch:refetchAlphabet} = useQuery(["alphabet", variant, genre, status, author, min, max], async()=>{
         let link = `series/${variant}/alphabet?`;
 
         if (genre) {
@@ -116,17 +117,11 @@ function Library({variant}:LibraryProps):React.ReactElement {
     });
 
     useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            await refetchAlphabet();
-            await refetchSeries();
-        }
+        if (!reloaded) return;
 
-        void refetchBooks();
-    }, [refetchAlphabet, refetchSeries, reloaded, searchParams]);
-
-    useEffect(()=>{
-        window.localStorage.setItem("limit", elements);
-    }, [elements]);
+        void refetchAlphabet();
+        void refetchSeries();
+    }, [refetchAlphabet, refetchSeries, reloaded]);
 
     function handleClick(event: React.MouseEvent<HTMLElement>):void {
         setAnchorEl(event.currentTarget);
@@ -137,11 +132,11 @@ function Library({variant}:LibraryProps):React.ReactElement {
     }
 
     return (
-        <div className="dark:bg-[#121212] pb-4">
+        <div className="dark:bg-app-bg pb-4">
             <Helmet>
                 <title>YomiYasu - Biblioteca</title>
             </Helmet>
-            <div className="z-20 w-fill dark:bg-[#212121] bg-[#f7f7f7] flex items-center justify-between h-14 border-x border-0 border-solid border-[#0000001f]">
+            <div className="z-20 w-fill dark:bg-app-sidebar bg-app-sidebar flex items-center justify-between h-14 border-x border-0 border-solid border-app-border">
                 <div className="flex items-center mx-4">
                     <Tooltip title="Volver atrás">
                         <IconButton onClick={()=>goBack(navigate)}>
@@ -164,28 +159,28 @@ function Library({variant}:LibraryProps):React.ReactElement {
                             open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
                         >
                             <MenuItem selected={elements === "10"} onClick={()=>{
-                                setElements("10");
+                                modifySiteSettings("libraryLimit", "10");
                                 handleClose();
                             }}
                             >
                                 10
                             </MenuItem>
                             <MenuItem selected={elements === "25"} onClick={()=>{
-                                setElements("25");
+                                modifySiteSettings("libraryLimit", "25");
                                 handleClose();
                             }}
                             >
                                 25
                             </MenuItem>
                             <MenuItem selected={elements === "50"} onClick={()=>{
-                                setElements("50");
+                                modifySiteSettings("libraryLimit", "50");
                                 handleClose();
                             }}
                             >
                                 50
                             </MenuItem>
                             <MenuItem selected={elements === "100"} onClick={()=>{
-                                setElements("100");
+                                modifySiteSettings("libraryLimit", "100");
                                 handleClose();
                             }}
                             >
@@ -214,7 +209,10 @@ function Library({variant}:LibraryProps):React.ReactElement {
                         return (
                             <IconButton disabled={disabled} onClick={()=>{
                                 setSelectedLetter(letter.group.toUpperCase());
-                                setCurrentPage(1);
+
+                                const next = new URLSearchParams(searchParams);
+                                next.delete("page");
+                                setSearchParams(next);
                             }} className={`${textColor} text-sm font-semibold`} key={letter.group}
                             >
                                 {letter.group.toUpperCase()}
@@ -224,18 +222,17 @@ function Library({variant}:LibraryProps):React.ReactElement {
                 </div>
 
                 <div className="flex flex-col overflow-y-scroll h-[calc(100svh-10.5rem)]">
-                    {series.pages > 1 && (
-                        <div className="flex justify-center py-4">
-                            <Pagination onChange={(_, p)=>{
-                                setCurrentPage(p);
-                                searchParams.set("page", `${p}`);
-                                setSearchParams(searchParams);
-                            }} page={currentPage} color="primary" count={series.pages}
-                            />
-                        </div>
+                    {isLoading && (
+                        <LibraryGridSkeleton count={Math.min(parseInt(elements), 25)}/>
                     )}
 
-                    {!isLoading && (
+                    {isError && (
+                        <SectionError message="No se pudo cargar la biblioteca" onRetry={()=>{
+                            void refetchSeries();
+                        }}/>
+                    )}
+
+                    {!isLoading && !isError && (
                         <div className="flex w-full items-center justify-center">
                             {series.data.length > 0 ? (
                                 <ul className="flex flex-wrap p-8 py-4 gap-4">
@@ -254,13 +251,14 @@ function Library({variant}:LibraryProps):React.ReactElement {
                     )}
 
                     {series.pages > 1 && (
-                        <div className="flex justify-center">
+                        <div className="sticky bottom-0 z-10 mt-auto flex items-center justify-center gap-4 py-2 border-t border-solid border-app-border bg-app-bg">
                             <Pagination onChange={(_, p)=>{
-                                setCurrentPage(p);
-                                searchParams.set("page", `${p}`);
-                                setSearchParams(searchParams);
-                            }} page={currentPage} color="primary" count={(series || {pages:1}).pages}
+                                const next = new URLSearchParams(searchParams);
+                                next.set("page", `${p}`);
+                                setSearchParams(next);
+                            }} page={pageParam} color="primary" count={series.pages}
                             />
+                            <p className="text-sm dark:text-white">Página {pageParam} de {series.pages}</p>
                         </div>
                     )}
                 </div>

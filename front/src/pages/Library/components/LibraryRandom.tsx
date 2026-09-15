@@ -6,6 +6,8 @@ import {useQuery} from "react-query";
 import {api} from "../../../api/api";
 import {SerieWithProgress} from "../../../types/serie";
 import {toast} from "react-toastify";
+import {useNavigate} from "react-router-dom";
+import {goTo} from "../../../helpers/helpers";
 
 interface LibraryRandomProps {
     variant:"manga" | "novela"
@@ -19,6 +21,8 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
     const [status, setStatus] = useState("");
     const [readProgress, setReadProgress] = useState("all");
     const [readlist, setReadlist] = useState<boolean>(false);
+
+    const navigate = useNavigate();
 
     const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery("genres-artists", async()=>{
         return api.get<{genres:string[], authors:string[]}>("series/genresAndArtists");
@@ -63,7 +67,7 @@ export function LibraryRandom({variant}:LibraryRandomProps):React.ReactElement {
 
             if (!res) return;
 
-            window.location.href = `/app/series/${res._id}`;
+            goTo(navigate, `/app/series/${res._id}`);
         } catch {
             toast.error("Ninguna serie coincide con los filtros indicados");
         }

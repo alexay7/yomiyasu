@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet'
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Loading } from './pages/Loading/Loading';
 import { useAuth } from './contexts/AuthContext';
+import { ConfirmDialog } from './components/ConfirmDialog/ConfirmDialog';
 
 const AppLayout = lazy(() => import('./components/AppLayout/AppLayout'));
 const ProtectedLayout = lazy(() => import('./components/Protection/ProtectedLayout'));
@@ -24,6 +25,7 @@ const History = lazy(() => import('./pages/History/pages/History'));
 const Login = lazy(() => import('./pages/Login/Login'));
 const Register = lazy(() => import('./pages/Register/Register'));
 const Offline = lazy(() => import('./pages/Offline/Offline'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
 
 function App() {
@@ -82,7 +84,7 @@ function App() {
                 <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
                     <Route index element={<Suspense fallback={<Loading/>}><Home/></Suspense>}/>
                     <Route path="library">
-                        <Route index element={<Suspense fallback={<Loading/>}><Library variant="manga"/></Suspense>}/>
+                        <Route index element={<Navigate to="manga" replace/>}/>
                         <Route path="manga" element={<Suspense fallback={<Loading/>}><Library variant="manga"/></Suspense>}/>
                         <Route path="novels" element={<Suspense fallback={<Loading/>}><Library variant="novela"/></Suspense>}/>
                     </Route>
@@ -92,14 +94,16 @@ function App() {
                     <Route path="profile" element={<Suspense fallback={<Loading/>}><Stats/></Suspense>}/>
                     <Route path="calendar" element={<Suspense fallback={<Loading/>}><Calendar/></Suspense>}/>
                     <Route path="admin" element={<Suspense fallback={<Loading/>}><Admin/></Suspense>}/>
-                    <Route path="*" element={<Navigate to="/app"/>}/>
+                    <Route path="*" element={<Suspense fallback={<Loading/>}><NotFound/></Suspense>}/>
                 </Route>
                 <Route path="reader/:id" element={<Suspense fallback={<Loading/>}><Reader type="remote"/></Suspense>}/>
                 <Route path="ranobe/:id" element={<Suspense fallback={<Loading/>}><EpubReader/></Suspense>}/>
                 <Route path="ankiexport" element={<Suspense fallback={<Loading/>}><Anki/></Suspense>}/>
                 <Route path="offline" element={<Suspense fallback={<Loading/>}><Offline/></Suspense>}/>
+                <Route path="*" element={<Suspense fallback={<Loading/>}><NotFound/></Suspense>}/>
             </Routes>
         )}
+        <ConfirmDialog/>
     </ThemeProvider>
 </ColorModeContext.Provider>
   )

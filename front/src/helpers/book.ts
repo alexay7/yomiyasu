@@ -1,10 +1,14 @@
+import {NavigateFunction} from "react-router-dom";
 import {api} from "../api/api";
 import {Book, BookWithProgress} from "../types/book";
 import {SerieWithProgress} from "../types/serie";
 import {openNovel} from "./ttu";
+import {goTo} from "./helpers";
+import {confirmDialog} from "../stores/ConfirmStore";
 
 type MoveBook = {
     book:Book;
+    navigate:NavigateFunction;
 } & ({
     variant:"manga",
 } | {
@@ -13,22 +17,22 @@ type MoveBook = {
 });
 
 export async function nextBook(props:MoveBook):Promise<void> {
-    const {book, variant} = props;
+    const {book, variant, navigate} = props;
     window.localStorage.removeItem(book._id);
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/next`);
 
     if (!foundBook) return;
 
     if (foundBook.status === "completed") {
-        if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+        if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
     }
 
     if (foundBook._id === "end") {
-        window.location.href = `/app/series/${book.serie}?finished=true`;
+        goTo(navigate, `/app/series/${book.serie}?finished=true`);
         return;
     }
     if (variant === "manga" || book.mokured) {
-        window.location.href = `/reader/${foundBook._id}`;
+        goTo(navigate, `/reader/${foundBook._id}`);
         return;
     }
 
@@ -39,22 +43,22 @@ export async function nextBook(props:MoveBook):Promise<void> {
 }
 
 export async function prevBook(props:MoveBook):Promise<void> {
-    const {book, variant} = props;
+    const {book, variant, navigate} = props;
 
     const foundBook = await api.get<BookWithProgress>(`books/${book._id}/prev`);
 
     if (!foundBook) return;
 
     if (foundBook.status === "completed") {
-        if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+        if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
     }
 
     if (foundBook._id === "start") {
-        window.location.href = `/app/series/${book.serie}`;
+        goTo(navigate, `/app/series/${book.serie}`);
         return;
     }
     if (variant === "manga" || book.mokured) {
-        window.location.href = `/reader/${foundBook._id}`;
+        goTo(navigate, `/reader/${foundBook._id}`);
         return;
     }
 
@@ -64,10 +68,9 @@ export async function prevBook(props:MoveBook):Promise<void> {
     await openNovel(connector, foundBook, false, false);
 }
 
-export function iBook(serieData:SerieWithProgress):void {
+export async function iBook(serieData:SerieWithProgress, navigate:NavigateFunction):Promise<void> {
     if (serieData.unreadBooks === 0) {
-        if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+        if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
     }
-    window.localStorage.setItem("origin", window.location.pathname);
-    window.location.href = `/reader/${serieData.currentBook}`;
+    goTo(navigate, `/reader/${serieData.currentBook}`);
 }

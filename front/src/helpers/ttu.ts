@@ -4,7 +4,13 @@ export async function findBookId(title:string):Promise<number | null> {
     // Search for the book in indexedDB with title equal to 涼宮ハルヒの驚愕（後） 「涼宮ハルヒ」シリーズ (角川スニーカー文庫)
 
     return new Promise<number | null>((resolve, reject) => {
-        const request = window.indexedDB.open("books", 6);
+        /**
+         * Se abre sin indicar versión a propósito: la base de datos la crea el lector
+         * (ッツ Ebook Reader) con su propia versión. Pedir una versión superior lanza un
+         * upgrade que queda bloqueado por la conexión abierta del lector, dejando el
+         * request pendiente para siempre (las novelas no abrían).
+         */
+        const request = window.indexedDB.open("books");
 
         request.onerror = () => {
             reject(new Error("Error opening the database"));
@@ -38,7 +44,8 @@ export async function getBookProgress(bookId?:number):Promise<number> {
     if (!bookId) return 0;
 
     return new Promise<number>((resolve, reject) => {
-        const request = window.indexedDB.open("books", 6);
+        // Sin versión: ver comentario en findBookId
+        const request = window.indexedDB.open("books");
 
         request.onerror = () => {
             reject(new Error("Error opening the database"));
@@ -73,7 +80,8 @@ export async function deleteBookBookmark(bookId?:number):Promise<void> {
     if (!bookId) return;
 
     return new Promise<void>((resolve, reject) => {
-        const request = window.indexedDB.open("books", 6);
+        // Sin versión: ver comentario en findBookId
+        const request = window.indexedDB.open("books");
 
         request.onerror = () => {
             reject(new Error("Error opening the database"));

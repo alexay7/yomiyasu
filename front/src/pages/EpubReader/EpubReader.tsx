@@ -1,4 +1,4 @@
-import {ArrowBack, ArrowCircleLeft, ArrowCircleRight, Timer} from "@mui/icons-material";
+import {ArrowBack, ArrowCircleLeft, ArrowCircleRight, Fullscreen, FullscreenExit, HelpOutline, Timer} from "@mui/icons-material";
 import {IconButton, Tooltip} from "@mui/material";
 import React, {useEffect, useRef, useState} from "react";
 import {Helmet} from "react-helmet";
@@ -9,11 +9,20 @@ import {useQuery} from "react-query";
 import {Book, BookProgress} from "../../types/book";
 import {api} from "../../api/api";
 import {getBookProgress} from "../../helpers/ttu";
+import {goBack} from "../../helpers/helpers";
 import {createProgress} from "../../helpers/progress";
 import {nextBook, prevBook} from "../../helpers/book";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {twMerge} from "tailwind-merge";
 import {Dictionary} from "../Reader/components/Dictionary";
+import {ShortcutItem, ShortcutsDialog} from "../Reader/components/ShortcutsDialog";
+import {useFullscreen} from "../../helpers/useFullscreen";
+
+const epubShortcuts:ShortcutItem[] = [
+    {keys:["t"], description:"Activar o pausar el cronómetro"},
+    {keys:["f"], description:"Pantalla completa"},
+    {keys:["?"], description:"Mostrar esta ayuda"},
+];
 
 async function saveProgressGlobal(timer:number, bookId?:string, iframe?:HTMLIFrameElement, bookData?:Book):Promise<number> {
     if (!bookData || !bookId) return 0;
@@ -44,6 +53,9 @@ export default function EpubReader():React.ReactElement {
     const [chars, setChars] = useState(0);
     const [changedTab, setChangedTab] = useState(false);
     const [searchWord, setSearchWord] = useState("");
+    const [showShortcuts, setShowShortcuts] = useState(false);
+
+    const {isFullscreen, toggleFullscreen} = useFullscreen();
 
     const iframe = useRef<HTMLIFrameElement>(null);
 
@@ -137,8 +149,16 @@ export default function EpubReader():React.ReactElement {
 
         function handleKeyDown(ev:KeyboardEvent):void {
             switch (ev.key) {
-                case "p":{
+                case "t":{
                     setTimerOn((prev) => !prev);
+                    break;
+                }
+                case "f":{
+                    toggleFullscreen();
+                    break;
+                }
+                case "?":{
+                    setShowShortcuts((prev) => !prev);
                     break;
                 }
             }
@@ -149,7 +169,7 @@ export default function EpubReader():React.ReactElement {
             window.removeEventListener("dblclick", handleDoubleClick);
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, []);
+    }, [toggleFullscreen]);
 
     useEffect(()=>{
         if (timer % 60 !== 0 || timer === 0) return;
@@ -185,27 +205,31 @@ export default function EpubReader():React.ReactElement {
         return () => clearInterval(timerInterval);
     }, [timerOn, setTimer]);
 
-    if (!id) {
-        navigate("/");
-        return <></>;
-    }
+    useEffect(() => {
+        if (!id) {
+            navigate("/");
+        }
+    }, [id, navigate]);
+
+    if (!id) return <></>;
 
     return (
-        <div className="text-[#0000008a] relative overflow-hidden h-[100svh] flex flex-col">
+        <div className="text-app-text relative overflow-hidden h-[100svh] flex flex-col">
             <Helmet>
                 <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
             </Helmet>
             <Dictionary searchWord={searchWord} setSearchWord={setSearchWord}/>
+            <ShortcutsDialog open={showShortcuts} onClose={()=>setShowShortcuts(false)} shortcuts={epubShortcuts}/>
             {showToolBar && (
-                <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-10 dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
+                <div className="bg-app-chrome w-full h-10 text-app-text flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
                     <div className="flex items-center gap-2 px-2 shrink lg:w-1/2">
                         <Tooltip title="Volver atrás">
                             <IconButton onClick={async()=>{
                                 await saveProgressGlobal(timer, id, (iframe.current || undefined), bookData);
 
-                                window.location.href = window.localStorage.getItem("origin") || "/app";
+                                goBack(navigate);
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowBack/>
                             </IconButton>
@@ -219,6 +243,16 @@ export default function EpubReader():React.ReactElement {
                             refreshProgress={refreshProgress}
                             bookData={bookData}
                         />
+                        <Tooltip title="Atajos de teclado (?)">
+                            <IconButton onClick={()=>setShowShortcuts(true)} className="text-app-text">
+                                <HelpOutline/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={isFullscreen ? "Salir de pantalla completa (f)" : "Pantalla completa (f)"}>
+                            <IconButton onClick={toggleFullscreen} className="text-app-text">
+                                {isFullscreen ? <FullscreenExit/> : <Fullscreen/>}
+                            </IconButton>
+                        </Tooltip>
                     </div>
                 </div>
             )}
@@ -231,26 +265,26 @@ export default function EpubReader():React.ReactElement {
                 </div>
             )}
             {showToolBar && !!bookData && (
-                <div className="dark:bg-[#101010] bg-[#ebe8e3] h-10 w-full dark:text-[#ebe8e3] flex justify-between items-center fixed bottom-0 py-2 lg:py-0" >
+                <div className="bg-app-chrome h-10 w-full dark:text-app-text flex justify-between items-center fixed bottom-0 py-2 lg:py-0" >
                     <div className="justify-between flex items-center">
                         <Tooltip title="Ir al siguiente libro">
                             <IconButton onClick={async()=>{
                                 await saveProgressGlobal(timer, id, (iframe.current || undefined), bookData);
-                                void nextBook({book:bookData, variant:"novela", connector:ttuConnector});
+                                void nextBook({book:bookData, variant:"novela", connector:ttuConnector, navigate});
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowCircleLeft/>
                             </IconButton>
                         </Tooltip>
                     </div>
                     <div className="justify-between flex items-center">
-                        <Tooltip title="It al libro anterior">
+                        <Tooltip title="Ir al libro anterior">
                             <IconButton onClick={async()=>{
                                 await saveProgressGlobal(timer, id, (iframe.current || undefined), bookData);
-                                void prevBook({book:bookData, variant:"novela", connector:ttuConnector});
+                                void prevBook({book:bookData, variant:"novela", connector:ttuConnector, navigate});
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowCircleRight/>
                             </IconButton>

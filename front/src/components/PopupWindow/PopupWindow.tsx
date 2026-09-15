@@ -1,6 +1,6 @@
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Slide} from "@mui/material";
 import React, {forwardRef} from "react";
-import {TransitionProps} from "react-transition-group/Transition";
+import {TransitionProps} from "@mui/material/transitions";
 
 interface PopupWindowProps {
     title:string;

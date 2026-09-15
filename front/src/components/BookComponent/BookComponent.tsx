@@ -10,6 +10,7 @@ import {defaultSets, useSettingsStore} from "../../stores/SettingsStore";
 import {twMerge} from "tailwind-merge";
 import {useGlobal} from "../../contexts/GlobalContext";
 import {openNovel} from "../../helpers/ttu";
+import {confirmDialog} from "../../stores/ConfirmStore";
 
 
 interface BookComponentProps {
@@ -88,7 +89,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 return;
             }
             if (read && bookData.status === "completed" && !incognito) {
-                if (!confirm("Yas has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
+                if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
             }
 
             let link = `/reader/${bookData._id}`;
@@ -185,7 +186,7 @@ export function BookComponent(props:BookComponentProps):React.ReactElement {
                 </Fade>
             </div>
 
-            <div className="dark:bg-[#1E1E1E] bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
+            <div className="dark:bg-app-surface bg-white dark:text-white flex flex-col px-2 pt-3 pb-1 rounded-b shadow-sm shadow-gray-500">
                 {(bookData.variant === "manga" || bookData.mokured) && (
                     <a href={siteSettings.openHTML ? `/api/static/mangas/${bookData.seriePath}/${bookData.path}.html` : `/reader/${bookData._id}`}
                         className="line-clamp-2 h-12" onClick={()=>{

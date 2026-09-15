@@ -29,4 +29,5 @@ export interface SiteConfig {
     mainView:"manga" | "novels" | "both";
     showCrono:boolean;
     kindleEmail:string | undefined;
+    libraryLimit:string;
 }

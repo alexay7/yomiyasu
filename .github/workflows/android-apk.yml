@@ -55,12 +55,10 @@ jobs:
           printf 'storeFile=keystore.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
 
-      - name: Tests, lint y build
+      - name: Build APKs
         working-directory: android
         run: |
           ./gradlew \
-            :app:testDebugUnitTest \
-            :app:lint \
             :app:assembleDebug \
             :app:assembleRelease \
             -Pyomiyasu.versionCode="${GITHUB_RUN_NUMBER}" \

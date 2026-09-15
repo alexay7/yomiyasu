@@ -1,9 +1,8 @@
-import React, {LiHTMLAttributes, useEffect, useRef} from "react";
+import React, {LiHTMLAttributes, useRef} from "react";
 import "./style.css";
 import {CSSTransition} from "react-transition-group";
 import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/material";
 import {Close} from "@mui/icons-material";
-import {toast} from "react-toastify";
 import {useSettingsStore} from "../../../stores/SettingsStore";
 import {useMediaQuery} from "react-responsive";
 
@@ -113,47 +112,6 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
         window.location.reload();
     }
 
-    useEffect(()=>{
-        function handleKeyDown(e:KeyboardEvent):void {
-            switch (e.key) {
-                case "m":{
-                    const zooms = ["fit to screen", "fit to width", "original size", "keep zoom level"];
-                    const zoomIndex = zooms.indexOf(readerSettings.defaultZoomMode);
-                    const newZoom = zoomIndex < 3 ? zooms[zoomIndex + 1] : zooms[0];
-                    iframeWindow.postMessage({action:"setSettings", property:"defaultZoom", value:newZoom});
-
-                    modifyReaderSettings("defaultZoomMode", newZoom as "fit to screen" | "fit to width" | "original size" | "keep zoom level");
-                    toast.success(`Nuevo modo de zoom: ${newZoom}`);
-                    break;
-                }
-                case "d":{
-                    iframeWindow.postMessage({action:"setSettings", property:"doublePage"});
-                    toast.success(`Double paginación ${readerSettings.singlePageView ? "activada" : "desactivada"}`);
-
-                    modifyReaderSettings("singlePageView", !readerSettings.singlePageView);
-                    break;
-                }
-                case "z":{
-                    if (readerSettings.panAndZoom) {
-                        iframeWindow.postMessage({action:"setSettings", property:"disableZoom"});
-                        toast.success("Zoom&Pan desactivado");
-                    } else {
-                        iframeWindow.postMessage({action:"setSettings", property:"enableZoom"});
-                        toast.success("Zoom&Pan activado");
-                    }
-                    modifyReaderSettings("panAndZoom", !readerSettings.panAndZoom);
-                    break;
-                }
-            }
-        }
-
-        addEventListener("keydown", handleKeyDown);
-
-        return ()=>{
-            removeEventListener("keydown", handleKeyDown);
-        };
-    }, [iframeWindow, readerSettings, modifyReaderSettings]);
-
     const blurredRef = useRef(null);
     const menuRef = useRef(null);
 
@@ -172,8 +130,8 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                         </IconButton>
                         <p className="text-lg">Ajustes del Lector</p>
                     </div>
-                    <div className="flex flex-col dark:bg-[#1E1E1E] bg-white py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
-                        <p className="font-bold text-[#101010] dark:text-[#ebe8e3] text-xl py-1">Ajustes de YomiYasu</p>
+                    <div className="flex flex-col dark:bg-app-surface bg-white py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
+                        <p className="font-bold text-app-text text-xl py-1">Ajustes de YomiYasu</p>
                         <div className="ml-2 flex flex-col gap-2">
                             <SettingsItem className="dark:text-white" label="Activar diccionario nativo" childrenId="dict">
                                 <div className="flex justify-end">
@@ -198,7 +156,7 @@ export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
                                 </div>
                             </SettingsItem>
                         </div>
-                        <p className="font-bold text-[#101010] dark:text-[#ebe8e3] text-xl py-1">Ajustes de Mokuro</p>
+                        <p className="font-bold text-app-text text-xl py-1">Ajustes de Mokuro</p>
                         <div className="ml-2 flex flex-col gap-2">
                             <SettingsItem className="dark:text-white" label="Activar Zoom&Pan" childrenId="zoompan">
                                 <div className="flex justify-end">

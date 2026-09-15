@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
@@ -15,6 +15,22 @@ import "./styles.css";
 import {useSettingsStore, defaultSets} from "../../stores/SettingsStore";
 import RemoteReader from "./components/RemoteReader";
 import LocalReader from "./components/LocalReader";
+import {toast} from "react-toastify";
+import {useFullscreen} from "../../helpers/useFullscreen";
+import {ShortcutItem, ShortcutsDialog} from "./components/ShortcutsDialog";
+import {confirmDialog} from "../../stores/ConfirmStore";
+
+const mangaShortcuts:ShortcutItem[] = [
+    {keys:["←", "Espacio"], description:"Página anterior (izquierda)"},
+    {keys:["→"], description:"Página siguiente (derecha)"},
+    {keys:["t"], description:"Activar o pausar el cronómetro"},
+    {keys:["p"], description:"Mostrar u ocultar el panel de texto"},
+    {keys:["d"], description:"Activar o desactivar la doble página"},
+    {keys:["z"], description:"Activar o desactivar Zoom y Pan"},
+    {keys:["m"], description:"Cambiar el modo de zoom"},
+    {keys:["f"], description:"Pantalla completa"},
+    {keys:["?"], description:"Mostrar esta ayuda"},
+];
 
 type ReaderProps = {
     type:"local",
@@ -30,14 +46,16 @@ type ReaderProps = {
 
 function Reader(props:ReaderProps):React.ReactElement {
     const {id} = useParams();
+    const navigate = useNavigate();
     let iframe = useRef<HTMLIFrameElement>(null);
 
     if(props.type === "local" && props.localIframe){
         iframe = props.localIframe;
     }
 
-    const {readerSettings, siteSettings} = useSettingsStore();
+    const {readerSettings, siteSettings, modifyReaderSettings} = useSettingsStore();
     const {reauth} = useAuth();
+    const {toggleFullscreen} = useFullscreen();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [doublePages, setDoublePages] = useState(false);
@@ -49,10 +67,11 @@ function Reader(props:ReaderProps):React.ReactElement {
     const [searchWord, setSearchWord] = useState("");
     const [changedTab, setChangedTab] = useState(false);
     const [forceSave, setForceSave] = useState(false);
+    const [showShortcuts, setShowShortcuts] = useState(false);
     
     const [bookData,setBookData]=useState<Book|undefined>(undefined);
 
-    useQuery("book", async()=> {
+    useQuery(["book", id], async()=> {
         const res = await api.get<Book>(`books/book/${id}`);
         return res;
     },{enabled:!!id,onSuccess:(data)=>setBookData(data)});
@@ -177,6 +196,10 @@ function Reader(props:ReaderProps):React.ReactElement {
         }
 
         function handleKeyDown(e:KeyboardEvent):void {
+            const target = e.target as HTMLElement | null;
+
+            if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+
             switch (e.key) {
                 case "ArrowLeft":{
                     iframe.current?.contentWindow?.postMessage({action:"goLeft"});
@@ -198,32 +221,66 @@ function Reader(props:ReaderProps):React.ReactElement {
                     setOpenTextSidebar((prev)=>!prev);
                     break;
                 }
+                case "d":{
+                    iframe.current?.contentWindow?.postMessage({action:"setSettings", property:"doublePage"});
+                    toast.success(`Doble página ${readerSettings.singlePageView ? "activada" : "desactivada"}`);
+                    modifyReaderSettings("singlePageView", !readerSettings.singlePageView);
+                    break;
+                }
+                case "z":{
+                    if (readerSettings.panAndZoom) {
+                        iframe.current?.contentWindow?.postMessage({action:"setSettings", property:"disableZoom"});
+                        toast.success("Zoom&Pan desactivado");
+                    } else {
+                        iframe.current?.contentWindow?.postMessage({action:"setSettings", property:"enableZoom"});
+                        toast.success("Zoom&Pan activado");
+                    }
+                    modifyReaderSettings("panAndZoom", !readerSettings.panAndZoom);
+                    break;
+                }
+                case "m":{
+                    const zooms = ["fit to screen", "fit to width", "original size", "keep zoom level"];
+                    const zoomIndex = zooms.indexOf(readerSettings.defaultZoomMode);
+                    const newZoom = zoomIndex < 3 ? zooms[zoomIndex + 1] : zooms[0];
+                    iframe.current?.contentWindow?.postMessage({action:"setSettings", property:"defaultZoom", value:newZoom});
+                    modifyReaderSettings("defaultZoomMode", newZoom as "fit to screen" | "fit to width" | "original size" | "keep zoom level");
+                    toast.success(`Nuevo modo de zoom: ${newZoom}`);
+                    break;
+                }
+                case "f":{
+                    toggleFullscreen();
+                    break;
+                }
+                case "?":{
+                    setShowShortcuts((prev)=>!prev);
+                    break;
+                }
             }
         }
 
-        function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):void {
+        async function handleNewMessage(e:MessageEvent<{action:string, value:unknown}>):Promise<void> {
             switch (e.data.action) {
                 case "newPage": {
                     const {value} = e.data as {value:number};
                     if (value || value === 0) {
                         if(bookData){
                             if ((value < -1 && !readerSettings.singlePageView) || (value < 0 && readerSettings.singlePageView)) {
-                                if (!confirm("¿Volver al libro anterior?")) return;
+                                if (!await confirmDialog("¿Volver al libro anterior?")) return;
                                 setForceSave(true);
 
                                 // Wait 500 ms
                                 setTimeout(()=>{
-                                    void prevBook({book:bookData, variant:"manga"});
+                                    void prevBook({book:bookData, variant:"manga", navigate});
                                 }, 500);
                                 return;
                             }
                             if (value >= bookData.pages) {
-                                if (!confirm("¿Pasar al siguiente libro?")) return;
+                                if (!await confirmDialog("¿Pasar al siguiente libro?")) return;
                                 setForceSave(true);
 
                                 // Wait 500 ms
                                 setTimeout(()=>{
-                                    void nextBook({book:bookData, variant:"manga"});
+                                    void nextBook({book:bookData, variant:"manga", navigate});
                                 }, 500);
 
                                 return;
@@ -349,14 +406,14 @@ function Reader(props:ReaderProps):React.ReactElement {
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
         };
-    }, [bookData, readerSettings, siteSettings, timerOn]);
+    }, [bookData, readerSettings, siteSettings, timerOn, navigate, modifyReaderSettings, toggleFullscreen]);
 
     function closeSettingsMenu():void {
         setShowSettings(false);
     }
 
     return (
-        <div className="text-[#0000008a] relative overflow-hidden h-[100svh] flex flex-col">
+        <div className="text-app-text relative overflow-hidden h-[100svh] flex flex-col">
             <Helmet>
                 <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
             </Helmet>
@@ -367,8 +424,9 @@ function Reader(props:ReaderProps):React.ReactElement {
             )}
             <PageText lines={pageText} open={openTextSidebar} setOpen={setOpenTextSidebar}/>
             <Dictionary searchWord={searchWord} setSearchWord={setSearchWord}/>
+            <ShortcutsDialog open={showShortcuts} onClose={()=>setShowShortcuts(false)} shortcuts={mangaShortcuts}/>
             {bookData && (
-                <RemoteReader readerVars={{bookData,bookProgress,currentPage,iframe,showSettings,setShowSettings,timer,setTimerOn,setTimer,timerOn,doublePages,setOpenTextSidebar}}/>
+                <RemoteReader readerVars={{bookData,bookProgress,currentPage,iframe,showSettings,setShowSettings,timer,setTimerOn,setTimer,timerOn,doublePages,setOpenTextSidebar,setShowShortcuts}}/>
             )}
             {props.type === "local" && (
                 <LocalReader readerVars={{currentPage,iframe,showSettings,setShowSettings,timer,setTimer,timerOn,setTimerOn,setOpenTextSidebar,localHtml:props.localHtml,pages:props.pages,iframeOnLoad:props.iframeOnLoad,name:props.name,resetBook:props.resetBook}}/>

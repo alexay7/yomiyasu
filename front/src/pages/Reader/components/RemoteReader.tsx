@@ -1,4 +1,4 @@
-import { ArrowBack, ArrowBackIosNew, ArrowCircleLeft, ArrowCircleRight, ArrowForwardIos, Settings, SkipNext, SkipPrevious, Timer, Translate, ViewSidebar } from "@mui/icons-material";
+import { ArrowBack, ArrowBackIosNew, ArrowCircleLeft, ArrowCircleRight, ArrowForwardIos, Fullscreen, FullscreenExit, HelpOutline, Settings, SkipNext, SkipPrevious, Timer, Translate, ViewSidebar } from "@mui/icons-material";
 import { createTheme, IconButton, ThemeProvider, Tooltip } from "@mui/material";
 import React, { Fragment, SetStateAction, useEffect, useState } from "react";
 import { StopWatchMenu } from "./StopWatchMenu";
@@ -9,7 +9,10 @@ import { createProgress } from "../../../helpers/progress";
 import { useMediaQuery } from "react-responsive";
 import { nextBook, prevBook } from "../../../helpers/book";
 import { ReaderConfig } from "../../../types/settings";
-import { formatTime } from "../../../helpers/helpers";
+import { formatTime, goBack } from "../../../helpers/helpers";
+import { useNavigate } from "react-router-dom";
+import { useFullscreen } from "../../../helpers/useFullscreen";
+import { buildMokuroScript, mokuroStyles } from "../../../helpers/mokuroScript";
 
 type RemoteReaderProps = {
     readerVars:{
@@ -25,6 +28,7 @@ type RemoteReaderProps = {
         setTimerOn:(v:SetStateAction<boolean>)=>void;
         doublePages:boolean;
         setOpenTextSidebar:(v:SetStateAction<boolean>)=>void;
+        setShowShortcuts:(v:SetStateAction<boolean>)=>void;
     }
 }
 
@@ -33,13 +37,16 @@ const theme = createTheme({
 });
 
 export default function RemoteReader({readerVars:{bookData, currentPage,timer,bookProgress,
-    setTimer,setTimerOn,timerOn,iframe,setShowSettings,doublePages,setOpenTextSidebar
+    setTimer,setTimerOn,timerOn,iframe,setShowSettings,doublePages,setOpenTextSidebar,setShowShortcuts
 }}:RemoteReaderProps):React.ReactElement{
     const {readerSettings,siteSettings}=useSettingsStore()
+    const {isFullscreen,toggleFullscreen}=useFullscreen();
 
 
     const [showTimeLeft, setShowTimeLeft] = useState(false);
     const [showToolBar, setShowToolbar] = useState(true);
+
+    const navigate = useNavigate();
 
     const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
 
@@ -58,276 +65,11 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
     
             const customStyles = document.createElement("style");
     
-            customStyles.innerHTML = `
-            @font-face {
-                font-family: "Zen Antique";
-                src: url("/fonts/ZenAntique.ttf") format("truetype");;
-            }
-            @font-face {
-                font-family: "IPA";
-                src: url("/fonts/ipaexg.ttf") format("truetype");;
-            }
-    
-            .pageContainer * { font-family: var(--user-font); }
-            `;
+            customStyles.innerHTML = mokuroStyles;
     
             const customMokuro = document.createElement("script");
     
-            customMokuro.innerHTML = `
-                (function(){
-                    /**
-                     * Recibe los mensajes del parent para realizar las acciones indicadas
-                     */ 
-                    let zoomEnabled = true;
-    
-                        window.addEventListener("message",
-                        (event) => {
-                            if (event.origin !== window.location.origin) return;
-                            
-                            switch(event.data.action){
-                                case "goRight":{
-                                    inputRight();
-                                    break;
-                                };
-                                case "goLeft":{
-                                    inputLeft();
-                                    break;
-                                };
-                                case "setPage":{
-                                    updatePage(event.data.page-1);
-                                    break;
-                                };
-                                case "getSettings":{
-                                    window.parent.postMessage({"action":"settings",value:state},"*");
-                                    break;
-                                };
-                                case "setSettings":{
-                                    switch(event.data.property){
-                                        case "r2l":{
-                                            document.getElementById("menuR2l").click();
-                                            break;
-                                        };
-                                        case "ctrlToPan":{
-                                            document.getElementById("menuCtrlToPan").click();
-                                            break;
-                                        };
-                                        case "doublePage":{
-                                            document.getElementById("menuDoublePageView").click();
-                                            break;
-                                        };
-                                        case "coverPage":{
-                                            document.getElementById("menuHasCover").click();
-                                            break;
-                                        };
-                                        case "borders":{
-                                            document.getElementById("menuTextBoxBorders").click();
-                                            break;
-                                        };
-                                        case "ocr":{
-                                            document.getElementById("menuDisplayOCR").click();
-                                            break;
-                                        };
-                                        case "fontSize":{
-                                            document.getElementById("menuFontSize").value=event.data.value;
-                                            const newEvent = new Event("change");
-                                            document.getElementById("menuFontSize").dispatchEvent(newEvent);
-                                            break;
-                                        };
-                                        case "defaultZoom":{
-                                            document.getElementById("menuDefaultZoom").value=event.data.value;
-                                            const newEvent = new Event("change");
-                                            document.getElementById("menuDefaultZoom").dispatchEvent(newEvent);
-                                            break;
-                                        };
-                                        case "toggleBoxes":{
-                                            document.getElementById("menuToggleOCRTextBoxes").click();
-                                            break;
-                                        };
-                                        case "enableZoom":{
-                                            pz.resume();
-                                            zoomEnabled=true;
-                                            break;
-                                        };
-                                        case "disableZoom":{
-                                            pz.pause();
-                                            zoomEnabled=false;
-                                            break;
-                                        };
-                                    }
-                                }
-                            };
-                        });
-    
-                    // Permite cambiar de página con keybinds también dentro del iframe
-                    document.body.addEventListener("keydown",(e)=>{
-                        switch(e.key){
-                            case "ArrowLeft":{
-                                inputLeft();
-                                e.stopPropagation();
-                                e.stopImmediatePropagation();
-                                break;
-                            };
-                            case " ":{
-                                inputLeft();
-                                e.stopPropagation();
-                                e.stopImmediatePropagation();
-                                break;
-                            };
-                            case "ArrowRight":{
-                                inputRight();
-                                e.stopPropagation();
-                                e.stopImmediatePropagation();
-                                break;
-                            };
-                            default:{
-                                window.parent.postMessage({action:"keypress",value:{key:e.key}},"*");
-                            }
-                        };
-                    });
-    
-                    ${readerSettings.dictionaryVersion === "word" ?
-            `
-                    function sendClickedWord(e){
-                        if (!event.target) return;
-                        const target = event.target;
-                        const text = target.textContent;
-                        if (!text || target.tagName !== "P") return;
-                        let clickedPosition = window.getSelection()?.focusOffset; // Obtiene la posición del clic
-                        const extracted = text.slice(clickedPosition);
-                        window.parent.postMessage({action:"selection",value:extracted},"*")
-                    }
-    
-                    document.body.addEventListener("click",sendClickedWord)
-                    ` : `
-                    document.body.addEventListener("click",(e)=>{
-                        if(window.getSelection().toString()){
-                            window.parent.postMessage({action:"selection",value:window.getSelection().toString()},"*")
-                        }
-                    })
-    
-                    function addClickHandlersToParagraphs() {
-                        const paragraphs = document.querySelectorAll('p');
-                        // Add event listener to each <p> element
-                        paragraphs.forEach(paragraph => {
-                            paragraph.addEventListener('touchstart', () => {
-                                // Retrieve the text content of the clicked <p> element
-                                const textContent = paragraph.textContent;
-            
-                                // Display the text (you can customize this part)
-                                window.parent.postMessage({ action: "selection", value: textContent });
-                            });
-                        });
-                    }
-            
-                    addClickHandlersToParagraphs();                
-                    `}
-    
-                    // Desactiva el menú de mokuro si así lo pone en ajustes
-                    ${readerSettings.panAndZoom ? "" : "pz.pause();zoomEnabled=false;"}
-    
-                    // Oculta el menú de mokuro
-                    document.getElementById('topMenu').style.display="none";
-                    document.getElementById('showMenuA').style.display="none";
-                    // Get color from localStorage
-                    const color = window.localStorage.getItem("color-theme");
-                    if (color === "dark") {
-                        document.body.style.backgroundColor = "black";
-                    } else {
-                        document.body.style.backgroundColor = "white";
-                    }
-    
-                    ${readerSettings.scrollChange ? `
-                    // Permite pasar de página con swipes
-                    var touchStart = null;
-                    var touchEnd = null;
-    
-                    document.body.addEventListener("touchstart",(e)=>{
-                        touchEnd = null;
-                        touchStart = e.targetTouches[0].clientX;
-                    });
-    
-                    document.body.addEventListener("touchmove",(e)=>{
-                        if(zoomEnabled && e.targetTouches.length<2)return;
-                        touchEnd = e.targetTouches[0].clientX;
-                    });
-    
-                    document.body.addEventListener("touchend",(e)=>{
-                        if (!touchStart || !touchEnd) return;
-                        const distance = touchStart - touchEnd;
-                        const isLeftSwipe = distance > 100;
-                        const isRightSwipe = distance < -100;
-                        if (isLeftSwipe){
-                            inputRight();
-                        }else if(isRightSwipe){
-                            inputLeft();
-                        }
-                    });` : ""}
-    
-                    /**
-                     * Reemplaza la función de pasar de página por una que, además de
-                     * hacer las mismas funciones que la anterior, mande un mensaje al parent
-                     * avisando del cambio de página
-                     */
-                    let oldUpdate = window.updatePage;
-    
-                    function getText(){
-                        const pageBoxes = document.querySelectorAll('.page');
-                        const inlineBlockTextBoxContents = [];
-    
-                        pageBoxes.forEach((textBox) => {
-                            const boxContent = [];
-                            if (textBox.style.display === "inline-block") {
-                                const divs = textBox.querySelectorAll('.textBox');
-                                const divBoxes = []
-                                divs.forEach((div) => {
-                                    const paragraphs = div.querySelectorAll('p');
-                                    const paragraphContent = [];
-                                    paragraphs.forEach((paragraph) => {
-                                        paragraphContent.push(paragraph.textContent);
-                                    })
-                                    divBoxes.push(paragraphContent);
-                                })
-                                boxContent.push(divBoxes);
-                            }
-                            if (boxContent.length > 0) {
-                                inlineBlockTextBoxContents.push(boxContent);
-                            }
-                        })
-    
-                        window.parent.postMessage({action:"text",value:inlineBlockTextBoxContents},"*");
-                    }
-    
-                    function getBackgroundImage(page) {
-                        const pageContainer = page?.querySelector('.pageContainer');
-                        return pageContainer?.style?.backgroundImage
-                          ?.slice(4, -1)
-                          .replace(/['"]/g, '');
-                      }
-    
-                    const preload = document.getElementById('preload-image');
-    
-                    function preloadImage() {
-                        let preloadContent = '';
-                  
-                        for (let i = 0; i < 5; i++) {
-                          const page = getPage(state.page_idx + i);
-                          const backgroundImageUrl = getBackgroundImage(page);
-                  
-                          if (backgroundImageUrl) {
-                            preloadContent += "url("+backgroundImageUrl+") ";
-                          }
-                        }
-                        preload.style.content = preloadContent;
-                      }
-    
-                    window.updatePage = function(new_page_idx){
-                        oldUpdate(new_page_idx);
-                        preloadImage();
-                        getText();
-                        window.parent.postMessage({action:"newPage",value:new_page_idx},"*");
-                    }
-                })()
-                `;
+            customMokuro.innerHTML = buildMokuroScript(readerSettings);
     
             const preload = document.createElement("div");
             preload.id = "preload-image";
@@ -448,15 +190,15 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
     return(
         <Fragment>
         {showToolBar && (
-            <div className="dark:bg-[#101010] bg-[#ebe8e3] w-full h-[5vh] dark:text-[#ebe8e3] text-[#0000008a] flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
+            <div className="bg-app-chrome w-full h-[5vh] text-app-text flex items-center justify-between fixed top-0 gap-4 py-2 lg:py-1 z-20">
                 <div className="flex items-center gap-2 px-2 shrink lg:w-1/2">
                     <Tooltip title="Volver atrás">
                         <IconButton onClick={async()=>{
                             await createProgress(bookData, currentPage, timer,
                                 bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                            window.location.href = window.localStorage.getItem("origin") || "/app";
+                            goBack(navigate);
                         }}
-                        className="dark:text-[#ebe8e3] text-[#0000008a]"
+                        className="text-app-text"
                         >
                             <ArrowBack/>
                         </IconButton>
@@ -466,7 +208,7 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                 <div className="flex items-center flex-row px-2 gap-1 grow lg:w-1/2 justify-end">
                     <Tooltip enterTouchDelay={0} title={`${calculateCharacters()} caracteres`}>
                         <IconButton>
-                            <Translate className="dark:text-[#ebe8e3] text-[#0000008a]"/>
+                            <Translate className="text-app-text"/>
                         </IconButton>
                     </Tooltip>
                     <StopWatchMenu characters={calculateCurrentCharacters()} oldProgress={bookProgress} bookData={bookData}
@@ -477,14 +219,28 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                     {/* <IconButton>
                         <Translate/>
                     </IconButton> */}
+                    <Tooltip title="Atajos de teclado (?)">
+                        <IconButton onClick={()=>setShowShortcuts(true)}>
+                            <HelpOutline className="text-app-text"/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title={isFullscreen ? "Salir de pantalla completa (f)" : "Pantalla completa (f)"}>
+                        <IconButton onClick={toggleFullscreen}>
+                            {isFullscreen ? (
+                                <FullscreenExit className="text-app-text"/>
+                            ) : (
+                                <Fullscreen className="text-app-text"/>
+                            )}
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title="Ajustes del lector">
                         <IconButton onClick={()=>setShowSettings(true)}>
-                            <Settings className="dark:text-[#ebe8e3] text-[#0000008a]"/>
+                            <Settings className="text-app-text"/>
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Mostrar caracteres por separado">
                         <IconButton onClick={toggleSidebar}>
-                            <ViewSidebar className="dark:text-[#ebe8e3] text-[#0000008a]"/>
+                            <ViewSidebar className="text-app-text"/>
                         </IconButton>
                     </Tooltip>
                 </div>
@@ -519,7 +275,7 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
             </div>
         )}
         {showToolBar && (
-            <div className="dark:bg-[#101010] bg-[#ebe8e3] h-[5vh] w-full dark:text-[#ebe8e3] flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
+            <div className="bg-app-chrome h-[5vh] w-full dark:text-app-text flex justify-center items-center fixed bottom-0 py-2 lg:py-0" >
                 {bookData.pageChars && (
                     <div className="absolute -top-6 right-1 text-white text-sm select-none font-bold" onClick={()=>setShowTimeLeft((prev)=>!prev)} style={{textShadow:"-1px 0 #787878, 0 1px #787878, 1px 0 #787878, 0 -1px #787878"}}>
                         {showTimeLeft ? (
@@ -535,9 +291,9 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                             <IconButton onClick={async()=>{
                                 await createProgress(bookData, currentPage, timer,
                                     bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                void nextBook({book:bookData, variant:"manga"});
+                                void nextBook({book:bookData, variant:"manga", navigate});
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowCircleLeft/>
                             </IconButton>
@@ -546,7 +302,7 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                             <IconButton  onClick={()=>{
                                 setPage(bookData.pages);
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <SkipPrevious/>
                             </IconButton>
@@ -556,13 +312,13 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                     </div>
                 ) : (
                     <div className="justify-between flex items-center">
-                        <Tooltip title="It al libro anterior">
+                        <Tooltip title="Ir al libro anterior">
                             <IconButton onClick={async()=>{
                                 await createProgress(bookData, currentPage, timer,
                                     bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                void prevBook({book:bookData, variant:"manga"});
+                                void prevBook({book:bookData, variant:"manga", navigate});
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowCircleLeft/>
                             </IconButton>
@@ -571,7 +327,7 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                             <IconButton onClick={()=>{
                                 setPage(1);
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <SkipPrevious/>
                             </IconButton>
@@ -596,7 +352,7 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                             <IconButton  onClick={()=>{
                                 setPage(bookData.pages);
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <SkipNext/>
                             </IconButton>
@@ -605,9 +361,9 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                             <IconButton onClick={async()=>{
                                 await createProgress(bookData, currentPage, timer,
                                     bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                void nextBook({book:bookData, variant:"manga"});
+                                void nextBook({book:bookData, variant:"manga", navigate});
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowCircleRight/>
                             </IconButton>
@@ -621,18 +377,18 @@ export default function RemoteReader({readerVars:{bookData, currentPage,timer,bo
                             <IconButton onClick={()=>{
                                 setPage(1);
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <SkipNext/>
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="It al libro anterior">
+                        <Tooltip title="Ir al libro anterior">
                             <IconButton onClick={async()=>{
                                 await createProgress(bookData, currentPage, timer,
                                     bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0, !readerSettings.singlePageView);
-                                void prevBook({book:bookData, variant:"manga"});
+                                void prevBook({book:bookData, variant:"manga", navigate});
                             }}
-                            className="dark:text-[#ebe8e3] text-[#0000008a]"
+                            className="text-app-text"
                             >
                                 <ArrowCircleRight/>
                             </IconButton>
