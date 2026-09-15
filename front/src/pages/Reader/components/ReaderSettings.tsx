@@ -1,29 +1,23 @@
-import React, {LiHTMLAttributes, useRef} from "react";
-import "./style.css";
-import {CSSTransition} from "react-transition-group";
-import {Checkbox, IconButton, MenuItem, Select, SelectChangeEvent} from "@mui/material";
-import {Close} from "@mui/icons-material";
+import {Settings} from "lucide-react";
+import React, {type ReactNode} from "react";
+import {useMediaQuery} from "../../../lib/useMediaQuery";
 import {useSettingsStore} from "../../../stores/SettingsStore";
-import {useMediaQuery} from "react-responsive";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../../ui/Select";
+import {Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle} from "../../../ui/Sheet";
+import {Switch} from "../../../ui/Switch";
 
-interface SettingsItemProps extends LiHTMLAttributes<HTMLLIElement> {
+interface SettingRowProps {
     label:string;
-    childrenId:string;
-    children:React.JSX.Element;
+    htmlFor?:string;
+    children:ReactNode;
 }
 
-function SettingsItem(props:SettingsItemProps):React.ReactElement {
-    const {label, children, childrenId, className, ...moreProps} = props;
-
+function SettingRow({label, htmlFor, children}:SettingRowProps):React.ReactElement {
     return (
-        <li className={`flex items-center justify-between ${className}`} {...moreProps}>
-            <div className="w-5/12 select-none text-sm lg:text-base">
-                <label htmlFor={childrenId}>{label}</label>
-            </div>
-            <div className="w-6/12">
-                {children}
-            </div>
-        </li>
+        <div className="flex items-center justify-between gap-4 py-1">
+            <label htmlFor={htmlFor} className="flex-1 select-none text-sm text-fg">{label}</label>
+            <div className="w-6/12 shrink-0">{children}</div>
+        </div>
     );
 }
 
@@ -36,201 +30,230 @@ interface ReaderSettingsProps {
 export function ReaderSettings(props:ReaderSettingsProps):React.ReactElement {
     const {readerSettings, modifyReaderSettings} = useSettingsStore();
     const {showMenu, iframeWindow, closeSettings} = props;
-    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
+    const isTabletOrMobile = useMediaQuery("(max-width: 1224px)");
 
-    function setRightToLeft():void {
-        iframeWindow.postMessage({action:"setSettings", property:"r2l"});
-        modifyReaderSettings("r2l", !readerSettings.r2l);
+    function post(property:string, value?:string):void {
+        iframeWindow.postMessage({action:"setSettings", property, value});
     }
-
-    function setCtrlToPan():void {
-        iframeWindow.postMessage({action:"setSettings", property:"ctrlToPan"});
-        modifyReaderSettings("ctrlToPan", !readerSettings.ctrlToPan);
-    }
-
-    function setZoom(e:SelectChangeEvent):void {
-        iframeWindow.postMessage({action:"setSettings", property:"defaultZoom", value:e.target.value});
-        modifyReaderSettings("defaultZoomMode", e.target.value as "fit to screen" | "fit to width" | "original size" | "keep zoom level");
-    }
-
-    function setOcr():void {
-        iframeWindow.postMessage({action:"setSettings", property:"ocr"});
-        modifyReaderSettings("displayOCR", !readerSettings.displayOCR);
-    }
-
-    function setBorders():void {
-        iframeWindow.postMessage({action:"setSettings", property:"borders"});
-        modifyReaderSettings("textBoxBorders", !readerSettings.textBoxBorders);
-    }
-
-    function setDoublePage():void {
-        iframeWindow.postMessage({action:"setSettings", property:"doublePage"});
-        modifyReaderSettings("singlePageView", !readerSettings.singlePageView);
-    }
-
-    function setCoverPage():void {
-        iframeWindow.postMessage({action:"setSettings", property:"coverPage"});
-        modifyReaderSettings("hasCover", !readerSettings.hasCover);
-    }
-
-    function setFontSize(e:SelectChangeEvent):void {
-        iframeWindow.postMessage({action:"setSettings", property:"fontSize", value:e.target.value});
-        modifyReaderSettings("fontSize", e.target.value);
-    }
-
-    function setToggleBox():void {
-        iframeWindow.postMessage({action:"setSettings", property:"toggleBoxes"});
-        modifyReaderSettings("toggleOCRTextBoxes", !readerSettings.toggleOCRTextBoxes);
-    }
-
-    function setZoomPan():void {
-        if (readerSettings.panAndZoom) {
-            iframeWindow.postMessage({action:"setSettings", property:"disableZoom"});
-        } else {
-            iframeWindow.postMessage({action:"setSettings", property:"enableZoom"});
-        }
-        modifyReaderSettings("panAndZoom", !readerSettings.panAndZoom);
-    }
-
-    function setFont(e:SelectChangeEvent):void {
-        iframeWindow.document.body.style.setProperty("--user-font", e.target.value);
-
-        modifyReaderSettings("fontFamily", e.target.value);
-    }
-
-    function setDictionary():void {
-        modifyReaderSettings("nativeDictionary", !readerSettings.nativeDictionary);
-    }
-
-    function setDictVersion(e:SelectChangeEvent):void {
-        modifyReaderSettings("dictionaryVersion", e.target.value as "word" | "sentence");
-        window.location.reload();
-    }
-
-    function setScrollChange():void {
-        modifyReaderSettings("scrollChange", !readerSettings.scrollChange);
-        window.location.reload();
-    }
-
-    const blurredRef = useRef(null);
-    const menuRef = useRef(null);
 
     return (
-        <>
-            <CSSTransition nodeRef={blurredRef} in={showMenu} timeout={300} classNames="blurred" unmountOnExit>
-                <div ref={blurredRef} className="dark:bg-black w-full h-[100svh] fixed top-0 left-0 z-10 opacity-40"
-                    onClick={closeSettings}
-                />
-            </CSSTransition>
-            <CSSTransition nodeRef={menuRef} in={showMenu} timeout={300} classNames="readerconf" unmountOnExit>
-                <div ref={menuRef} className="w-full lg:w-1/2 max-w-screen-sm absolute left-1/2 bottom-0 bg-transparent -translate-x-1/2 z-20">
-                    <div className="flex px-4 gap-4 items-center py-2 bg-primary rounded-t-xl text-[#ebe8e3] dark:text-[#101010]">
-                        <IconButton onClick={closeSettings}>
-                            <Close className="text-[#ebe8e3] dark:text-[#101010]"/>
-                        </IconButton>
-                        <p className="text-lg">Ajustes del Lector</p>
-                    </div>
-                    <div className="flex flex-col dark:bg-app-surface bg-white py-4 px-4 gap-2 h-[32rem] overflow-y-auto">
-                        <p className="font-bold text-app-text text-xl py-1">Ajustes de YomiYasu</p>
-                        <div className="ml-2 flex flex-col gap-2">
-                            <SettingsItem className="dark:text-white" label="Activar diccionario nativo" childrenId="dict">
-                                <div className="flex justify-end">
-                                    <Checkbox id="dict" onClick={setDictionary} checked={readerSettings.nativeDictionary}/>
-                                </div>
-                            </SettingsItem>
-                            {readerSettings.nativeDictionary && !isTabletOrMobile && (
-                                <SettingsItem className="dark:text-white" label="Versión de diccionario" childrenId="dictver">
-                                    <div className="flex justify-end">
-                                        <Select className="w-full" variant="standard" id="dictver" value={readerSettings.dictionaryVersion}
-                                            onChange={(e)=>setDictVersion(e)}
-                                        >
-                                            <MenuItem value="word">Click para buscar (más precisión, busca palabra)</MenuItem>
-                                            <MenuItem value="sentence">Seleccionar para buscar (menos precisión, busca frase)</MenuItem>
-                                        </Select>
-                                    </div>
-                                </SettingsItem>
-                            )}
-                            <SettingsItem className="dark:text-white" label="Activar scroll para cambiar de página" childrenId="scroll">
-                                <div className="flex justify-end">
-                                    <Checkbox id="scroll" onClick={setScrollChange} checked={readerSettings.scrollChange}/>
-                                </div>
-                            </SettingsItem>
-                        </div>
-                        <p className="font-bold text-app-text text-xl py-1">Ajustes de Mokuro</p>
-                        <div className="ml-2 flex flex-col gap-2">
-                            <SettingsItem className="dark:text-white" label="Activar Zoom&Pan" childrenId="zoompan">
-                                <div className="flex justify-end">
-                                    <Checkbox id="zoompan" onClick={setZoomPan} checked={readerSettings.panAndZoom}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Mostrar doble página" childrenId="doublepage">
-                                <div className="flex justify-end">
-                                    <Checkbox id="doublepage" onClick={setDoublePage} checked={!readerSettings.singlePageView}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Primera página es portada" childrenId="coverpage">
-                                <div className="flex justify-end">
-                                    <Checkbox id="coverpage" onClick={setCoverPage} checked={readerSettings.hasCover}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Leer de derecha a izquierda" childrenId="r2l">
-                                <div className="flex justify-end">
-                                    <Checkbox id="r2l" onClick={setRightToLeft} checked={readerSettings.r2l}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Tipo de fuente" childrenId="font">
-                                <div className="flex justify-end">
-                                    <Select className="w-full" variant="standard" id="font" value={readerSettings.fontFamily} onChange={(e)=>setFont(e)}>
-                                        <MenuItem value="Zen Antique">Zen Antique</MenuItem>
-                                        <MenuItem value="IPA">IPAex Gothic</MenuItem>
-                                        <MenuItem value="Noto Sans JP">Noto Sans Japanese</MenuItem>
-                                    </Select>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Ctrl para moverse por el libro (PC)" childrenId="ctrl">
-                                <div className="flex justify-end">
-                                    <Checkbox id="ctrl" onClick={setCtrlToPan} checked={readerSettings.ctrlToPan}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Zoom al pasar de página" childrenId="zoom">
-                                <div className="flex justify-end">
-                                    <Select className="w-full" variant="standard" id="zoom" value={readerSettings.defaultZoomMode} onChange={(e)=>setZoom(e)}>
-                                        <MenuItem value="fit to screen">Ajustar verticalmente</MenuItem>
-                                        <MenuItem value="fit to width">Ajustar horizontalmente</MenuItem>
-                                        <MenuItem value="original size">Tamaño Original</MenuItem>
-                                        <MenuItem value="keep zoom level">Mantener Zoom</MenuItem>
-                                    </Select>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Mostrar OCR" childrenId="ocr">
-                                <div className="flex justify-end">
-                                    <Checkbox id="ocr" onClick={setOcr} checked={readerSettings.displayOCR}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Mostrar bordes en cuadros de texto" childrenId="borders">
-                                <div className="flex justify-end">
-                                    <Checkbox id="borders" onClick={setBorders} checked={readerSettings.textBoxBorders}/>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Tamaño del texto" childrenId="fontsize">
-                                <div className="flex justify-end">
-                                    <Select className="w-full" variant="standard" id="zoom" value={readerSettings.fontSize} onChange={(e)=>setFontSize(e)}>
-                                        <MenuItem value="auto">Auto</MenuItem>
-                                        <MenuItem value="10">Pequeño</MenuItem>
-                                        <MenuItem value="20">Normal</MenuItem>
-                                        <MenuItem value="40">Grande</MenuItem>
-                                    </Select>
-                                </div>
-                            </SettingsItem>
-                            <SettingsItem className="dark:text-white" label="Mantener texto al hacer click" childrenId="togglebox">
-                                <div className="flex justify-end">
-                                    <Checkbox id="togglebox" onClick={setToggleBox} checked={readerSettings.toggleOCRTextBoxes}/>
-                                </div>
-                            </SettingsItem>
-                        </div>
-                    </div>
-                </div>
-            </CSSTransition>
-        </>
+        <Sheet
+            open={showMenu}
+            onOpenChange={(value)=>{
+                if (!value) closeSettings();
+            }}
+        >
+            <SheetContent side="bottom" className="sm:mx-auto sm:max-w-screen-sm lg:max-w-xl">
+                <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                        <Settings className="size-4 text-fg-muted" />
+                        Ajustes del lector
+                    </SheetTitle>
+                    <SheetDescription>Los cambios se aplican al instante</SheetDescription>
+                </SheetHeader>
+
+                <SheetBody className="flex flex-col gap-5">
+                    <section className="flex flex-col">
+                        <h3 className="pb-1 text-[13px] font-semibold uppercase tracking-wider text-fg-muted/80">YomiYasu</h3>
+                        <SettingRow label="Activar diccionario nativo" htmlFor="setting-dict">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-dict"
+                                    checked={readerSettings.nativeDictionary}
+                                    onCheckedChange={(checked)=>modifyReaderSettings("nativeDictionary", checked)}
+                                />
+                            </div>
+                        </SettingRow>
+                        {readerSettings.nativeDictionary && !isTabletOrMobile ? (
+                            <SettingRow label="Versión de diccionario" htmlFor="setting-dictver">
+                                <Select
+                                    value={readerSettings.dictionaryVersion}
+                                    onValueChange={(value)=>{
+                                        modifyReaderSettings("dictionaryVersion", value as "word" | "sentence");
+                                        window.location.reload();
+                                    }}
+                                >
+                                    <SelectTrigger id="setting-dictver" className="h-8 text-[13px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="word">Click para buscar</SelectItem>
+                                        <SelectItem value="sentence">Seleccionar para buscar</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </SettingRow>
+                        ) : null}
+                        <SettingRow label="Scroll para cambiar de página" htmlFor="setting-scroll">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-scroll"
+                                    checked={readerSettings.scrollChange}
+                                    onCheckedChange={(checked)=>{
+                                        modifyReaderSettings("scrollChange", checked);
+                                        window.location.reload();
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                    </section>
+
+                    <section className="flex flex-col">
+                        <h3 className="pb-1 text-[13px] font-semibold uppercase tracking-wider text-fg-muted/80">Mokuro</h3>
+                        <SettingRow label="Activar Zoom y Pan" htmlFor="setting-zoompan">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-zoompan"
+                                    checked={readerSettings.panAndZoom}
+                                    onCheckedChange={(checked)=>{
+                                        post(checked ? "enableZoom" : "disableZoom");
+                                        modifyReaderSettings("panAndZoom", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Mostrar doble página" htmlFor="setting-doublepage">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-doublepage"
+                                    checked={!readerSettings.singlePageView}
+                                    onCheckedChange={(checked)=>{
+                                        post("doublePage");
+                                        modifyReaderSettings("singlePageView", !checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Primera página es portada" htmlFor="setting-cover">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-cover"
+                                    checked={readerSettings.hasCover}
+                                    onCheckedChange={(checked)=>{
+                                        post("coverPage");
+                                        modifyReaderSettings("hasCover", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Leer de derecha a izquierda" htmlFor="setting-r2l">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-r2l"
+                                    checked={readerSettings.r2l}
+                                    onCheckedChange={(checked)=>{
+                                        post("r2l");
+                                        modifyReaderSettings("r2l", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Tipo de fuente" htmlFor="setting-font">
+                            <Select
+                                value={readerSettings.fontFamily}
+                                onValueChange={(value)=>{
+                                    iframeWindow.document.body.style.setProperty("--user-font", value);
+                                    modifyReaderSettings("fontFamily", value);
+                                }}
+                            >
+                                <SelectTrigger id="setting-font" className="h-8 text-[13px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Zen Antique">Zen Antique</SelectItem>
+                                    <SelectItem value="IPA">IPAex Gothic</SelectItem>
+                                    <SelectItem value="Noto Sans JP">Noto Sans Japanese</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </SettingRow>
+                        <SettingRow label="Ctrl para moverse por el libro (PC)" htmlFor="setting-ctrl">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-ctrl"
+                                    checked={readerSettings.ctrlToPan}
+                                    onCheckedChange={(checked)=>{
+                                        post("ctrlToPan");
+                                        modifyReaderSettings("ctrlToPan", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Zoom al pasar de página" htmlFor="setting-zoom">
+                            <Select
+                                value={readerSettings.defaultZoomMode}
+                                onValueChange={(value)=>{
+                                    post("defaultZoom", value);
+                                    modifyReaderSettings("defaultZoomMode", value as "fit to screen" | "fit to width" | "original size" | "keep zoom level");
+                                }}
+                            >
+                                <SelectTrigger id="setting-zoom" className="h-8 text-[13px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="fit to screen">Ajustar verticalmente</SelectItem>
+                                    <SelectItem value="fit to width">Ajustar horizontalmente</SelectItem>
+                                    <SelectItem value="original size">Tamaño original</SelectItem>
+                                    <SelectItem value="keep zoom level">Mantener zoom</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </SettingRow>
+                        <SettingRow label="Mostrar OCR" htmlFor="setting-ocr">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-ocr"
+                                    checked={readerSettings.displayOCR}
+                                    onCheckedChange={(checked)=>{
+                                        post("ocr");
+                                        modifyReaderSettings("displayOCR", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Bordes en cuadros de texto" htmlFor="setting-borders">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-borders"
+                                    checked={readerSettings.textBoxBorders}
+                                    onCheckedChange={(checked)=>{
+                                        post("borders");
+                                        modifyReaderSettings("textBoxBorders", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                        <SettingRow label="Tamaño del texto" htmlFor="setting-fontsize">
+                            <Select
+                                value={readerSettings.fontSize}
+                                onValueChange={(value)=>{
+                                    post("fontSize", value);
+                                    modifyReaderSettings("fontSize", value);
+                                }}
+                            >
+                                <SelectTrigger id="setting-fontsize" className="h-8 text-[13px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="auto">Auto</SelectItem>
+                                    <SelectItem value="10">Pequeño</SelectItem>
+                                    <SelectItem value="20">Normal</SelectItem>
+                                    <SelectItem value="40">Grande</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </SettingRow>
+                        <SettingRow label="Mantener texto al hacer click" htmlFor="setting-togglebox">
+                            <div className="flex justify-end">
+                                <Switch
+                                    id="setting-togglebox"
+                                    checked={readerSettings.toggleOCRTextBoxes}
+                                    onCheckedChange={(checked)=>{
+                                        post("toggleBoxes");
+                                        modifyReaderSettings("toggleOCRTextBoxes", checked);
+                                    }}
+                                />
+                            </div>
+                        </SettingRow>
+                    </section>
+                </SheetBody>
+            </SheetContent>
+        </Sheet>
     );
 }

@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {useQuery} from "react-query";
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import {useNavigate, useParams} from "react-router";
+import {useQuery} from "@tanstack/react-query";
 import {api} from "../../api/api";
 import {Book, BookProgress} from "../../types/book";
 import {ReaderSettings} from "./components/ReaderSettings";
@@ -8,17 +8,19 @@ import {createProgress} from "../../helpers/progress";
 import {PageText} from "./components/PageText";
 import {Dictionary} from "./components/Dictionary";
 import {nextBook, prevBook} from "../../helpers/book";
-import {Helmet} from "react-helmet";
+import {useTitle} from "../../lib/useTitle";
 import {useAuth} from "../../contexts/AuthContext";
 import {getCookie} from "../../helpers/cookies";
-import "./styles.css";
-import {useSettingsStore, defaultSets} from "../../stores/SettingsStore";
+import {useSettingsStore} from "../../stores/SettingsStore";
 import RemoteReader from "./components/RemoteReader";
 import LocalReader from "./components/LocalReader";
 import {toast} from "react-toastify";
 import {useFullscreen} from "../../helpers/useFullscreen";
 import {ShortcutItem, ShortcutsDialog} from "./components/ShortcutsDialog";
 import {confirmDialog} from "../../stores/ConfirmStore";
+import {keys} from "../../lib/queryKeys";
+import {readMokuroSettings, seedMokuroPage} from "../../lib/mokuro";
+import {useReaderTimerStore, useReadingTimerTicker} from "../../stores/ReaderStore";
 
 const mangaShortcuts:ShortcutItem[] = [
     {keys:["←", "Espacio"], description:"Página anterior (izquierda)"},
@@ -37,7 +39,7 @@ type ReaderProps = {
     localHtml:string,
     iframeOnLoad:()=>void,
     pages:number,
-    localIframe:React.RefObject<HTMLIFrameElement>,
+    localIframe:React.RefObject<HTMLIFrameElement | null>,
     name:string,
     resetBook:()=>void
 } | {
@@ -61,25 +63,49 @@ function Reader(props:ReaderProps):React.ReactElement {
     const [doublePages, setDoublePages] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [pageText, setPageText] = useState<string[][][][]>([]);
-    const [timer, setTimer] = useState(0);
-    const [timerOn, setTimerOn] = useState(false);
     const [openTextSidebar, setOpenTextSidebar] = useState(false);
     const [searchWord, setSearchWord] = useState("");
     const [changedTab, setChangedTab] = useState(false);
     const [forceSave, setForceSave] = useState(false);
     const [showShortcuts, setShowShortcuts] = useState(false);
-    
-    const [bookData,setBookData]=useState<Book|undefined>(undefined);
 
-    useQuery(["book", id], async()=> {
-        const res = await api.get<Book>(`books/book/${id}`);
-        return res;
-    },{enabled:!!id,onSuccess:(data)=>setBookData(data)});
+    const {data:bookData} = useQuery({
+        queryKey:keys.book(id),
+        queryFn:async()=> {
+            const res = await api.get<Book>(`books/book/${id}`);
+            return res;
+        },
+        enabled:!!id
+    });
 
-    const {data:bookProgress, isLoading} = useQuery(`progress-${id}`, async()=>{
-        const res = await api.get<BookProgress>(`readprogress?book=${id}&status=reading`);
-        return res;
-    }, {refetchOnMount:false, refetchOnReconnect:false, refetchOnWindowFocus:false, enabled:!!id});
+    useTitle(bookData ? bookData.visibleName : "Lector");
+
+    const {data:bookProgress, isLoading} = useQuery({
+        queryKey:keys.bookProgress(id),
+        queryFn:async()=>{
+            const res = await api.get<BookProgress>(`readprogress?book=${id}&status=reading`);
+            return res;
+        },
+        refetchOnMount:false,
+        refetchOnReconnect:false,
+        refetchOnWindowFocus:false,
+        enabled:!!id
+    });
+
+    useReadingTimerTicker();
+
+    const saveProgress = useCallback(async(keepAlive = false):Promise<void> => {
+        if (!bookData) return;
+
+        const timer = useReaderTimerStore.getState().timer;
+
+        window.localStorage.setItem(bookData._id, `${timer}`);
+        await createProgress(bookData, currentPage, timer, bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0,
+            !readerSettings.singlePageView, undefined, keepAlive);
+    }, [bookData, currentPage, readerSettings.singlePageView]);
+
+    const saveProgressRef = useRef(saveProgress);
+    saveProgressRef.current = saveProgress;
 
     useEffect(()=>{
         if(!id) return;
@@ -89,72 +115,64 @@ function Reader(props:ReaderProps):React.ReactElement {
         if (!logged) {
             reauth(true);
         }
+    }, [id, reauth]);
 
-        if (!bookData || (timer % 60 !== 0 || timer === 0)&&!forceSave) return;
-        window.localStorage.setItem(bookData._id, `${timer}`);
-        void createProgress(bookData, currentPage, timer, bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0,
-            !readerSettings.singlePageView);
+    // Guarda al cumplir cada minuto de lectura, sin re-renderizar el lector
+    useEffect(()=>{
+        let lastSavedTimer = -1;
+
+        return useReaderTimerStore.subscribe((state)=>{
+            const {timer} = state;
+
+            if (timer > 0 && timer % 60 === 0 && timer !== lastSavedTimer) {
+                lastSavedTimer = timer;
+                void saveProgressRef.current();
+            }
+        });
+    }, []);
+
+    // Guardado forzado antes de cambiar de libro o salir
+    useEffect(()=>{
+        if (!forceSave) return;
+
         setForceSave(false);
-    }, [currentPage, timer, bookData, reauth, readerSettings,id,forceSave]);
+        void saveProgressRef.current();
+    }, [forceSave]);
 
     useEffect(()=>{
         if (siteSettings.autoCrono) {
-            setTimerOn(true);
+            useReaderTimerStore.getState().start();
         }
-    }, [siteSettings, setTimerOn]);
+    }, [siteSettings]);
 
     useEffect(()=>{
-        function replaceWindowSelection():Selection | null {
-            if (window.document.getSelection()) {
-                return window.document.getSelection();
-            }
+        if (isLoading || !bookData) return;
 
-            if (iframe.current && iframe.current.contentWindow) {
+        useReaderTimerStore.getState().setTimer(bookProgress && bookProgress.time && bookProgress.time !== 0 ? bookProgress.time : parseInt(window.localStorage.getItem(bookData._id) || "0"));
 
-                const realSelection = iframe.current.contentWindow.getSelection();
-                return realSelection;
-            }
-
-            return null;
-        }
-
-        window.getSelection = replaceWindowSelection;
-
-        if (!isLoading && bookData) {
-            let page = 1;
-
-            setTimer(bookProgress && bookProgress.time && bookProgress.time !== 0 ? bookProgress.time : parseInt(window.localStorage.getItem(bookData._id) || "0"));
-
-            if (bookProgress && bookProgress.currentPage) {
-                page = bookProgress.currentPage;
-            }
-
-            const initial = defaultSets() as {page_idx:number};
-
-            initial.page_idx = page;
-            window.localStorage.setItem(`mokuro_/api/static/${bookData.variant}s/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`, JSON.stringify(initial));
-
-            setCurrentPage(page - 1);
-        }
+        // La API guarda páginas 1-based; mokuro usa page_idx 0-based
+        const page = bookProgress && bookProgress.currentPage ? bookProgress.currentPage : 1;
+        seedMokuroPage(bookData, page, bookData.pages);
+        setCurrentPage(page);
     }, [bookProgress, bookData, isLoading]);
 
     useEffect(() => {
         if(!id)return;
 
-        const handleBeforeUnload = async():Promise<void> => {
-            // Save before leaving the page
-            if (!bookData) return;
-            await createProgress(bookData, currentPage, timer, bookData.pageChars ? bookData.pageChars[currentPage - 1] : 0,
-                !readerSettings.singlePageView);
+        const handleBeforeUnload = ():void => {
+            // Guardado de salida: keepalive para que la petición sobreviva al cierre
+            void saveProgressRef.current(true);
         };
 
         const handleOutFocus = ():void=>{
+            const {timerOn} = useReaderTimerStore.getState();
+
             if (document.visibilityState === "hidden" && timerOn) {
-                setTimerOn(false);
+                useReaderTimerStore.getState().pause();
                 setChangedTab(true);
             }
             if (changedTab && document.visibilityState === "visible" && !timerOn) {
-                setTimerOn(true);
+                useReaderTimerStore.getState().start();
                 setChangedTab(false);
             }
         };
@@ -166,7 +184,7 @@ function Reader(props:ReaderProps):React.ReactElement {
             window.removeEventListener("beforeunload", handleBeforeUnload);
             window.removeEventListener("visibilitychange", handleOutFocus);
         };
-    }, [bookData, currentPage, timer, timerOn, changedTab, readerSettings,id]);
+    }, [bookData, currentPage, changedTab, readerSettings,id, navigate, modifyReaderSettings, toggleFullscreen, siteSettings]);
 
     useEffect(()=>{
         /**
@@ -174,12 +192,9 @@ function Reader(props:ReaderProps):React.ReactElement {
          * la configuración anterior del volumen
          */
         if (bookData) {
-            const rawProgress = window.localStorage.getItem(`mokuro_/api/static/${bookData.variant}s/${encodeURI(bookData.seriePath)}/${encodeURI(bookData.path)}.html`) as string;
-            if (rawProgress) {
-                const progress = JSON.parse(rawProgress) as {"page_idx":number, "singlePageView":boolean};
-                setDoublePages(!progress.singlePageView);
-                setCurrentPage(progress.page_idx);
-            }
+            const stored = readMokuroSettings(bookData);
+            setDoublePages(!stored.singlePageView);
+            setCurrentPage(Math.max(1, (stored.page_idx ?? 0) + 1));
         }
     }, [bookData]);
 
@@ -214,7 +229,7 @@ function Reader(props:ReaderProps):React.ReactElement {
                     break;
                 }
                 case "t":{
-                    setTimerOn((prev)=>!prev);
+                    useReaderTimerStore.getState().toggle();
                     break;
                 }
                 case "p":{
@@ -287,8 +302,8 @@ function Reader(props:ReaderProps):React.ReactElement {
                             }
                         }
 
-                        if (siteSettings.startCronoOnPage && !timerOn) {
-                            setTimerOn(true);
+                        if (siteSettings.startCronoOnPage && !useReaderTimerStore.getState().timerOn) {
+                            useReaderTimerStore.getState().start();
                         }
 
                         setCurrentPage(value + 1);
@@ -406,7 +421,7 @@ function Reader(props:ReaderProps):React.ReactElement {
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
         };
-    }, [bookData, readerSettings, siteSettings, timerOn, navigate, modifyReaderSettings, toggleFullscreen]);
+    }, [bookData, readerSettings, siteSettings, navigate, modifyReaderSettings, toggleFullscreen]);
 
     function closeSettingsMenu():void {
         setShowSettings(false);
@@ -414,9 +429,6 @@ function Reader(props:ReaderProps):React.ReactElement {
 
     return (
         <div className="text-app-text relative overflow-hidden h-[100svh] flex flex-col">
-            <Helmet>
-                <title>{`YomiYasu - ${bookData ? bookData.visibleName : "lector"}`}</title>
-            </Helmet>
             {iframe && iframe.current && iframe.current.contentWindow && (
                 <ReaderSettings showMenu={showSettings} closeSettings={closeSettingsMenu}
                     iframeWindow={iframe.current.contentWindow}
@@ -425,11 +437,11 @@ function Reader(props:ReaderProps):React.ReactElement {
             <PageText lines={pageText} open={openTextSidebar} setOpen={setOpenTextSidebar}/>
             <Dictionary searchWord={searchWord} setSearchWord={setSearchWord}/>
             <ShortcutsDialog open={showShortcuts} onClose={()=>setShowShortcuts(false)} shortcuts={mangaShortcuts}/>
-            {bookData && (
-                <RemoteReader readerVars={{bookData,bookProgress,currentPage,iframe,showSettings,setShowSettings,timer,setTimerOn,setTimer,timerOn,doublePages,setOpenTextSidebar,setShowShortcuts}}/>
+            {bookData && !isLoading && (
+                <RemoteReader readerVars={{bookData,bookProgress,currentPage,iframe,showSettings,setShowSettings,doublePages,setOpenTextSidebar,setShowShortcuts,saveProgress}}/>
             )}
             {props.type === "local" && (
-                <LocalReader readerVars={{currentPage,iframe,showSettings,setShowSettings,timer,setTimer,timerOn,setTimerOn,setOpenTextSidebar,localHtml:props.localHtml,pages:props.pages,iframeOnLoad:props.iframeOnLoad,name:props.name,resetBook:props.resetBook}}/>
+                <LocalReader readerVars={{currentPage,iframe,showSettings,setShowSettings,setOpenTextSidebar,localHtml:props.localHtml,pages:props.pages,iframeOnLoad:props.iframeOnLoad,name:props.name,resetBook:props.resetBook}}/>
             )}
         </div>
     );

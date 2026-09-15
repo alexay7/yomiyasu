@@ -5,6 +5,8 @@ import {join, extname} from "path";
 import * as fs from "fs";
 import {BooksService} from "./books/books.service";
 import {extractUrlFromHtml, getCharacterCount, getNovelCharacterCount, getNovelCover} from "./books/helpers/helpers";
+import {ensureThumbnails} from "./books/helpers/thumbnail";
+import {Book} from "./books/schemas/book.schema";
 import {WebsocketsGateway} from "./websockets/websockets.gateway";
 import {InjectQueue} from "@nestjs/bull";
 import {Queue} from "bull";
@@ -165,7 +167,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontrados libros nuevos");
               areChanges = true;
 
-              booksToAddInDb.forEach(async(elem) => {
+              const addResults = await Promise.allSettled(booksToAddInDb.map(async(elem) => {
                   if (elem.bookPath) {
                       const imagesFolder = await extractUrlFromHtml(elem.bookPath);
 
@@ -197,8 +199,13 @@ export class AppService {
                           await this.booksService.updateOrCreate(newBook);
                       }
                   }
-              });
+              }));
+
+              this.logFailedBooks(addResults, "manga");
           }
+
+          // Genera las miniaturas de portada que falten (incluidos libros ya existentes)
+          await this.ensureLibraryThumbnails("manga");
 
           // Marca los libros no encontrados como desaparecidos
           if (booksToMarkAsDeleted.length > 0) {
@@ -343,7 +350,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontradas novelas nuevas");
               areChanges = true;
 
-              booksToAddInDb.forEach(async(elem) => {
+              const addResults = await Promise.allSettled(booksToAddInDb.map(async(elem) => {
                   if (elem.bookPath) {
                       const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath, "novela");
                       await this.seriesService.increaseBookCount(foundSerie);
@@ -367,8 +374,13 @@ export class AppService {
 
                       await this.booksService.updateOrCreate(newBook);
                   }
-              });
+              }));
+
+              this.logFailedBooks(addResults, "novela");
           }
+
+          // Genera las miniaturas de portada que falten (incluidos libros ya existentes)
+          await this.ensureLibraryThumbnails("novela");
 
           // Marca los libros no encontrados como desaparecidos
           if (booksToMarkAsDeleted.length > 0) {
@@ -389,5 +401,64 @@ export class AppService {
           this.logger.error("Something went wrong");
           console.error(e);
       }
+  }
+
+  /**
+   * Ruta (relativa a exterior/) de la portada de un libro, o null si no
+   * tiene portada registrada.
+   */
+  private coverRelativePath(book: Book): string | null {
+      if (!book.thumbnailPath) return null;
+
+      const parts = [book.variant === "manga" ? "mangas" : "novelas", book.seriePath];
+
+      if (book.variant === "manga" || book.mokured) {
+          if (!book.imagesFolder) return null;
+          parts.push(book.imagesFolder);
+      }
+
+      parts.push(book.thumbnailPath);
+
+      return join(...parts);
+  }
+
+  /**
+   * Genera en exterior/thumbnails las miniaturas de portada que falten (o
+   * estén desactualizadas) para todos los libros de la biblioteca. Se ejecuta
+   * en cada rescan y es idempotente.
+   */
+  private async ensureLibraryThumbnails(variant: "manga" | "novela") {
+      const books = await this.booksService.findNonMissing(variant);
+      const exteriorRoot = join(process.cwd(), "..", "exterior");
+
+      const sourcePaths = books
+          .map((book) => this.coverRelativePath(book))
+          .filter((sourcePath): sourcePath is string => Boolean(sourcePath));
+
+      if (sourcePaths.length === 0) return;
+
+      this.logger.log(`\x1b[34mRevisando miniaturas de ${variant} (${sourcePaths.length} portadas)...`);
+
+      const result = await ensureThumbnails(exteriorRoot, sourcePaths);
+
+      if (result.created > 0 || result.failed > 0) {
+          this.logger.log(
+              `\x1b[34mMiniaturas de ${variant}: ${result.created} generadas, ` +
+              `${result.skipped} al día, ${result.missing} sin original, ${result.failed} fallidas`
+          );
+      }
+  }
+
+  /** Loggea los libros nuevos que fallaron durante un escaneo. */
+  private logFailedBooks(results: PromiseSettledResult<unknown>[], variant: "manga" | "novela") {
+      const failed = results.filter((result) => result.status === "rejected");
+
+      if (failed.length === 0) return;
+
+      this.logger.error(`Fallaron ${failed.length} libros nuevos de ${variant} durante el escaneo`);
+
+      failed.forEach((result) => {
+          if (result.status === "rejected") console.error(result.reason);
+      });
   }
 }

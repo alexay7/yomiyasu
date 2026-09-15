@@ -1,15 +1,18 @@
-import React, {createContext, useContext, useEffect, useRef, useState} from "react";
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from "react";
+import type {Socket} from "socket.io-client";
 import {ContextProps} from "./AuthContext";
-import socket from "../api/socket";
 import {useSettingsStore} from "../stores/SettingsStore";
-import {useNavigate} from "react-router-dom";
-import {goTo} from "../helpers/helpers";
+import {useNavigate} from "react-router";
 import {findBookId} from "../helpers/ttu";
+import {invalidateLibraryUpdate} from "../lib/invalidate";
 
 type GlobalContexType = {
-    forceReload:(v:string)=>void,
-    reloaded:string,
-    ttuConnector:React.RefObject<HTMLIFrameElement>
+    ttuConnector:React.RefObject<HTMLIFrameElement | null>;
+    /**
+     * Monta (si hace falta) el iframe del lector de novelas y espera a que
+     * cargue. Se usa antes de enviarle un EPUB por postMessage.
+     */
+    ensureTtuLoaded:()=>Promise<void>;
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -20,14 +23,39 @@ export function useGlobal():GlobalContexType {
     return useContext(GlobalContext);
 }
 
+/** Tiempo máximo de espera si /ebook no responde (el lector de novelas no está disponible). */
+const TTU_LOAD_TIMEOUT = 8000;
+
 export function GlobalProvider(props:ContextProps):React.ReactElement {
     const {children} = props;
-    const [reload, setReload] = useState("");
     const {siteSettings, setSiteSettings, setReaderSettings, modifySiteSettings} = useSettingsStore();
 
     const navigate = useNavigate();
 
     const ttuConnector = useRef<HTMLIFrameElement>(null);
+
+    // El iframe del lector de novelas solo se monta cuando se abre una novela
+    const [ttuRequested, setTtuRequested] = useState(false);
+    const ttuLoadPromise = useRef<Promise<void> | null>(null);
+    const ttuResolve = useRef<(() => void) | null>(null);
+
+    const ensureTtuLoaded = useCallback(():Promise<void> => {
+        if (ttuLoadPromise.current) return ttuLoadPromise.current;
+
+        ttuLoadPromise.current = new Promise<void>((resolve)=>{
+            ttuResolve.current = resolve;
+        });
+
+        setTtuRequested(true);
+
+        // Si el lector no está disponible, no bloquear la apertura de la novela
+        window.setTimeout(()=>{
+            ttuResolve.current?.();
+            ttuResolve.current = null;
+        }, TTU_LOAD_TIMEOUT);
+
+        return ttuLoadPromise.current;
+    }, []);
 
     useEffect(()=>{
         if (siteSettings.mainView === undefined) {
@@ -35,17 +63,9 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
         }
     }, [modifySiteSettings, siteSettings.mainView]);
 
-    function forceReload(key:string):void {
-        setReload(key);
-        setTimeout(()=>{
-            setReload("");
-        }, 500);
-    }
-
     useEffect(() => {
         async function handleMessage(e:MessageEvent):Promise<void> {
             if (e.data.event === "finished") {
-
 
 
                 if (!e.data.bookId) {
@@ -71,7 +91,7 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
                     return;
                 }
 
-                goTo(navigate, link);
+                navigate(link);
             }
         }
 
@@ -93,17 +113,26 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
             });
         }
 
-        socket.on("notification", (data:{action:string}) => {
-            switch (data.action) {
-                case "LIBRARY_UPDATE":{
-                    // Si el backend ha notificado cambios en la biblioteca, actualizar la interfaz
-                    forceReload("all");
-                }
+        // socket.io se carga de forma diferida: solo hace falta para avisos
+        let cancelled = false;
+        let socketInstance: Socket | undefined;
+
+        function handleNotification(data:{action:string}):void {
+            if (data.action === "LIBRARY_UPDATE") {
+                // Si el backend ha notificado cambios en la biblioteca, invalidar la caché
+                invalidateLibraryUpdate();
             }
+        }
+
+        void import("../api/socket").then(({default: importedSocket})=>{
+            if (cancelled) return;
+            socketInstance = importedSocket;
+            socketInstance.on("notification", handleNotification);
         });
 
         return () => {
-            socket.off("notification");
+            cancelled = true;
+            socketInstance?.off("notification", handleNotification);
         };
     }, [siteSettings]);
 
@@ -122,9 +151,19 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
     }, [setSiteSettings, setReaderSettings]);
 
     return (
-        <GlobalContext.Provider value={{forceReload:forceReload, reloaded:reload, ttuConnector}}>
+        <GlobalContext.Provider value={{ttuConnector, ensureTtuLoaded}}>
             {children}
-            <iframe ref={ttuConnector} src="/ebook/manage" className="hidden"/>
+            {ttuRequested ? (
+                <iframe
+                    ref={ttuConnector}
+                    src="/ebook/manage"
+                    className="hidden"
+                    onLoad={()=>{
+                        ttuResolve.current?.();
+                        ttuResolve.current = null;
+                    }}
+                />
+            ) : null}
         </GlobalContext.Provider>
     );
 }

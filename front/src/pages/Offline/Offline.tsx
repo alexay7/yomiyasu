@@ -1,115 +1,138 @@
-import React, { useState, useRef } from "react";
+import {FolderOpen, WifiOff} from "lucide-react";
+import React, {useEffect, useRef, useState} from "react";
+import {useNavigate} from "react-router";
+import {Button} from "../../ui/Button";
+import {useTitle} from "../../lib/useTitle";
 import Reader from "../Reader/Reader";
-import { Button, IconButton } from "@mui/material";
-import { UploadFile } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
 
 const FileUploader: React.FC = () => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-  const [htmlBlobUrl, setHtmlBlobUrl] = useState<string>("");
-  const [filesMap, setFilesMap] = useState<Record<string, File>>({});
-  const [pages, setPages] = useState<number>(1);
-  const [name, setName] = useState("");
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+    const [htmlBlobUrl, setHtmlBlobUrl] = useState<string>("");
+    const [filesMap, setFilesMap] = useState<Record<string, File>>({});
+    const [pages, setPages] = useState<number>(1);
+    const [name, setName] = useState("");
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const objectUrlsRef = useRef<string[]>([]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
+    useTitle("Lector local");
 
-    const fileMap: Record<string, File> = {};
+    // Libera los blobs creados al desmontar o al cargar otra carpeta
+    const revokeObjectUrls = ():void => {
+        objectUrlsRef.current.forEach((url)=>URL.revokeObjectURL(url));
+        objectUrlsRef.current = [];
+    };
 
-    // Create a map of file paths to file objects
-    for (const file of Array.from(files)) {
-      const pathWithoutRoot = file.webkitRelativePath.split("/").slice(1).join("/");
+    useEffect(()=>revokeObjectUrls, []);
 
-      fileMap[pathWithoutRoot] = file;
-    }
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>):void => {
+        const files = event.target.files;
+        if (!files) return;
 
-    setFilesMap(fileMap);
+        revokeObjectUrls();
+        setHtmlBlobUrl("");
 
-    // Find the HTML file and read its content
-    const htmlFile = Array.from(files).find((file) => file.name.endsWith(".html"));
-    if (htmlFile) {
-      setName(htmlFile.name.replace(".html", ""));
-      const reader = new FileReader();
-      reader.onload = () => {
-        const blob = new Blob([reader.result as string], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
+        const fileMap: Record<string, File> = {};
 
-        setHtmlBlobUrl(url);
-      };
-      reader.readAsText(htmlFile);
-    }
-  };
-
-  const handleIframeLoad = () => {
-    const iframeDoc = iframeRef.current?.contentDocument;
-    if (!iframeDoc) return;
-
-    const divs = iframeDoc.getElementsByClassName("pageContainer");
-
-    setPages(divs.length);
-
-    for (const div of Array.from(divs)) {
-      const style = (div as HTMLDivElement).style;
-      const backgroundImage = style.backgroundImage;
-      const urlMatch = backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
-      if (urlMatch && urlMatch[1]) {
-        const imagePath = decodeURIComponent(urlMatch[1]);
-        if (filesMap[imagePath]) {
-          const imageUrl = URL.createObjectURL(filesMap[imagePath]);
-          style.backgroundImage = `url("${imageUrl}")`;
+        // Create a map of file paths to file objects
+        for (const file of Array.from(files)) {
+            const pathWithoutRoot = file.webkitRelativePath.split("/").slice(1).join("/");
+            fileMap[pathWithoutRoot] = file;
         }
-      }
-    }
-  };
 
-  return (
-    <div>
-      {htmlBlobUrl ? (
-        <Reader
-          type="local"
-          localHtml={htmlBlobUrl}
-          pages={pages}
-          iframeOnLoad={handleIframeLoad}
-          localIframe={iframeRef}
-          name={name}
-          resetBook={() => setHtmlBlobUrl("")}
-        />
-      ) : (
-        <div className="flex justify-center items-center h-screen text-white flex-col gap-4">
-          <IconButton
-            onClick={() => {
-              if (inputRef.current) inputRef.current.click();
-            }}
-            className="flex flex-col animate-pulse border-4 border-primary border-solid bg-white p-4"
-          >
-            <UploadFile className="h-20 w-20 text-primary" />
-            <input hidden ref={inputRef} type="file" webkitdirectory="true" multiple onChange={handleFileChange} />
-          </IconButton>
-          <button className="bg-transparent border-none cursor-pointer" onClick={()=>{
-              if (inputRef.current) inputRef.current.click();
-          }}>
-          <h1 className="text-primary">Click aquí para cargar una carpeta</h1>
-          </button>
-          <div className="flex flex-col text-center w-[400px] items-center gap-2">
-              <p className="text-2xl font-semibold">Selecciona una carpeta con un manga &quot;mokureado&quot;</p>
-              <p className="text-sm w-2/3">
-                La carpeta deberá contener un archivo .html y una subcarpeta donde deberán estar las imágenes del manga
-              </p>
-            </div>
-            <div className="flex flex-col">
-              <p className="text-xs">(No se guardará tu progreso ni se añadirá el libro a tus estadísticas)</p>
-            </div>
-            <Button variant="outlined" onClick={()=>navigate("/")}>
-                Volver atrás
-            </Button>
+        setFilesMap(fileMap);
+
+        // Find the HTML file and read its content
+        const htmlFile = Array.from(files).find((file) => file.name.endsWith(".html"));
+
+        if (htmlFile) {
+            setName(htmlFile.name.replace(".html", ""));
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                const blob = new Blob([reader.result as string], { type: "text/html" });
+                const url = URL.createObjectURL(blob);
+
+                objectUrlsRef.current.push(url);
+                setHtmlBlobUrl(url);
+            };
+
+            reader.readAsText(htmlFile);
+        }
+    };
+
+    const handleIframeLoad = ():void => {
+        const iframeDoc = iframeRef.current?.contentDocument;
+        if (!iframeDoc) return;
+
+        const divs = iframeDoc.getElementsByClassName("pageContainer");
+
+        setPages(divs.length);
+
+        for (const div of Array.from(divs)) {
+            const style = (div as HTMLDivElement).style;
+            const backgroundImage = style.backgroundImage;
+            const urlMatch = backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
+
+            if (urlMatch && urlMatch[1]) {
+                const imagePath = decodeURIComponent(urlMatch[1]);
+
+                if (filesMap[imagePath]) {
+                    const imageUrl = URL.createObjectURL(filesMap[imagePath]);
+                    objectUrlsRef.current.push(imageUrl);
+                    style.backgroundImage = `url("${imageUrl}")`;
+                }
+            }
+        }
+    };
+
+    return (
+        <div>
+            {htmlBlobUrl ? (
+                <Reader
+                    type="local"
+                    localHtml={htmlBlobUrl}
+                    pages={pages}
+                    iframeOnLoad={handleIframeLoad}
+                    localIframe={iframeRef}
+                    name={name}
+                    resetBook={()=>setHtmlBlobUrl("")}
+                />
+            ) : (
+                <div className="flex h-[100svh] flex-col items-center justify-center gap-5 bg-app-bg px-4 text-center">
+                    <span className="flex size-16 items-center justify-center rounded-full bg-tint text-primary">
+                        <WifiOff className="size-8" strokeWidth={1.5} />
+                    </span>
+
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-xl font-bold text-fg">Lector local</h1>
+                        <p className="max-w-md text-sm text-fg-muted">
+                            Selecciona una carpeta con un manga &quot;mokureado&quot;. Debe contener un archivo
+                            <span className="font-medium text-fg"> .html </span>
+                            y una subcarpeta con las imágenes.
+                        </p>
+                    </div>
+
+                    <Button
+                        icon={<FolderOpen className="size-4" />}
+                        onClick={()=>inputRef.current?.click()}
+                    >
+                        Elegir carpeta
+                    </Button>
+                    <input hidden ref={inputRef} type="file" webkitdirectory="true" multiple onChange={handleFileChange} />
+
+                    <p className="text-xs text-fg-muted">
+                        No se guardará tu progreso ni se añadirá el libro a tus estadísticas.
+                    </p>
+
+                    <Button variant="ghost" onClick={()=>navigate("/")}>
+                        Volver atrás
+                    </Button>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default FileUploader;

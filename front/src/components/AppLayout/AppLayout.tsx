@@ -1,55 +1,37 @@
-import {Menu, Home, Book, Logout, AdminPanelSettings, History, GitHub, LightMode, DarkMode, PieChart, CalendarMonth, List, PhotoAlbum, Translate, SignalWifiOff} from "@mui/icons-material";
-import {Divider, IconButton, useTheme} from "@mui/material";
-import React, {Fragment, useContext, useEffect, useRef, useState} from "react";
-import {Outlet, useNavigate} from "react-router-dom";
-import {CSSTransition} from "react-transition-group";
-import "./styles.css";
-import {LateralListItem} from "./components/LateralListItem";
+import {Search} from "lucide-react";
+import React, {lazy, Suspense, useEffect, useState} from "react";
+import {Outlet, useNavigate} from "react-router";
 import {useAuth} from "../../contexts/AuthContext";
-import {useMediaQuery} from "react-responsive";
-import {SearchAutocomplete} from "./components/SearchAutocomplete";
-import {Settings} from "./components/Settings";
-import {AccountSettings} from "./components/AccountSettings";
-import {ColorModeContext} from "../../contexts/ColorModeContext";
 import {useSettingsStore} from "../../stores/SettingsStore";
+import {Kbd} from "../../ui/Kbd";
+import {MobileTabBar} from "./MobileTabBar";
+import {Sidebar} from "./Sidebar";
+
+// Los overlays (búsqueda, ajustes, cuenta, más) se cargan bajo demanda
+const GlobalSearch = lazy(() => import("./GlobalSearch").then((m)=>({default:m.GlobalSearch})));
+const SettingsSheet = lazy(() => import("./SettingsSheet").then((m)=>({default:m.SettingsSheet})));
+const AccountSheet = lazy(() => import("./AccountSheet").then((m)=>({default:m.AccountSheet})));
+const MoreSheet = lazy(() => import("./MoreSheet").then((m)=>({default:m.MoreSheet})));
 
 export default function AppLayout():React.ReactElement {
-    const theme = useTheme();
-    const colorMode = useContext(ColorModeContext);
-    const {toggleColorMode} = colorMode;
-    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1224px)"});
-    const {modifyReaderSettings} = useSettingsStore();
-
-    const {userData, logoutUser} = useAuth();
-    const [showMenu, setShowMenu] = useState(!isTabletOrMobile);
-
+    const {sidebarCollapsed, setSidebarCollapsed, setOpenSettings} = useSettingsStore();
+    const {userData} = useAuth();
     const navigate = useNavigate();
 
-    useEffect(()=>{
-        setShowMenu(!isTabletOrMobile);
-    }, [isTabletOrMobile, setShowMenu]);
-
-    useEffect(()=>{
-        // El modo "word" del diccionario no es usable en pantallas táctiles
-        if (isTabletOrMobile) {
-            modifyReaderSettings("dictionaryVersion", "sentence");
-        }
-    }, [isTabletOrMobile, modifyReaderSettings]);
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [moreOpen, setMoreOpen] = useState(false);
+    const [accountOpen, setAccountOpen] = useState(false);
 
     useEffect(()=>{
         function handleKeyDown(e:KeyboardEvent):void {
             if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
 
-            const target = e.target as HTMLElement;
+            const target = e.target as HTMLElement | null;
 
-            if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+            if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
 
-            const input = document.getElementById("global-search-input");
-
-            if (input) {
-                e.preventDefault();
-                input.focus();
-            }
+            e.preventDefault();
+            setSearchOpen(true);
         }
 
         window.addEventListener("keydown", handleKeyDown);
@@ -57,89 +39,66 @@ export default function AppLayout():React.ReactElement {
         return ()=>window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    function toggleMenu():void {
-        setShowMenu((prev)=>!prev);
-    }
-
-    const searchBarRef = useRef(null);
-    const lateralRef = useRef(null);
-    const mainRef = useRef(null);
-
     return (
-        <div className="h-[100svh]">
-            {/* Barra de búsqueda */}
-            <CSSTransition nodeRef={searchBarRef} classNames="searchbar" timeout={300} in={showMenu}>
-                <div ref={searchBarRef} className={`bg-app-chrome h-16 ${isTabletOrMobile ? "left-0" : "left-[270px]"} fixed right-0 flex px-2 items-center justify-between z-10 gap-2`}>
-                    <IconButton onClick={toggleMenu}>
-                        <Menu className="dark:text-white p-1"/>
-                    </IconButton>
-                    <div className="dark:bg-app-surface w-[95%] px-4 py-2 rounded-md shadow-gray-400 dark:shadow-gray-900 shadow-sm bg-white">
-                        <SearchAutocomplete/>
-                    </div>
-                </div>
-            </CSSTransition>
+        <div className="flex h-[100svh] overflow-hidden bg-app-bg">
+            <Sidebar
+                collapsed={sidebarCollapsed}
+                onToggleCollapsed={()=>setSidebarCollapsed(!sidebarCollapsed)}
+                onOpenSettings={()=>setOpenSettings(true)}
+                onOpenAccount={()=>setAccountOpen(true)}
+            />
 
-            {/* Barra lateral */}
-            <CSSTransition nodeRef={lateralRef} classNames="leftbar" timeout={300} in={showMenu} unmountOnExit>
-                <div ref={lateralRef} className="w-[270px] bg-app-sidebar h-[100svh] fixed">
-                    <div className="h-16 justify-center dark:text-white flex items-center bg-app-chrome">
-                        <h1 className="cursor-pointer hover:text-primary duration-150" onClick={()=>navigate("/app")}>YomiYasu</h1>
-                    </div>
-                    <Divider/>
-                    <ul className="mt-4 select-none h-[calc(100svh-8rem)] overflow-y-auto">
-                        <LateralListItem toggleMenu={toggleMenu} text="Inicio" link="/app" Icon={Home}/>
-                        <LateralListItem toggleMenu={toggleMenu} text="Mangas" link="/app/library/manga" Icon={PhotoAlbum}/>
-                        <LateralListItem toggleMenu={toggleMenu} text="Novelas" link="/app/library/novels" Icon={Book}/>
-                        <Divider className="my-4"/>
-                        <LateralListItem category toggleMenu={toggleMenu} text="Historial" link="/app/history" Icon={History}/>
-                        <Fragment>
-                            <LateralListItem sub toggleMenu={toggleMenu} text="Lista" link="/app/history" Icon={List}/>
-                            <LateralListItem sub toggleMenu={toggleMenu} text="Calendario" link="/app/calendar" Icon={CalendarMonth}/>
-                        </Fragment>
-                        <LateralListItem toggleMenu={toggleMenu} text="Estadísticas" link="/app/profile" Icon={PieChart}/>
-                        <LateralListItem toggleMenu={toggleMenu} text="Palabras Guardadas" link="/app/words" Icon={Translate}/>
-                        <LateralListItem toggleMenu={toggleMenu} text="Lector Local" link="/offline" Icon={SignalWifiOff}/>
-                        <AccountSettings/>
-                        <Settings/>
-                        {userData?.admin && (
-                            <LateralListItem toggleMenu={toggleMenu} text="Configuración" link="/app/admin" Icon={AdminPanelSettings}/>
-                        )}
-                        <LateralListItem className="hover:bg-red-200 hover:text-black duration-150 transition-colors" text="Cerrar Sesión" Icon={Logout} onClick={()=>logoutUser()}/>
-                        <Divider/>
-                        {theme.palette.mode === "dark" ? (
-                            <LateralListItem toggleMenu={toggleMenu} text="Activar modo claro" Icon={LightMode} onClick={()=>{
-                                document.documentElement.classList.remove("dark");
-                                window.localStorage.setItem("color-theme", "light");
-                                document.documentElement.style.backgroundColor = "white";
-                                toggleColorMode();
-                            }}
-                            />
-                        ) : (
-                            <LateralListItem toggleMenu={toggleMenu} text="Activar modo oscuro" Icon={DarkMode} onClick={()=>{
-                                document.documentElement.classList.add("dark");
-                                window.localStorage.setItem("color-theme", "dark");
-                                document.documentElement.style.backgroundColor = "#1E1E1E";
-                                toggleColorMode();
-                            }}
-                            />
-                        )}
-                        <LateralListItem toggleMenu={toggleMenu} text="Reportar fallos" Icon={GitHub} onClick={()=>
-                            window.open("https://github.com/alexay7/yomiyasu/issues/new", "_blank")?.focus()}
-                        />
-                    </ul>
-                    <div className="absolute bottom-0 left-0 p-4">
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/alexay7/yomiyasu" className="text-gray-600 dark:text-gray-300 text-sm hover:no-underline hover:text-primary duration-150 transition-colors">YomiYasu {APP_VERSION}</a>
-                    </div>
-                </div>
-            </CSSTransition>
+            <div className="flex min-w-0 flex-1 flex-col">
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b border-app-border bg-app-chrome px-3 lg:px-4">
+                    <button
+                        type="button"
+                        onClick={()=>navigate("/app")}
+                        className="rounded-lg px-1 text-lg font-bold tracking-tight text-fg transition-colors hover:text-primary lg:hidden"
+                    >
+                        YomiYasu
+                    </button>
 
-            {/* Contenido */}
-            <CSSTransition nodeRef={mainRef} classNames="maincontent" timeout={300} in={showMenu}>
-                <div ref={mainRef} className={`h-[calc(100svh-4rem)] pt-16 ${isTabletOrMobile ? "pl-0" : "pl-[270px]"} bg-app-bg`}>
-                    <Divider/>
+                    <button
+                        type="button"
+                        onClick={()=>setSearchOpen(true)}
+                        className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border border-app-border bg-app-surface px-3 text-sm text-fg-muted transition-colors hover:border-accent/60 hover:text-fg lg:max-w-md"
+                        aria-label="Buscar en la biblioteca"
+                    >
+                        <Search className="size-4 shrink-0" />
+                        <span className="flex-1 truncate text-left">Busca series o libros…</span>
+                        <Kbd className="hidden sm:inline-flex">/</Kbd>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={()=>setMoreOpen(true)}
+                        className="ml-auto flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-semibold uppercase text-white lg:hidden"
+                        aria-label="Más opciones"
+                    >
+                        {userData?.username?.charAt(0) ?? "?"}
+                    </button>
+                </header>
+
+                <main className="min-h-0 flex-1 overflow-y-auto">
                     <Outlet/>
-                </div>
-            </CSSTransition>
+                </main>
+
+                <MobileTabBar onOpenMore={()=>setMoreOpen(true)} />
+            </div>
+
+            <Suspense fallback={null}>
+                {searchOpen ? <GlobalSearch open onOpenChange={setSearchOpen} /> : null}
+                {moreOpen ? (
+                    <MoreSheet
+                        open
+                        onOpenChange={setMoreOpen}
+                        onOpenSettings={()=>setOpenSettings(true)}
+                        onOpenAccount={()=>setAccountOpen(true)}
+                    />
+                ) : null}
+                <SettingsSheet />
+                {accountOpen ? <AccountSheet open onOpenChange={setAccountOpen} /> : null}
+            </Suspense>
         </div>
     );
 }

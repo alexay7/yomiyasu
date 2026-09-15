@@ -1,11 +1,14 @@
-import React from "react";
+import {useMemo} from "react";
+import {useQuery} from "@tanstack/react-query";
+import {api} from "../../api/api";
+import {useAuth} from "../../contexts/AuthContext";
+import {keys} from "../../lib/queryKeys";
+import {useTitle} from "../../lib/useTitle";
+import {ErrorState} from "../../ui/ErrorState";
+import {Skeleton} from "../../ui/Skeleton";
+import GeneralStats from "./components/GeneralStats";
 import SpeedChart from "./components/SpeedChart";
 import TotalReadChart from "./components/TotalReadChart";
-import GeneralStats from "./components/GeneralStats";
-import {useAuth} from "../../contexts/AuthContext";
-import {useQuery} from "react-query";
-import {api} from "../../api/api";
-import {Helmet} from "react-helmet";
 
 interface MonthPoint {
     _id:{month:number, year:number}, totalHours:number, meanReadSpeed:number
@@ -14,17 +17,15 @@ interface MonthPoint {
 function Stats():React.ReactElement {
     const {userData} = useAuth();
 
-    const {data = {speedData:{
-        manga:[],
-        novelas:[]
-    }, hoursData:{
-        manga:[],
-        novelas:[]
-    }, labels:[]}} = useQuery("mygraphs", async()=>{
-        const res = await api.get<{manga:MonthPoint[], novela:MonthPoint[]}>("readprogress/mygraphs");
+    useTitle("Estadísticas");
 
-        if (res) {
-        // Get speed data from manga and novelas so that inside of the object we have novelas with the speed and manga with the speed
+    const {data, isLoading, isError, refetch} = useQuery({
+        queryKey:keys.graphs,
+        queryFn:async()=>{
+            const res = await api.get<{manga:MonthPoint[], novela:MonthPoint[]}>("readprogress/mygraphs");
+
+            if (!res) return {speedData:{manga:[], novelas:[]}, hoursData:{manga:[], novelas:[]}, labels:[]};
+
             const speedData = {
                 manga:res.manga.map((item)=>({month:`${item._id.month}/${item._id.year}`, speed:item.meanReadSpeed})),
                 novelas:res.novela.map((item)=>({month:`${item._id.month}/${item._id.year}`, speed:item.meanReadSpeed}))
@@ -35,18 +36,15 @@ function Stats():React.ReactElement {
                 novelas:res.novela.map((item)=>({month:`${item._id.month}/${item._id.year}`, totalHours:item.totalHours}))
             };
 
-            if (speedData.manga.length === 1) {
-                speedData.manga = speedData.manga.concat(speedData.manga);
-            }
+            // Con un único punto, duplicarlo para que la gráfica dibuje una línea
+            if (speedData.manga.length === 1) speedData.manga = speedData.manga.concat(speedData.manga);
+            if (speedData.novelas.length === 1) speedData.novelas = speedData.novelas.concat(speedData.novelas);
 
-            if (speedData.novelas.length === 1) {
-                speedData.novelas = speedData.novelas.concat(speedData.novelas);
-            }
+            const labels = res.manga.map((item)=>`${item._id.month}/${item._id.year}`)
+                .concat(res.novela.map((item)=>`${item._id.month}/${item._id.year}`))
+                .filter((value, index, self)=>self.indexOf(value) === index);
 
-            // Get labels from both res.manga and res.novelas without duplicates
-            const labels = res.manga.map((item)=>`${item._id.month}/${item._id.year}`).concat(res.novela.map((item)=>`${item._id.month}/${item._id.year}`)).filter((value, index, self)=>self.indexOf(value) === index);
-
-            // Fill the gaps in the data with the previous value in speedData or 0 if it's the first label
+            // Rellenar huecos: horas a 0 y velocidad con el valor anterior
             labels.forEach((label, index)=>{
                 if (!hoursData.manga.find((item)=>item.month === label)) {
                     hoursData.manga.splice(index, 0, {month:label, totalHours:0});
@@ -69,29 +67,39 @@ function Stats():React.ReactElement {
         }
     });
 
+    const charts = useMemo(()=>data ?? {speedData:{manga:[], novelas:[]}, hoursData:{manga:[], novelas:[]}, labels:[]}, [data]);
+
     return (
-        <div className="flex flex-col w-full dark:bg-app-bg overflow-y-scroll h-[calc(100svh-4rem)]">
-            <Helmet>
-                <title>YomiYasu - Estadísticas</title>
-            </Helmet>
-            <div className="flex flex-col py-8 gap-8">
-                <div className="flex flex-col w-3/4 mx-auto gap-8 items-start">
-                    <h1 className="dark:text-white">Estadísticas de {userData?.username}</h1>
-                    <GeneralStats/>
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-6 lg:px-8">
+            <h1 className="text-xl font-bold text-fg">Estadísticas de {userData?.username}</h1>
+
+            <GeneralStats />
+
+            <section className="flex flex-col gap-4 rounded-xl border border-app-border bg-app-surface p-5 lg:p-6">
+                <h2 className="text-base font-semibold text-fg">Velocidad con el tiempo</h2>
+                <div className="h-72 lg:h-80">
+                    {isLoading ? (
+                        <Skeleton className="h-full w-full rounded-lg" />
+                    ) : isError ? (
+                        <ErrorState title="No se pudieron cargar las gráficas" onRetry={()=>void refetch()} />
+                    ) : (
+                        <SpeedChart data={charts.speedData} labels={charts.labels} />
+                    )}
                 </div>
-                <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
-                    <h2 className="dark:text-white">Velocidad con el tiempo</h2>
-                    <div className="h-80">
-                        <SpeedChart data={data.speedData} labels={data.labels}/>
-                    </div>
+            </section>
+
+            <section className="flex flex-col gap-4 rounded-xl border border-app-border bg-app-surface p-5 lg:p-6">
+                <h2 className="text-base font-semibold text-fg">Horas leídas por mes</h2>
+                <div className="h-72 lg:h-80">
+                    {isLoading ? (
+                        <Skeleton className="h-full w-full rounded-lg" />
+                    ) : isError ? (
+                        <ErrorState title="No se pudieron cargar las gráficas" onRetry={()=>void refetch()} />
+                    ) : (
+                        <TotalReadChart data={charts.hoursData} labels={charts.labels} />
+                    )}
                 </div>
-                <div className="flex flex-col w-3/4 mx-auto bg-gray-100 dark:bg-opacity-20 p-8 rounded-lg gap-4">
-                    <h2 className="dark:text-white">Horas leídas por mes</h2>
-                    <div className="h-80">
-                        <TotalReadChart data={data.hoursData} labels={data.labels}/>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
     );
 }

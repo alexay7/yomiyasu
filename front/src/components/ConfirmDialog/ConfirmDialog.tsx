@@ -1,20 +1,33 @@
-import {Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from "@mui/material";
-import React from "react";
 import {useConfirmStore} from "../../stores/ConfirmStore";
+import {Button} from "../../ui/Button";
+import {Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle} from "../../ui/Dialog";
 
 export function ConfirmDialog():React.ReactElement {
     const {message, resolve} = useConfirmStore();
 
     return (
-        <Dialog open={!!message} onClose={()=>resolve(false)}>
-            <DialogTitle>Confirmación</DialogTitle>
-            <DialogContent>
-                <DialogContentText>{message}</DialogContentText>
+        <Dialog
+            open={Boolean(message)}
+            onOpenChange={(open)=>{
+                if (!open) resolve(false);
+            }}
+        >
+            <DialogContent size="sm">
+                <DialogHeader>
+                    <DialogTitle>Confirmación</DialogTitle>
+                </DialogHeader>
+                <DialogBody>
+                    <p className="text-sm text-fg-muted">{message}</p>
+                </DialogBody>
+                <DialogFooter>
+                    <Button variant="secondary" onClick={()=>resolve(false)}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={()=>resolve(true)} autoFocus>
+                        Aceptar
+                    </Button>
+                </DialogFooter>
             </DialogContent>
-            <DialogActions>
-                <Button color="inherit" onClick={()=>resolve(false)}>Cancelar</Button>
-                <Button variant="contained" onClick={()=>resolve(true)}>Aceptar</Button>
-            </DialogActions>
         </Dialog>
     );
 }

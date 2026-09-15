@@ -1,32 +1,40 @@
-import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
-import React, {Children, useState} from "react";
-import {Helmet} from "react-helmet";
-import {useQuery} from "react-query";
-import {api} from "../../api/api";
-import {UserWord} from "../../types/word";
+import {ExternalLink, Languages, Trash2} from "lucide-react";
+import React, {useState} from "react";
+import {useQuery} from "@tanstack/react-query";
 import {toast} from "react-toastify";
+import {api} from "../../api/api";
+import {invalidateWords} from "../../lib/invalidate";
+import {keys} from "../../lib/queryKeys";
+import {useTitle} from "../../lib/useTitle";
 import {confirmDialog} from "../../stores/ConfirmStore";
+import {UserWord} from "../../types/word";
+import {Button} from "../../ui/Button";
+import {EmptyState} from "../../ui/EmptyState";
+import {ErrorState} from "../../ui/ErrorState";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../ui/Select";
+import {Skeleton} from "../../ui/Skeleton";
+
+function frequencyText(freq:number):string {
+    if (freq < 5000) return "Muy alta";
+    if (freq < 10000) return "Alta";
+    if (freq < 20000) return "Media";
+    if (freq < 30000) return "Baja";
+    return "Muy baja";
+}
 
 export default function Words():React.ReactElement {
     const [sortBy, setSortBy] = useState<string>("new");
-    const [words, setWords] = useState<UserWord[]>([]);
 
-    useQuery(["words", sortBy], async() => {
-        const response = await api.get<UserWord[]>(`userwords?sort=${sortBy}`);
+    useTitle("Palabras guardadas");
 
-        return response;
-    }, {refetchOnWindowFocus:false, onSuccess:(data)=>{
-        setWords(data || []);
-    }
+    const {data:words = [], isLoading, isError, refetch} = useQuery({
+        queryKey:keys.words(sortBy),
+        queryFn:async()=>{
+            const response = await api.get<UserWord[]>(`userwords?sort=${sortBy}`);
+            return response ?? [];
+        },
+        refetchOnWindowFocus:false
     });
-
-    function frequencyText(freq:number):string {
-        if (freq < 5000) return "Muy alta";
-        if (freq < 10000) return "Alta";
-        if (freq < 20000) return "Media";
-        if (freq < 30000) return "Baja";
-        return "Muy baja";
-    }
 
     async function deleteWord(word:string):Promise<void> {
         const response = await api.delete<{modifiedCount:number}>(`userwords/${word}`);
@@ -34,80 +42,108 @@ export default function Words():React.ReactElement {
         if (!response || response.modifiedCount === 0) {
             toast.error("No se ha podido eliminar la palabra");
         } else {
-            setWords(words.filter((ex) => ex.word !== word));
+            invalidateWords();
             toast.success("Palabra eliminada correctamente");
         }
     }
 
     return (
-        <div className="flex flex-col gap-8 overflow-y-scroll h-[calc(100svh-4rem)]">
-            <Helmet>
-                <title>YomiYasu - Palabras Guardadas</title>
-            </Helmet>
-            <div className="flex flex-col gap-4 py-4">
-                <h1 className="dark:text-white px-4 pt-2 text-2xl text-center">Palabras Guardadas</h1>
-                <div className="w-10/12 flex justify-center mx-auto pt-4">
-                    <FormControl className="w-[300px] bg-white dark:bg-inherit">
-                        <InputLabel id="sortlabel">Ordenar por...</InputLabel>
-                        <Select labelId="sortlabel" value={sortBy} onChange={(e)=>{
-                            setSortBy(e.target.value);
-                        }}
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 lg:px-8">
+            <header className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="text-xl font-bold text-fg">Palabras guardadas</h1>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-9 w-56 text-[13px]">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="new">Más nuevas primero</SelectItem>
+                        <SelectItem value="!new">Más antiguas primero</SelectItem>
+                        <SelectItem value="!frequency">Más frecuentes primero</SelectItem>
+                        <SelectItem value="frequency">Menos frecuentes primero</SelectItem>
+                    </SelectContent>
+                </Select>
+            </header>
+
+            {isLoading ? (
+                <ul className="flex flex-col gap-4" aria-hidden>
+                    {Array.from({length:4}, (_, index)=>(
+                        <li key={index}>
+                            <Skeleton className="h-40 w-full rounded-xl" />
+                        </li>
+                    ))}
+                </ul>
+            ) : isError ? (
+                <ErrorState title="No se pudieron cargar tus palabras" onRetry={()=>void refetch()} />
+            ) : words.length === 0 ? (
+                <EmptyState
+                    icon={Languages}
+                    title="No tienes palabras guardadas"
+                    description="Puedes guardar palabras desde el diccionario nativo dentro de cualquier libro."
+                />
+            ) : (
+                <ul className="flex flex-col gap-4">
+                    {words.map((word)=>(
+                        <li
+                            key={word.word}
+                            className="flex flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface [content-visibility:auto] [contain-intrinsic-size:auto_200px] lg:flex-row"
                         >
-                            <MenuItem value="new">Más nuevas primero</MenuItem>
-                            <MenuItem value="!new">Más antiguas primero</MenuItem>
-                            <MenuItem value="!frequency">Más frecuentes primero</MenuItem>
-                            <MenuItem value="frequency">Menos frecuentes primero</MenuItem>
-                        </Select>
-                    </FormControl>
-                </div>
-                {words.length !== 0 ? (
-                    <ul className="flex flex-col gap-4 w-8/12 mx-auto dark:text-white">
-                        {Children.toArray(words.map((ex) => (
-                            <li className="flex flex-col border border-solid dark:border-gray-400 border-gray-200 rounded-lg shadow-sm shadow-gray-400 lg:flex-row dark:bg-black dark:bg-opacity-40 bg-white">
-                                <div className="flex flex-col gap-4 lg:w-4/5 py-4 px-4">
-                                    <div className="flex justify-center underline">
-                                        <ruby className="text-4xl">{ex.word}<rt>{ex.reading}</rt></ruby>
-                                    </div>
-                                    <p className="text-2xl text-center">{ex.sentence.split(ex.display)[0]}<span className="text-primary font-semibold text-3xl">{ex.display}</span>{ex.sentence.split(ex.display)[1]}</p>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex gap-2">
-                                            <p className="font-semibold">Frecuencia:</p>
-                                            <p>{frequencyText(ex.frequency)} ({ex.frequency})</p>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <p className="font-semibold">Significados:</p>
-                                            <p>{ex.meaning.join(", ")}</p>
-                                        </div>
-                                        {/* Added date */}
-                                        <div className="flex gap-2 text-xs justify-end mt-4">
-                                            <p className="font-semibold">Añadida:</p>
-                                            <p>{new Date(ex.createdAt!).toLocaleString()}</p>
-                                        </div>
-                                    </div>
+                            <div className="flex flex-1 flex-col gap-3 px-4 py-4">
+                                <div className="text-center">
+                                    <ruby className="text-3xl font-semibold text-fg">
+                                        {word.word}
+                                        <rt className="text-xs font-normal text-fg-muted">{word.reading}</rt>
+                                    </ruby>
                                 </div>
-                                <ul className="lg:w-1/5 flex lg:flex-col justify-evenly border-0 border-t lg:border-0 lg:border-l dark:border-gray-400 border-gray-200 border-solid w-full">
-                                    <MenuItem className="lg:h-1/2 w-1/2 lg:w-auto justify-center lg:text-xl font-semibold"
-                                        onClick={()=>{
-                                            window.open(`/ankiexport?word=${ex.word}&reading=${ex.reading}&definition=${encodeURI(ex.meaning.join("\n"))}`,
-                                                "YomiYasu - Exportar a Anki", "height=600,width=500,resizable=no,menubar=no,toolbar=no,location=no,status=no");
-                                        }}
-                                    >Añadir a Anki
-                                    </MenuItem>
-                                    <MenuItem className="lg:h-1/2 bg-red-600 dark:bg-red-800 hover:bg-red-700 dark:hover:bg-red-600 transition-colors rounded-br-lg w-1/2 lg:w-auto justify-center lg:text-xl font-semibold" onClick={async()=>{
-                                        if (await confirmDialog(`¿Estás seguro de que quieres eliminar la palabra "${ex.word}"?`)) {
-                                            void deleteWord(ex.word);
+                                <p className="text-center text-lg text-fg-muted">
+                                    {word.sentence.split(word.display)[0]}
+                                    <span className="font-semibold text-primary">{word.display}</span>
+                                    {word.sentence.split(word.display)[1]}
+                                </p>
+                                <div className="flex flex-col gap-1 text-sm">
+                                    <p className="text-fg-muted">
+                                        <span className="font-medium text-fg">Frecuencia: </span>
+                                        {frequencyText(word.frequency)} ({word.frequency})
+                                    </p>
+                                    <p className="text-fg-muted">
+                                        <span className="font-medium text-fg">Significados: </span>
+                                        {word.meaning.join(", ")}
+                                    </p>
+                                </div>
+                                <p className="text-right text-[11px] text-fg-muted">
+                                    Añadida: {word.createdAt ? new Date(word.createdAt).toLocaleString() : "—"}
+                                </p>
+                            </div>
+                            <div className="flex shrink-0 flex-row gap-2 border-t border-app-border p-3 lg:w-44 lg:flex-col lg:border-l lg:border-t-0">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    fullWidth
+                                    icon={<ExternalLink className="size-3.5" />}
+                                    onClick={()=>{
+                                        window.open(`/ankiexport?word=${encodeURIComponent(word.word)}&reading=${encodeURIComponent(word.reading)}&definition=${encodeURIComponent(word.meaning.join("\n"))}`,
+                                            "YomiYasu - Exportar a Anki", "height=600,width=500,resizable=no,menubar=no,toolbar=no,location=no,status=no");
+                                    }}
+                                >
+                                    Añadir a Anki
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    fullWidth
+                                    icon={<Trash2 className="size-3.5" />}
+                                    onClick={async()=>{
+                                        if (await confirmDialog(`¿Estás seguro de que quieres eliminar la palabra "${word.word}"?`)) {
+                                            void deleteWord(word.word);
                                         }
                                     }}
-                                    >Eliminar
-                                    </MenuItem>
-                                </ul>
-                            </li>
-                        )))}
-                    </ul>
-                ) : (
-                    <p className="text-center dark:text-white">No tienes palabras guardadas. <br /> <br /> Puedes guardar palabras desde el <span className="text-primary">Diccionario Nativo</span> dentro de cualquier libro</p>
-                )}
-            </div>
+                                >
+                                    Eliminar
+                                </Button>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 }

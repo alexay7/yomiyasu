@@ -17,6 +17,7 @@ import {UsersService} from "./users/users.service";
 import {InjectQueue} from "@nestjs/bull";
 import {Queue} from "bull";
 import {Throttle} from "@nestjs/throttler";
+import {sendStaticFile} from "./helpers/staticFiles";
 
 @Controller()
 @UseGuards(JwtAuthGuard)
@@ -54,19 +55,19 @@ export class AppController {
     @Get("static/*")
     @Throttle(200, 10)
     serveFiles(@Req() req: Request, @Res() res: Response) {
-        return res.sendFile(
-            /**
-       * Las rutas van a tender a usar elementos japoneses así que es necesario decodificar la url
-       * para poder acceder bien a los archivos del sistema
-       */
-            decodeURIComponent(req.path.replace("/api/static", "")),
-            {
-                root: "./../exterior"
-            }, function(err) {
-                if (err) {
-                    res.sendStatus(404);
-                }
-            }
-        );
+        let relativePath: string;
+
+        /**
+         * Las rutas van a tender a usar elementos japoneses así que es necesario decodificar la url
+         * para poder acceder bien a los archivos del sistema
+         */
+        try {
+            relativePath = decodeURIComponent(req.path.replace("/api/static", ""));
+        } catch {
+            res.sendStatus(404);
+            return;
+        }
+
+        sendStaticFile(res, "./../exterior", relativePath);
     }
 }

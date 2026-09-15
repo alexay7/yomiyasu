@@ -1,38 +1,26 @@
-import React, {useEffect} from "react";
-import {useQuery} from "react-query";
+import React from "react";
+import {useQuery} from "@tanstack/react-query";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
-import {useGlobal} from "../../../contexts/GlobalContext";
 import {SeriesFilter} from "../../../types/serie";
+import {keys} from "../../../lib/queryKeys";
 
 interface RecentSeriesScrollerProps {
     variant:"manga" | "novela";
 }
 
 function RecentSeriesScroller({variant}:RecentSeriesScrollerProps):React.ReactElement {
-    const {reloaded} = useGlobal();
-    const {data:recentSeries = [], refetch:recentSeriesRefetch, isLoading, isError} = useQuery(["recentseries", variant], async()=> {
-        const res = await api.get<SeriesFilter>(`series/${variant}?sort=!lastModifiedDate&limit=15`);
+    const {data:recentSeries = [], refetch:recentSeriesRefetch, isLoading, isError} = useQuery({
+        queryKey:keys.recentSeries(variant),
+        queryFn:async()=> {
+            const res = await api.get<SeriesFilter>(`series/${variant}?sort=!lastModifiedDate&limit=15`);
 
-        if (!res) return [];
+            if (!res) return [];
 
-        return res.data;
+            return res.data;
+        }
     });
-
-    useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            await Promise.all([
-                recentSeriesRefetch()
-            ]);
-        }
-
-        if (reloaded && reloaded !== "reviews") {
-            setTimeout(()=>{
-                void refetchBooks();
-            }, 1000);
-        }
-    }, [recentSeriesRefetch, reloaded]);
 
     const title = `Series de ${variant === "manga" ? "manga" : "novelas"} con volúmenes nuevos`;
 
@@ -47,7 +35,9 @@ function RecentSeriesScroller({variant}:RecentSeriesScrollerProps):React.ReactEl
     if (recentSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller variant={variant} type="series" title={title} components={recentSeries} noVariantIndicator/>
+        <ComponentScroller type="series" title={title} components={recentSeries} noVariantIndicator
+            moreLink={`/app/library/${variant === "manga" ? "manga" : "novels"}?sortBy=!lastModifiedDate`}
+        />
     );
 }
 

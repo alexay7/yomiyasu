@@ -15,10 +15,6 @@ export interface ReaderConfig {
     scrollChange:boolean,
 }
 
-export interface FullReaderConfig extends ReaderConfig {
-    page_idx:number,
-    page2_idx:number
-}
 
 export interface SiteConfig {
     openHTML:boolean;

@@ -1,5 +1,6 @@
-import {Dialog, DialogContent, DialogTitle, Divider} from "@mui/material";
 import React from "react";
+import {Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle} from "../../../ui/Dialog";
+import {Kbd} from "../../../ui/Kbd";
 
 export interface ShortcutItem {
     keys:string[];
@@ -14,24 +15,30 @@ interface ShortcutsDialogProps {
 
 export function ShortcutsDialog({open, onClose, shortcuts}:ShortcutsDialogProps):React.ReactElement {
     return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>Atajos de teclado</DialogTitle>
-            <Divider/>
-            <DialogContent>
-                <ul className="flex flex-col gap-3">
-                    {shortcuts.map((shortcut)=>(
-                        <li className="flex items-center gap-4" key={shortcut.description}>
-                            <span className="flex gap-1 min-w-[7rem]">
-                                {shortcut.keys.map((key)=>(
-                                    <kbd key={key} className="px-2 py-1 text-xs rounded border border-solid border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-[#2a2a2a]">
-                                        {key}
-                                    </kbd>
-                                ))}
-                            </span>
-                            <span>{shortcut.description}</span>
-                        </li>
-                    ))}
-                </ul>
+        <Dialog
+            open={open}
+            onOpenChange={(value)=>{
+                if (!value) onClose();
+            }}
+        >
+            <DialogContent size="sm">
+                <DialogHeader>
+                    <DialogTitle>Atajos de teclado</DialogTitle>
+                </DialogHeader>
+                <DialogBody>
+                    <ul className="flex flex-col gap-3">
+                        {shortcuts.map((shortcut)=>(
+                            <li className="flex items-center gap-4" key={shortcut.description}>
+                                <span className="flex min-w-[7rem] gap-1">
+                                    {shortcut.keys.map((key)=>(
+                                        <Kbd key={key}>{key}</Kbd>
+                                    ))}
+                                </span>
+                                <span className="text-sm text-fg-muted">{shortcut.description}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </DialogBody>
             </DialogContent>
         </Dialog>
     );

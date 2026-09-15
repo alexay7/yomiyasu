@@ -1,12 +1,13 @@
-import React, {useEffect} from "react";
-import {useQuery} from "react-query";
+import React from "react";
+import {useQuery} from "@tanstack/react-query";
 import {api} from "../../../api/api";
 import {Line} from "react-chartjs-2";
 import {Chart as ChartJS, ChartData, Point, LinearScale, CategoryScale, PointElement, LineElement, Title, Legend, Filler, Tooltip} from "chart.js";
-import {useTheme} from "@mui/material";
 import {Book} from "../../../types/book";
-import {useGlobal} from "../../../contexts/GlobalContext";
 import {formatTime} from "../../../helpers/helpers";
+import {keys} from "../../../lib/queryKeys";
+import {useIsDarkMode} from "../../../lib/colorMode";
+import {chartTokens} from "../../../lib/tokens";
 
 ChartJS.register(LinearScale, CategoryScale, PointElement, LineElement, Title, Legend, Filler, Tooltip);
 
@@ -17,20 +18,17 @@ interface SpeedGraphProps {
 
 function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const {serieId, books} = props;
-    const {reloaded} = useGlobal();
 
-    const {data:serieSpeed = [], refetch} = useQuery(`serie-${serieId}-speed`, async()=>{
-        const response = await api.get<{book:string, meanReadSpeed:number, endDate:string, time:number}[]>(`readprogress/serie/${serieId}/speed`);
-        return response;
+    const {data:serieSpeed = []} = useQuery({
+        queryKey:keys.serieSpeed(serieId),
+        queryFn:async()=>{
+            const response = await api.get<{book:string, meanReadSpeed:number, endDate:string, time:number}[]>(`readprogress/serie/${serieId}/speed`);
+            return response;
+        }
     });
 
-    useEffect(()=>{
-        if (reloaded === "all") {
-            void refetch();
-        }
-    }, [reloaded, refetch]);
-
-    const theme = useTheme();
+    const isDark = useIsDarkMode();
+    const tokens = chartTokens(isDark);
 
     const chartData:ChartData<"line", (number | Point | null)[], unknown> = {
         labels: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.endDate).toLocaleDateString("es")}`),
@@ -39,13 +37,13 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
                 label: "Velocidad",
                 data: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => item.meanReadSpeed),
                 fill: true,
-                borderColor: "#308054",
-                backgroundColor: "#24b14c39",
+                borderColor: tokens.primary,
+                backgroundColor: `${tokens.primary}26`,
                 borderWidth: 2,
                 pointRadius: 4,
-                pointBackgroundColor: "white",
+                pointBackgroundColor: isDark ? "#1E1E1E" : "#ffffff",
                 pointHoverRadius: 8,
-                pointHoverBackgroundColor: "white"
+                pointHoverBackgroundColor: isDark ? "#1E1E1E" : "#ffffff"
             }
         ]
     };
@@ -72,13 +70,13 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
         scales: {
             y: {
                 ticks: {
-                    color: theme.palette.mode === "dark" ? "white" : "black"
+                    color: tokens.fg
                 },
                 beginAtZero: true,
                 title: {
                     display: true,
                     text: "Vel (chars/h)",
-                    color:theme.palette.mode === "dark" ? "white" : "black"
+                    color:tokens.fg
                 },
                 grace:"10%"
             },
@@ -92,7 +90,7 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
             }
         },
         showToolTips:true,
-        color:theme.palette.mode === "dark" ? "white" : "black",
+        color:tokens.fg,
         maintainAspectRatio: false
     };
 

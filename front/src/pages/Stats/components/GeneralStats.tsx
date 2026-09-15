@@ -1,113 +1,113 @@
-import React, {useRef, useState} from "react";
-import {useQuery} from "react-query";
+import {useQuery} from "@tanstack/react-query";
+import {useState} from "react";
 import {api} from "../../../api/api";
-import {CSSTransition} from "react-transition-group";
+import {keys} from "../../../lib/queryKeys";
+import {ErrorState} from "../../../ui/ErrorState";
+import {Skeleton} from "../../../ui/Skeleton";
 
-import "./styles.css";
+interface GameStats {
+    totalMangaBooks:number;
+    totalNovelaBooks:number;
+    totalMangaSeries:number;
+    totalNovelaSeries:number;
+    totalPagesRead:number;
+    totalCharacters:number;
+    totalTimeRead:number;
+}
+
+function formatTime(minutes?:number):string {
+    if (!minutes) return "0";
+
+    if (minutes < 60) {
+        return minutes.toLocaleString(undefined, {maximumFractionDigits:1});
+    }
+
+    return (minutes / 60).toLocaleString(undefined, {maximumFractionDigits:1});
+}
+
+function formatTimeText(minutes?:number):string {
+    if (!minutes || minutes < 60) return "Minutos leídos";
+    return "Horas leídas";
+}
+
+interface StatCardProps {
+    value: string;
+    label: string;
+}
+
+function StatCard({value, label}:StatCardProps):React.ReactElement {
+    return (
+        <div className="flex min-w-40 flex-1 flex-col gap-1 rounded-xl border border-app-border bg-app-surface p-4">
+            <p className="text-3xl font-bold text-primary">{value}</p>
+            <p className="text-xs text-fg-muted">{label}</p>
+        </div>
+    );
+}
 
 function GeneralStats():React.ReactElement {
     const [details, setDetails] = useState(false);
 
-    const {data:generalStats} = useQuery("mystats", async()=>{
-        return api.get<{totalMangaBooks:number, totalNovelaBooks:number, totalMangaSeries:number, totalNovelaSeries:number, totalPagesRead:number, totalCharacters:number, totalTimeRead:number}>("readprogress/mystats");
+    const {data:generalStats, isLoading, isError, refetch} = useQuery({
+        queryKey:keys.stats,
+        queryFn:async()=>{
+            return api.get<GameStats>("readprogress/mystats");
+        }
     });
 
-    function formatTime(minutes?:number):string {
-        if (!minutes) {
-            return "0";
-        }
-        // Minutos
-        if (minutes < 60) {
-            return minutes.toLocaleString(undefined, {maximumFractionDigits:1});
-        }
-
-        // Horas
-        return (minutes / 60).toLocaleString(undefined, {maximumFractionDigits:1});
+    if (isLoading) {
+        return (
+            <section className="flex flex-wrap gap-4">
+                {Array.from({length:4}, (_, index)=>(
+                    <Skeleton key={index} className="h-24 min-w-40 flex-1 rounded-xl" />
+                ))}
+            </section>
+        );
     }
 
-    function formatTimeText(minutes?:number):string {
-        if (!minutes) {
-            return "Minutos leídos";
-        }
-        // Minutos
-        if (minutes < 60) {
-            return "Minutos leídos";
-        }
-
-        return "Horas leídas";
+    if (isError || !generalStats) {
+        return <ErrorState title="No se pudieron cargar tus estadísticas" onRetry={()=>void refetch()} />;
     }
-
-    const extraInfoRef = useRef<HTMLDivElement>(null);
 
     return (
-        <div>
-            {generalStats === undefined ? <p>Cargando...</p> : (
-                <div className="flex flex-col">
-                    <div className="flex flex-col gap-2 pb-4">
-                        <div className="flex gap-2 items-end">
-                            <h2 className="dark:text-white text-black">Estadísticas generales</h2>
-                            <button className="bg-transparent border-none dark:text-white cursor-pointer hover:underline" onClick={()=>{
-                                setDetails((prev)=>!prev);
-                            }}
-                            >{details ? "Ocultar" : "Ver"} detalles
-                            </button>
-                        </div>
-                        <div className="flex flex-wrap gap-4 items-center">
-                            <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                <p className="text-primary text-4xl font-bold">{generalStats.totalCharacters.toLocaleString()}</p>
-                                <p className="dark:text-white">Caracteres leídos en total</p>
-                            </div>
-                            <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                <p className="text-primary text-4xl font-bold">{formatTime(generalStats.totalTimeRead)}</p>
-                                <p className="dark:text-white">{formatTimeText(generalStats.totalTimeRead)} en total</p>
-                            </div>
-                            <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                <p className="text-primary text-4xl font-bold">{(generalStats.totalMangaBooks + generalStats.totalNovelaBooks).toLocaleString()}</p>
-                                <p className="dark:text-white">Libros leídos</p>
-                            </div>
-                            <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                <p className="text-primary text-4xl font-bold">{(generalStats.totalMangaSeries + generalStats.totalNovelaSeries).toLocaleString()}</p>
-                                <p className="dark:text-white">Series leídas</p>
-                            </div>
+        <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+                <h2 className="text-base font-semibold text-fg">Estadísticas generales</h2>
+                <button
+                    type="button"
+                    className="text-xs font-medium text-primary hover:underline"
+                    onClick={()=>setDetails((prev)=>!prev)}
+                >
+                    {details ? "Ocultar detalles" : "Ver detalles"}
+                </button>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+                <StatCard value={generalStats.totalCharacters.toLocaleString()} label="Caracteres leídos en total" />
+                <StatCard value={formatTime(generalStats.totalTimeRead)} label={`${formatTimeText(generalStats.totalTimeRead)} en total`} />
+                <StatCard value={(generalStats.totalMangaBooks + generalStats.totalNovelaBooks).toLocaleString()} label="Libros leídos" />
+                <StatCard value={(generalStats.totalMangaSeries + generalStats.totalNovelaSeries).toLocaleString()} label="Series leídas" />
+            </div>
+
+            {details ? (
+                <div className="flex flex-wrap gap-8 pt-2 animate-fade-in">
+                    <div className="flex flex-col gap-3">
+                        <h3 className="text-sm font-semibold text-fg-muted">Manga</h3>
+                        <div className="flex flex-wrap gap-4">
+                            <StatCard value={generalStats.totalMangaBooks.toLocaleString()} label="Mangas leídos" />
+                            <StatCard value={generalStats.totalMangaSeries.toLocaleString()} label="Series de manga leídas" />
+                            <StatCard value={generalStats.totalPagesRead.toLocaleString()} label="Páginas de manga leídas" />
                         </div>
                     </div>
-                    <CSSTransition nodeRef={extraInfoRef} classNames="extrainfo" timeout={300} in={details} unmountOnExit>
-                        <div ref={extraInfoRef} className="flex flex-wrap gap-4">
-                            <div className="flex flex-col gap-2">
-                                <h2 className="dark:text-white text-black">Estadísticas de manga</h2>
-                                <div className="flex flex-wrap gap-4 items-center">
-                                    <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                        <p className="text-primary text-4xl font-bold">{generalStats.totalMangaBooks.toLocaleString()}</p>
-                                        <p className="dark:text-white">Mangas leídos</p>
-                                    </div>
-                                    <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                        <p className="text-primary text-4xl font-bold">{generalStats.totalMangaSeries.toLocaleString()}</p>
-                                        <p className="dark:text-white">Series de manga leídas</p>
-                                    </div>
-                                    <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                        <p className="text-primary text-4xl font-bold">{generalStats.totalPagesRead.toLocaleString()}</p>
-                                        <p className="dark:text-white">Páginas de manga leídas</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <h2 className="dark:text-white text-black">Estadísticas de novelas</h2>
-                                <div className="flex flex-wrap gap-4 items-center">
-                                    <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                        <p className="text-primary text-4xl font-bold">{generalStats?.totalNovelaBooks.toLocaleString()}</p>
-                                        <p className="dark:text-white">Novelas leídas</p>
-                                    </div>
-                                    <div className="flex flex-col gap-2 bg-gray-100 dark:bg-opacity-20 p-4 rounded-md">
-                                        <p className="text-primary text-4xl font-bold">{generalStats?.totalNovelaSeries.toLocaleString()}</p>
-                                        <p className="dark:text-white">Series de novelas leídas</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <div className="flex flex-col gap-3">
+                        <h3 className="text-sm font-semibold text-fg-muted">Novelas</h3>
+                        <div className="flex flex-wrap gap-4">
+                            <StatCard value={generalStats.totalNovelaBooks.toLocaleString()} label="Novelas leídas" />
+                            <StatCard value={generalStats.totalNovelaSeries.toLocaleString()} label="Series de novelas leídas" />
                         </div>
-                    </CSSTransition>
+                    </div>
                 </div>
-            )}
-        </div>
+            ) : null}
+        </section>
     );
 }
 

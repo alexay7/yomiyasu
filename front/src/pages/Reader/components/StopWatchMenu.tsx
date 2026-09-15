@@ -1,57 +1,44 @@
-import {ArrowDropDown, ArrowDropUp, Timer, TimerOff} from "@mui/icons-material";
-import {Alert, IconButton, Menu, MenuItem, Snackbar, Tooltip} from "@mui/material";
+import {ChevronDown, ChevronUp, RotateCcw, Timer, TimerOff} from "lucide-react";
 import React, {useState} from "react";
 import {formatTime} from "../../../helpers/helpers";
 import {createProgress} from "../../../helpers/progress";
-import {Book, BookProgress} from "../../../types/book";
-import {useQueryClient} from "react-query";
+import {useReaderTimerStore} from "../../../stores/ReaderStore";
 import {confirmDialog} from "../../../stores/ConfirmStore";
-
+import type {Book, BookProgress} from "../../../types/book";
+import {Button} from "../../../ui/Button";
+import {IconButton} from "../../../ui/IconButton";
+import {Menu, MenuContent, MenuItem, MenuTrigger} from "../../../ui/Menu";
+import {Separator} from "../../../ui/Separator";
+import {Snackbar} from "../../../ui/Snackbar";
+import {useQueryClient} from "@tanstack/react-query";
+import {keys} from "../../../lib/queryKeys";
 
 interface StopWatchMenuProps {
     oldProgress?:BookProgress | undefined;
     characters?:number;
     bookData?:Book;
-    timer:number;
-    setTimer:(v:React.SetStateAction<number>)=>void;
-    timerOn:boolean;
-    setTimerOn:(v:React.SetStateAction<boolean>)=>void;
     currentPage?:number;
     refreshProgress?:()=>Promise<number>;
 }
 
-export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn, bookData, oldProgress,
-    currentPage, refreshProgress}:StopWatchMenuProps):React.ReactElement {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+export function StopWatchMenu({characters, bookData, oldProgress, currentPage, refreshProgress}:StopWatchMenuProps):React.ReactElement {
+    const timer = useReaderTimerStore((state)=>state.timer);
+    const timerOn = useReaderTimerStore((state)=>state.timerOn);
+    const setTimer = useReaderTimerStore((state)=>state.setTimer);
+    const toggleTimer = useReaderTimerStore((state)=>state.toggle);
+
     const [copied, setCopied] = useState(false);
     const [showAdjustTime, setShowAdjustTime] = useState(false);
 
     const queryClient = useQueryClient();
 
-    function handleClick(event: React.MouseEvent<HTMLElement>):void {
-        setAnchorEl(event.currentTarget);
-    }
-
-    function handleClose():void {
-        setAnchorEl(null);
-    }
-
-    function stopTimer():void {
-        setTimerOn(false);
-    }
-
-    function startTimer():void {
-        setTimerOn(true);
-    }
-
     async function resetTimer():Promise<void> {
-        // Confirmation from the user
         if (!await confirmDialog("¿Estás seguro de que quieres reiniciar el cronómetro?, esto reiniciará el tiempo de lectura del libro entero.")) return;
 
         if (bookData) {
             await createProgress(bookData, undefined, 1);
             window.localStorage.removeItem(bookData._id);
-            await queryClient.invalidateQueries([`progress-${bookData._id}`]);
+            await queryClient.invalidateQueries({queryKey:keys.bookProgress(bookData._id)});
         }
         setTimer(0);
     }
@@ -63,111 +50,113 @@ export function StopWatchMenu({timer, setTimer, characters, timerOn, setTimerOn,
             return;
         }
 
-        setTimer((prev)=>prev + (minutes * 60));
+        setTimer(timer + (minutes * 60));
+    }
+
+    async function copySessionLog():Promise<void> {
+        if (!bookData) return;
+
+        let text = "";
+        let currentChars = (characters || 0) - (oldProgress?.characters || 0);
+
+        if (refreshProgress) {
+            // Actualizar el progreso antes de copiar
+            currentChars = await refreshProgress() - (oldProgress?.characters || 0);
+        }
+
+        if (bookData.variant === "novela") {
+            text = `.log lectura ${currentChars} ${bookData.visibleName}`;
+        } else if (bookData.variant === "manga" && !!currentPage) {
+            const readPages = currentPage - (oldProgress?.currentPage || 0);
+            text = `.log manga ${readPages} ${bookData.visibleName}`;
+        }
+
+        const currentTime = timer - (oldProgress?.time || 0);
+
+        if (timer > 59) {
+            text += `;${Math.floor(currentTime / 60)}`;
+        }
+
+        if (currentChars > 0 && bookData.variant === "manga") {
+            text += `&${currentChars}`;
+        }
+
+        void navigator.clipboard.writeText(text);
+        setCopied(true);
     }
 
     return (
-        <div className="">
-            <Tooltip title="Cronómetro">
-                <IconButton onClick={handleClick} className="text-app-text">
-                    {timerOn ? (
-                        <Timer/>
-                    ) : (
-                        <TimerOff/>
-                    )}
-                </IconButton>
-            </Tooltip>
-            <Menu id="stopwatch-menu" keepMounted anchorEl={anchorEl}
-                open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
-            >
-                <li style={{paddingTop:".25rem", paddingBottom:".25rem"}}>
-                    <p style={{textAlign:"center"}}>Tiempo: {formatTime(timer)}</p>
-                </li>
-                <hr/>
-                <li className="flex flex-col items-center justify-center gap-1">
-                    <Tooltip title="Haz click para copiar el log de tu sesión actual">
-                        <div className="cursor-cell w-full flex flex-col items-center justify-center" onClick={async()=>{
-                            if (!bookData) return;
+        <>
+            <Menu>
+                <MenuTrigger asChild>
+                    <IconButton label="Cronómetro" className="text-app-text">
+                        {timerOn ? <Timer /> : <TimerOff />}
+                    </IconButton>
+                </MenuTrigger>
+                <MenuContent align="end" className="min-w-[17rem] p-0">
+                    <p className="px-3 py-2 text-center text-sm font-medium text-fg">
+                        Tiempo: {formatTime(timer)}
+                    </p>
+                    <Separator />
 
-                            let text = "";
-
-                            let currentChars = (characters || 0) - (oldProgress?.characters || 0);
-
-                            if (refreshProgress) {
-                                // Actualizar el progreso antes de copiar
-                                currentChars = await refreshProgress() - (oldProgress?.characters || 0);
-                            }
-
-                            if (bookData?.variant === "novela") {
-                                text = `.log lectura ${currentChars} ${bookData?.visibleName}`;
-                            } else if (bookData?.variant === "manga" && !!currentPage) {
-                                const readPages = currentPage - (oldProgress?.currentPage || 0);
-                                text = `.log manga ${readPages} ${bookData.visibleName}`;
-                            }
-
-                            const currentTime = timer - (oldProgress?.time || 0);
-
-                            if (timer > 59) {
-                                text += `;${Math.floor(currentTime / 60)}`;
-                            }
-
-                            if (currentChars > 0 && bookData?.variant === "manga") {
-                                text += `&${currentChars}`;
-                            }
-
-                            void navigator.clipboard.writeText(text);
-                            setCopied(true);
-                        }}
-                        >
-                            <p>Sesión Actual</p>
-                            <p className="text-xs">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</p>
-                            <p className="text-xs">Caracteres: {(characters || 0) - (oldProgress?.characters || 0)}</p>
-                        </div>
-                    </Tooltip>
-                </li>
-                <hr />
-                <div className="flex flex-col gap-2">
-                    <div className="flex flex-col items-center">
-                        <button className="bg-transparent text-white border-none cursor-pointer text-base" onClick={()=>setShowAdjustTime((prev)=>!prev)}>
-                            <p className="flex items-center">Ajustar tiempo {showAdjustTime ? <ArrowDropDown/> : <ArrowDropUp/>}</p>
-                        </button>
-                        {showAdjustTime && (
-                            <div className="flex flex-col" onDoubleClick={(e)=>{
-                                e.stopPropagation();
-                            }}
+                    {bookData ? (
+                        <>
+                            <button
+                                type="button"
+                                onClick={()=>void copySessionLog()}
+                                className="flex w-full cursor-pointer flex-col items-center gap-0.5 px-3 py-2 text-center transition-colors hover:bg-tint"
+                                title="Haz click para copiar el log de tu sesión actual"
                             >
-                                <div className="flex justify-around text-sm">
-                                    <p>Restar</p>
-                                    <p>Sumar</p>
+                                <span className="text-sm font-medium text-fg">Sesión actual</span>
+                                <span className="text-xs text-fg-muted">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</span>
+                                <span className="text-xs text-fg-muted">Caracteres: {(characters || 0) - (oldProgress?.characters || 0)}</span>
+                            </button>
+
+                            <Separator />
+                        </>
+                    ) : null}
+
+                    <div className="flex flex-col gap-1 p-1">
+                        <button
+                            type="button"
+                            onClick={()=>setShowAdjustTime((prev)=>!prev)}
+                            className="flex items-center justify-center gap-1 rounded-md py-1.5 text-sm text-fg-muted transition-colors hover:bg-tint hover:text-fg"
+                        >
+                            Ajustar tiempo
+                            {showAdjustTime ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
+                        </button>
+                        {showAdjustTime ? (
+                            <div className="flex flex-col gap-1 px-1 pb-1" onDoubleClick={(e)=>e.stopPropagation()}>
+                                <div className="flex justify-around text-xs text-fg-muted">
+                                    <span>Restar</span>
+                                    <span>Sumar</span>
                                 </div>
-                                <div>
-                                    <button className="bg-white text-black border-primary border-solid border-r-0 rounded-l-md hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(-5)}>-5m</button>
-                                    <button className="bg-white text-black border-primary border-solid border-l-0 hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(-1)}>-1m</button>
-                                    <button className="bg-white text-black border-primary border-solid border-r-0 hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(1)}>+1m</button>
-                                    <button className="bg-white text-black border-primary border-solid border-l-0 rounded-r-md hover:bg-primary hover:text-white cursor-pointer duration-150" onClick={()=>modifyTime(5)}>+5m</button>
+                                <div className="flex justify-center gap-1">
+                                    <Button variant="secondary" size="sm" onClick={()=>modifyTime(-5)}>-5m</Button>
+                                    <Button variant="secondary" size="sm" onClick={()=>modifyTime(-1)}>-1m</Button>
+                                    <Button variant="secondary" size="sm" onClick={()=>modifyTime(1)}>+1m</Button>
+                                    <Button variant="secondary" size="sm" onClick={()=>modifyTime(5)}>+5m</Button>
                                 </div>
                             </div>
-                        )}
+                        ) : null}
                     </div>
-                </div>
-                <hr />
-                {!!refreshProgress && (
-                    <MenuItem onClick={refreshProgress}>Actualizar caracteres leídos</MenuItem>
-                )}
-                {!timerOn ? (
-                    <MenuItem onClick={startTimer}>Iniciar Cronómetro</MenuItem>
-                ) : (
-                    <MenuItem onClick={stopTimer}>Pausar Cronómetro</MenuItem>
-                )}
-                <MenuItem onClick={resetTimer}>Reiniciar Cronómetro</MenuItem>
+
+                    <Separator />
+
+                    {refreshProgress ? (
+                        <MenuItem onSelect={()=>void refreshProgress()}>Actualizar caracteres leídos</MenuItem>
+                    ) : null}
+                    <MenuItem onSelect={toggleTimer}>
+                        {timerOn ? "Pausar cronómetro" : "Iniciar cronómetro"}
+                    </MenuItem>
+                    <MenuItem onSelect={()=>void resetTimer()}>
+                        <RotateCcw />
+                        Reiniciar cronómetro
+                    </MenuItem>
+                </MenuContent>
             </Menu>
-            <Snackbar
-                open={copied}
-                autoHideDuration={2000}
-                onClose={()=>setCopied(false)}
-            >
-                <Alert severity="success">Log copiado al portapapeles</Alert>
-            </Snackbar>
-        </div>
+
+            <Snackbar open={copied} onOpenChange={setCopied} message="Log copiado al portapapeles" />
+        </>
     );
 }

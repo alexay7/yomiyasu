@@ -1,9 +1,8 @@
-import {Close, DragHandle, DragIndicator} from "@mui/icons-material";
-import {IconButton} from "@mui/material";
+import {GripHorizontal, GripVertical, X} from "lucide-react";
 import React, {Fragment, useRef, useState} from "react";
-import {CSSTransition} from "react-transition-group";
-import "./style.css";
-import {useMediaQuery} from "react-responsive";
+import {IconButton} from "../../../ui/IconButton";
+import {cn} from "../../../ui/cn";
+import {useMediaQuery} from "../../../lib/useMediaQuery";
 import {useSettingsStore} from "../../../stores/SettingsStore";
 
 interface PageTextProps {
@@ -16,7 +15,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
     const {open, setOpen} = props;
     const {readerSettings} = useSettingsStore();
     const sidebarRef = useRef<HTMLDivElement>(null);
-    const isTabletOrMobile = useMediaQuery({query: "(max-width: 1024px)"});
+    const isTabletOrMobile = useMediaQuery("(max-width: 1024px)");
 
     const {lines} = props;
 
@@ -28,7 +27,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
         return readerSettings.r2l ? "Izquierda" : "Derecha";
     }
 
-    const [initialPos,   setInitialPos] = useState(0);
+    const [initialPos, setInitialPos] = useState(0);
     const [initialSize, setInitialSize] = useState(0);
 
     const initial = (e:React.DragEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>, mobile?:boolean, x?:boolean):void => {
@@ -49,7 +48,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
                 setInitialSize(sidebarRef.current.offsetHeight);
             }
         } else {
-            const event = e as  React.TouchEvent<HTMLButtonElement>;
+            const event = e as React.TouchEvent<HTMLButtonElement>;
             if (x) {
                 setInitialPos(event.targetTouches[0].clientX);
                 setInitialSize(sidebarRef.current.offsetWidth);
@@ -71,7 +70,7 @@ export function PageText(props:PageTextProps):React.ReactElement {
                 sidebarRef.current.style.height = `${initialSize - event.clientY + initialPos}px`;
             }
         } else {
-            const event = e as  React.TouchEvent<HTMLButtonElement>;
+            const event = e as React.TouchEvent<HTMLButtonElement>;
             if (!sidebarRef || !sidebarRef.current || event.targetTouches[0].clientY === 0) return;
 
             if (x) {
@@ -83,63 +82,72 @@ export function PageText(props:PageTextProps):React.ReactElement {
     };
 
     return (
-        <Fragment>
-            <CSSTransition nodeRef={sidebarRef} classNames="textbox" in={open} timeout={300} unmountOnExit>
-                <div ref={sidebarRef} className="min-w-full lg:max-w-[80%] lg:min-w-[400px] max-h-[80%] lg:max-h-none min-h-[10%] pt-4 lg:h-full flex fixed lg:top-0 z-20 lg:pt-14 bg-black bg-opacity-70 justify-center border-0 border-r border-white border-solid">
-                    {isTabletOrMobile ? (
-                        <IconButton draggable={true} className="touch-none dragable mx-2 absolute top-0 translate-x-1/2 right-1/2 z-30 cursor-row-resize"
-                            onDragStart={initial}
-                            onDrag={resize}
-                            onTouchStart={(e)=>{
-                                initial(e, true);
-                            }}
-                            onTouchMove={(e)=>{
-                                resize(e, true);
-                            }}
-                        >
-                            <DragHandle/>
-                        </IconButton>
-                    ) : (
-                        <IconButton draggable={true} className="dragable mx-2 absolute top-1/2 -translate-y-1/2 right-0 z-30 cursor-col-resize"
-                            onDragStart={(e)=>initial(e, false, true)}
-                            onDrag={(e)=>resize(e, false, true)}
-                            onTouchStart={(e)=>{
-                                initial(e, true, true);
-                            }}
-                            onTouchMove={(e)=>{
-                                resize(e, true, true);
-                            }}
-                        >
-                            <DragIndicator/>
-                        </IconButton>
-                    )}
-                    <IconButton className="absolute top-0 right-0" onClick={()=>setOpen(false)}>
-                        <Close/>
-                    </IconButton>
-                    <ul className="flex mt-4 lg:h-5/6 flex-col px-4 gap-4 text-white overflow-y-auto lg:pr-12">
-                        {lines.map((page, i)=>(
-                            <Fragment key={`${i}`}>
-                                <p className="text-center text-xl font-semibold">{getPageName(i)}</p>
-                                <li className="border shadow-lg shadow-black border-white border-solid p-2 rounded-md bg-[#101010] bg-opacity-80">
-                                    <ul className="flex flex-col gap-4">
-                                        {page.map((koma, j)=>(
-                                            <li key={`${i}-${j}`}>
-                                                <ul className="flex flex-col gap-2">
-                                                    {koma.map((text, k)=>(
-                                                        <li key={`${i}-${j}-${k}`} className="flex gap-2">
-                                                            ・  <p data-searchable>{text.join("")}</p>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </li>
-                            </Fragment>
-                        ))}
-                    </ul>
-                </div>
-            </CSSTransition>
-        </Fragment>
+        <div
+            ref={sidebarRef}
+            aria-hidden={!open}
+            className={cn(
+                "fixed z-20 flex justify-center border-app-border bg-black/75 transition-transform duration-300 ease-out",
+                // Móvil: hoja inferior
+                "inset-x-0 bottom-0 max-h-[80%] min-h-[10%] w-full border-t",
+                open ? "translate-y-0" : "translate-y-full",
+                // Escritorio: panel lateral izquierdo
+                "lg:inset-y-0 lg:left-0 lg:h-full lg:max-h-none lg:w-[min(80%,720px)] lg:min-w-[400px] lg:border-r lg:border-t-0",
+                open ? "lg:translate-x-0" : "lg:-translate-x-full",
+                !open && "pointer-events-none",
+            )}
+        >
+            {isTabletOrMobile ? (
+                <IconButton
+                    label="Redimensionar panel"
+                    draggable
+                    className="absolute right-1/2 top-0 z-30 mx-2 translate-x-1/2 cursor-row-resize touch-none"
+                    onDragStart={initial}
+                    onDrag={resize}
+                    onTouchStart={(e)=>initial(e, true)}
+                    onTouchMove={(e)=>resize(e, true)}
+                >
+                    <GripHorizontal />
+                </IconButton>
+            ) : (
+                <IconButton
+                    label="Redimensionar panel"
+                    draggable
+                    className="absolute right-0 top-1/2 z-30 mx-2 -translate-y-1/2 cursor-col-resize"
+                    onDragStart={(e)=>initial(e, false, true)}
+                    onDrag={(e)=>resize(e, false, true)}
+                    onTouchStart={(e)=>initial(e, true, true)}
+                    onTouchMove={(e)=>resize(e, true, true)}
+                >
+                    <GripVertical />
+                </IconButton>
+            )}
+
+            <IconButton label="Cerrar panel de texto" className="absolute right-2 top-2 z-30 text-white" onClick={()=>setOpen(false)}>
+                <X />
+            </IconButton>
+
+            <ul className="mt-12 flex flex-col gap-4 overflow-y-auto px-4 pb-6 text-white lg:mt-16 lg:h-5/6 lg:pr-12">
+                {lines.map((page, i)=>(
+                    <Fragment key={`${i}`}>
+                        <p className="text-center text-xl font-semibold">{getPageName(i)}</p>
+                        <li className="rounded-md border border-white/70 bg-black/80 p-3 shadow-lg">
+                            <ul className="flex flex-col gap-4">
+                                {page.map((koma, j)=>(
+                                    <li key={`${i}-${j}`}>
+                                        <ul className="flex flex-col gap-2">
+                                            {koma.map((text, k)=>(
+                                                <li key={`${i}-${j}-${k}`} className="flex gap-2">
+                                                    ・ <p data-searchable>{text.join("")}</p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </li>
+                                ))}
+                            </ul>
+                        </li>
+                    </Fragment>
+                ))}
+            </ul>
+        </div>
     );
 }

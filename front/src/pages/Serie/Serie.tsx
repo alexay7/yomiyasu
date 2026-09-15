@@ -1,300 +1,314 @@
-import React, {useEffect, useRef, useState} from "react";
-import {useQuery, useQueryClient} from "react-query";
-import {useNavigate, useParams} from "react-router-dom";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {ArrowLeft, Bookmark, BookmarkCheck, ChevronDown, ChevronUp, Download, Play} from "lucide-react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
+import {Link, useNavigate, useParams} from "react-router";
 import {api} from "../../api/api";
-import {FullSerie} from "../../types/serie";
-import {Accordion, AccordionDetails, AccordionSummary, Button, IconButton, Tooltip} from "@mui/material";
-import {BookComponent} from "../../components/BookComponent/BookComponent";
-import {BookWithProgress} from "../../types/book";
-import {useGlobal} from "../../contexts/GlobalContext";
-import {ArrowBack, ArrowDropDown, ArrowDropUp, BookmarkAdd, BookmarkRemove, Download, ExpandMore, Whatshot} from "@mui/icons-material";
-import {SerieSettings} from "../../components/SerieComponent/components/SerieSettings";
-import {goBack, goTo} from "../../helpers/helpers";
-import {EditSerie} from "../../components/EditSerie/EditSerie";
+import {CardMenu} from "../../components/CoverCard/CardMenu";
+import {CoverCard} from "../../components/CoverCard/CoverCard";
 import {useAuth} from "../../contexts/AuthContext";
-import {Reviews} from "./components/Reviews";
-import {addToReadlist, getFlameColor, removeFromReadlist} from "../../helpers/series";
-import {Helmet} from "react-helmet";
-import SpeedGraph from "./components/SpeedGraph";
-import {openNovel} from "../../helpers/ttu";
-import {SeriePageSkeleton, SectionError} from "../../components/Skeletons/Skeletons";
+import {addToReadlist, removeFromReadlist} from "../../helpers/series";
+import {invalidateReadlist} from "../../lib/invalidate";
+import {serieThumbnail} from "../../lib/media";
+import {CoverImage} from "../../components/CoverImage";
+import {keys} from "../../lib/queryKeys";
+import {useOpenBook} from "../../lib/useOpenBook";
+import {useTitle} from "../../lib/useTitle";
 import {confirmDialog} from "../../stores/ConfirmStore";
+import type {BookWithProgress} from "../../types/book";
+import type {FullSerie} from "../../types/serie";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "../../ui/Accordion";
+import {Badge} from "../../ui/Badge";
+import {Button} from "../../ui/Button";
+import {EmptyState} from "../../ui/EmptyState";
+import {ErrorState} from "../../ui/ErrorState";
+import {IconButton} from "../../ui/IconButton";
+import {Spinner} from "../../ui/Spinner";
+import {Tooltip} from "../../ui/Tooltip";
+import {Reviews} from "./components/Reviews";
+import SpeedGraph from "./components/SpeedGraph";
 
 function Serie():React.ReactElement {
     const {id} = useParams();
-    const {reloaded, ttuConnector} = useGlobal();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const {userData} = useAuth();
+    const openBook = useOpenBook();
+
     const [readMore, setReadMore] = useState(false);
     const [textOverflows, setTextOverflows] = useState(false);
-    const queryClient = useQueryClient();
     const [unreadBooks, setUnreadBooks] = useState(0);
 
     const overflowingText = useRef<HTMLParagraphElement | null>(null);
 
-    const {data:serieData, refetch:serieRefetch, isLoading, isError} = useQuery(`serie-${id}`, async()=>{
-        const response = await api.get<FullSerie>(`series/serie/${id}`);
-
-        if (response) {
-            setUnreadBooks(response.unreadBooks);
-            return response;
-        }
+    const {data:serieData, isLoading, isError, refetch, isFetching} = useQuery({
+        queryKey:keys.serie(id),
+        queryFn:async()=>{
+            return await api.get<FullSerie>(`series/serie/${id}`);
+        },
+        enabled:!!id
     });
 
-    const {data:serieBooks, refetch:booksRefetch} = useQuery(`books-serie-${id}`, async()=>{
-        const response = await api.get<BookWithProgress[]>(`books/${serieData!.variant}?serie=${id}&sort=sortName`);
-        return response;
-    }, {enabled:!!serieData});
+    useEffect(()=>{
+        if (serieData) {
+            setUnreadBooks(serieData.unreadBooks);
+        }
+    }, [serieData]);
 
-    const navigate = useNavigate();
+    const {data:serieBooks} = useQuery({
+        queryKey:keys.serieBooks(id),
+        queryFn:async()=>{
+            const response = await api.get<BookWithProgress[]>(`books/${serieData!.variant}?serie=${id}&sort=sortName`);
+            return response ?? [];
+        },
+        enabled:!!serieData
+    });
+
+    useTitle(serieData?.visibleName ?? (isLoading ? "Serie" : undefined));
 
     useEffect(() => {
         if (overflowingText.current) {
-        // Check if the text overflows after the component has been rendered
-            const isOverflowing = overflowingText.current.scrollHeight > overflowingText.current.clientHeight;
-            setTextOverflows(isOverflowing);
+            setTextOverflows(overflowingText.current.scrollHeight > overflowingText.current.clientHeight);
         }
-    }, []);
+    }, [serieData]);
 
-    useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            if (reloaded === "all") {
-                await booksRefetch();
-            }
-            await serieRefetch();
+    // Volumen por el que continuar la lectura
+    const currentBook = useMemo(()=>{
+        if (!serieBooks || serieBooks.length === 0) return undefined;
+
+        return serieBooks.find((book)=>book.status === "reading")
+            ?? serieBooks.find((book)=>book.status !== "completed")
+            ?? serieBooks[0];
+    }, [serieBooks]);
+
+    async function continueReading():Promise<void> {
+        if (!currentBook) return;
+
+        if (unreadBooks === 0) {
+            if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
         }
 
-        if (reloaded) {
-            void refetchBooks();
+        await openBook(currentBook, {confirmReread:false});
+    }
+
+    async function toggleReadlist():Promise<void> {
+        if (!serieData) return;
+
+        const next = !serieData.readlist;
+
+        // Actualización optimista
+        queryClient.setQueryData(keys.serie(id), {...serieData, readlist:next});
+
+        if (next) {
+            await addToReadlist(serieData._id, serieData.visibleName);
+        } else {
+            await removeFromReadlist(serieData._id, serieData.visibleName);
         }
-    }, [booksRefetch, serieRefetch, reloaded]);
 
-    function getReadButtonText():string {
-        if (!serieData) return "";
-        if (unreadBooks === 0) return "Leer de nuevo";
-
-        if (unreadBooks === serieData.bookCount) return "Empezar a leer";
-
-        return "Seguir leyendo";
+        invalidateReadlist();
     }
 
     function getCharacterCount():string {
         if (!serieBooks || serieBooks.length === 0) return "";
         let characters = 0;
 
-        serieBooks?.forEach((book)=>{
+        serieBooks.forEach((book)=>{
             characters += book.characters || 0;
         });
 
-        return `${characters} caracteres totales (${Math.floor(characters / serieBooks?.length)} caract./libro)`;
+        return `${characters.toLocaleString()} caracteres totales (${Math.floor(characters / serieBooks.length).toLocaleString()} por libro)`;
     }
 
-    const thumbnailUrl = serieData ? serieData.variant === "manga" ? `/api/static/mangas/${serieData.thumbnailPath}` : `/api/static/novelas/${serieData.thumbnailPath}` : "";
+    const ctaLabel = unreadBooks === 0 ? "Leer de nuevo" : unreadBooks === serieData?.bookCount ? "Empezar a leer" : "Seguir leyendo";
 
     if (isLoading) {
         return (
-            <div className="dark:bg-app-bg">
-                <SeriePageSkeleton/>
+            <div className="flex h-full items-center justify-center py-24">
+                <Spinner size={28} className="text-fg-muted" />
             </div>
         );
     }
 
-    if (isError) {
+    if (isError || !serieData) {
         return (
-            <div className="dark:bg-app-bg">
-                <SectionError message="No se pudo cargar la serie" onRetry={()=>{
-                    void serieRefetch();
-                }}/>
-            </div>
+            <ErrorState
+                title="No se pudo cargar la serie"
+                onRetry={()=>void refetch()}
+                className="py-24"
+            />
         );
     }
 
     return (
-        <div className="dark:bg-app-bg pb-4">
-            <Helmet>
-                <title>{`YomiYasu - ${serieData?.visibleName ? serieData?.visibleName : "serie"}`}</title>
-            </Helmet>
-            <div className="z-20 w-fill dark:bg-app-sidebar bg-app-sidebar flex items-center justify-between h-14 border-x border-0 border-solid border-app-border">
-                <div className="flex items-center mx-4 w-5/6 overflow-hidden">
-                    <IconButton onClick={()=>goBack(navigate)}>
-                        <ArrowBack/>
+        <div className="flex min-h-full flex-col">
+            <div className="sticky top-0 z-20 border-b border-app-border bg-app-sidebar">
+                <div className="flex h-14 items-center gap-1.5 px-3">
+                    <IconButton label="Volver atrás" onClick={()=>navigate(-1)}>
+                        <ArrowLeft />
                     </IconButton>
-                    {serieData && (
-                        <div className="flex gap-4 items-center w-full">
-                            <SerieSettings serieData={serieData} unreadBooks={unreadBooks} setUnreadBooks={setUnreadBooks}/>
-                            <p className="dark:text-white text-2xl max-w-[50%] overflow-hidden text-ellipsis whitespace-nowrap">{serieData.visibleName}</p>
-                            <p className="text-white px-3 py-1 bg-[#555555] rounded-md font-semibold">{serieData.bookCount}</p>
-                        </div>
-                    )}
-                </div>
-                {serieData && (
-                    <div className="flex items-center mx-4 flex-shrink-0 justify-end">
-                        <Tooltip title="Descargar serie">
-                            <IconButton onClick={()=>{
-                                window.open(`/api/series/${serieData._id}/download`);
-                            }}
-                            >
-                                <Download/>
+                    <CardMenu kind="serie" serie={serieData} unreadBooks={unreadBooks} onUnreadChanged={setUnreadBooks} />
+                    <h1 className="min-w-0 flex-1 truncate px-1 text-base font-semibold text-fg">{serieData.visibleName}</h1>
+                    {isFetching ? <Spinner size={14} className="text-fg-muted" /> : null}
+                    <Badge variant="neutral">{serieData.bookCount} libros</Badge>
+
+                    <div className="ml-2 flex items-center gap-1">
+                        <Tooltip content="Descargar serie">
+                            <IconButton label="Descargar serie" onClick={()=>window.open(`/api/series/${serieData._id}/download`)}>
+                                <Download />
                             </IconButton>
                         </Tooltip>
-                        {!serieData?.readlist ? (
-                            <Tooltip title="Añadir a &quot;Leer más tarde&quot;">
-                                <IconButton onClick={async()=>{
-                                    await addToReadlist(serieData._id, serieData.visibleName);
-                                    queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:true});
-                                }}
-                                >
-                                    <BookmarkAdd/>
-                                </IconButton>
-                            </Tooltip>
-                        ) : (
-                            <Tooltip title="Quitar de &quot;Leer más tarde&quot;">
-                                <IconButton onClick={async()=>{
-                                    await removeFromReadlist(serieData._id, serieData.visibleName);
-                                    queryClient.setQueryData(`serie-${id}`, {...serieData, readlist:false});
-                                }}
-                                >
-                                    <BookmarkRemove/>
-                                </IconButton>
-                            </Tooltip>
-                        )}
-                        {userData?.admin && (
-                            <EditSerie circleIcon serieData={serieData}/>
-                        )}
+                        <Tooltip content={serieData.readlist ? "Quitar de “Leer más tarde”" : "Añadir a “Leer más tarde”"}>
+                            <IconButton
+                                label={serieData.readlist ? "Quitar de Leer más tarde" : "Añadir a Leer más tarde"}
+                                variant={serieData.readlist ? "primary" : "ghost"}
+                                onClick={()=>void toggleReadlist()}
+                            >
+                                {serieData.readlist ? <BookmarkCheck /> : <Bookmark />}
+                            </IconButton>
+                        </Tooltip>
                     </div>
-                )}
+                </div>
             </div>
-            {serieData && (
-                <div className="px-8 overflow-y-scroll h-[calc(100svh-7.5rem)]">
-                    <div className="flex gap-8 flex-col lg:flex-row pt-8">
-                        <div className="flex flex-col items-center sm:items-start sm:flex-row w-full gap-8">
-                            <div className="relative w-[14rem] pointer-events-none flex-shrink-0">
-                                {unreadBooks > 0 && (
-                                    <div className="absolute top-0 right-0 text-white min-w-[1.5rem] h-6 text-center font-semibold">
-                                        <p className={`p-2 ${serieData.readlist ? "bg-accent" : "bg-primary"}`}>{unreadBooks}</p>
-                                    </div>
-                                )}
-                                <img loading="lazy" className="rounded-sm" src={thumbnailUrl} alt="" />
-                                {serieData.difficulty > 0 && (
-                                    <div className="absolute top-0 left-0 text-center font-semibold bg-white m-1 rounded-full">
-                                        <div className="relative">
-                                            <Whatshot fontSize="large"
-                                                sx={{color:getFlameColor(serieData.difficulty)}}
-                                            />
-                                            <p className="absolute left-1/2 -translate-x-1/2 text-lg text-white"
-                                                style={{textShadow:"-1px 0 gray, 0 1px gray, 1px 0 gray, 0 -1px gray"}}
-                                            >{serieData.difficulty.toFixed(1)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex sm:w-4/6 flex-col dark:text-white">
-                                <p className="text-3xl">{serieData.visibleName}</p>
-                                {serieData.status && (
-                                    <Button color={serieData.status === "PUBLISHING" ? "primary" : "error"} variant="outlined" className="w-fit py-0 my-4">{serieData.status === "PUBLISHING" ? "En publicación" : "Finalizado"}</Button>
-                                )}
-                                <p className="text py-4 pt-2 text-sm">{serieData.bookCount} libros</p>
-                                <p className="text py-4 pt-2 text-sm">{getCharacterCount()}</p>
-                                {serieBooks && serieBooks.length > 0 && (
-                                    <Button color="inherit" variant="contained" className="w-fit my-2 py-1 px-2" onClick={async()=>{
-                                        if (unreadBooks === 0) {
-                                            if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
-                                        }
-                                        let bookId = 0;
-                                        serieBooks.forEach((book, i)=>{
-                                            if (book.status === "reading") {
-                                                bookId = i;
-                                                return;
-                                            }
-                                        });
-                                        if (serieData.variant === "manga") {
-                                            goTo(navigate, `/reader/${serieBooks[bookId]._id}`);
-                                            return;
-                                        }
 
-                                        // NOVELA
-                                        await openNovel(ttuConnector, serieBooks[bookId], false, false);
-                                    }}
-                                    >{getReadButtonText()}
-                                    </Button>
-                                )}
-                                {serieData.summary && (
-                                    <div className="text-sm mt-4">
-                                        <p className="overflow-hidden whitespace-pre-line" ref={overflowingText} style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}>{serieData.summary.replace(/(<([^>]+)>)/ig, "")}</p>
-                                        {textOverflows && (
-                                            <Button className="text-gray-500" onClick={()=>setReadMore(!readMore)}>Leer {readMore ? "menos" : "más"} {readMore ? <ArrowDropUp/> : <ArrowDropDown/>}</Button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="w-full md:w-3/4 lg:w-1/2 mx-auto">
-                            <Reviews serieData={serieData}/>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-8 pb-4">
-                        {serieData.genres.length > 0 && (
-                            <div className="flex dark:text-white items-center">
-                                <p className="w-[14rem] text-sm">GÉNEROS</p>
-                                <ul className="list-none flex gap-2 text-xs">
-                                    {serieData.genres.map((genre)=>(
-                                        <Button onClick={()=>goTo(navigate, `/app/library?genre=${genre}`)}
-                                            onMouseDown={(e)=>{
-                                                if (e.button === 1) {
-                                                    window.open(`/app/library?genre=${genre}`, "_blank")?.focus();
-                                                }
-                                            }}
-                                            className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={genre}
-                                        >{genre}
-                                        </Button>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {serieData.authors.length > 0 && (
-                            <div className="flex dark:text-white items-center">
-                                <p className="w-[14rem] text-sm">AUTORES</p>
-                                <ul className="list-none flex gap-2 text-xs">
-                                    {serieData.authors.map((author)=>(
-                                        <Button onClick={()=>goTo(navigate, `/app/library?author=${author}`)}
-                                            onMouseDown={(e)=>{
-                                                if (e.button === 1) {
-                                                    window.open(`/app/library?author=${author}`, "_blank")?.focus();
-                                                }
-                                            }}
-                                            className="px-2 py-0 dark:text-white text-black normal-case border border-solid border-gray-700 rounded-md" key={author}
-                                        >{author}
-                                        </Button>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="px-1">
-                        {id && serieData.unreadBooks !== serieData.bookCount && serieBooks && (
-                            <Accordion TransitionProps={{unmountOnExit: true}}>
-                                <AccordionSummary expandIcon={<ExpandMore/>}>
-                                    <p>Tu velocidad de lectura</p>
-                                </AccordionSummary>
-                                <AccordionDetails className="max-w-[1000px]">
-                                    <div className="py-4">
-                                        <SpeedGraph serieId={id} books={serieBooks}/>
-                                    </div>
-                                </AccordionDetails>
-                            </Accordion>
-                        )}
-                    </div>
-                    <ul className="flex flex-wrap gap-4 py-4 pb-8">
-                        {serieBooks && serieBooks.length > 0 && serieBooks.map((book, i)=>(
-                            <BookComponent key={book._id} bookData={book} insideSerie forceRead={unreadBooks === 0}
-                                blurred={(serieData.bookCount - unreadBooks) < i} noVariantIndicator
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 lg:px-8 lg:py-8">
+                <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
+                    {/* Portada + metadatos */}
+                    <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
+                        <div className="relative w-40 shrink-0 lg:w-48">
+                            <CoverImage
+                                loading="lazy"
+                                decoding="async"
+                                className="aspect-[9/13] w-full rounded-lg object-cover"
+                                src={encodeURI(serieThumbnail(serieData))}
+                                alt={serieData.visibleName}
                             />
+                            {unreadBooks > 0 ? (
+                                <span className={`absolute right-0 top-0 rounded-bl-md px-2 py-0.5 text-xs font-semibold text-white ${serieData.readlist ? "bg-accent" : "bg-primary"}`}>
+                                    {unreadBooks} sin leer
+                                </span>
+                            ) : null}
+                        </div>
+
+                        <div className="flex min-w-0 flex-col items-start gap-2">
+                            <h2 className="text-2xl font-bold text-fg lg:text-3xl">{serieData.visibleName}</h2>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {serieData.status ? (
+                                    <Badge variant={serieData.status === "PUBLISHING" ? "success" : "neutral"}>
+                                        {serieData.status === "PUBLISHING" ? "En publicación" : "Finalizada"}
+                                    </Badge>
+                                ) : null}
+                                {serieData.difficulty > 0 ? (
+                                    <Badge variant="outline">Dificultad {serieData.difficulty.toFixed(1)}/10</Badge>
+                                ) : null}
+                                {serieData.paused ? <Badge variant="warning">Pausada</Badge> : null}
+                            </div>
+                            {serieBooks && serieBooks.length > 0 ? (
+                                <p className="text-xs text-fg-muted">{getCharacterCount()}</p>
+                            ) : null}
+
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <Button size="lg" icon={<Play className="size-4" fill="currentColor" />} onClick={()=>void continueReading()} loading={isFetching}>
+                                    {ctaLabel}
+                                </Button>
+                                {userData?.admin ? (
+                                    <span className="text-xs text-fg-muted">Gestiona la serie desde el menú ⋮</span>
+                                ) : null}
+                            </div>
+
+                            {serieData.summary ? (
+                                <div className="mt-3 text-sm text-fg-muted">
+                                    <p
+                                        className="overflow-hidden whitespace-pre-line"
+                                        ref={overflowingText}
+                                        style={{maxHeight:readMore ? "100%" : "11.25rem", transition:"max-height 0.3s ease"}}
+                                    >
+                                        {serieData.summary.replace(/(<([^>]+)>)/ig, "")}
+                                    </p>
+                                    {textOverflows ? (
+                                        <button
+                                            type="button"
+                                            className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                            onClick={()=>setReadMore(!readMore)}
+                                        >
+                                            Leer {readMore ? "menos" : "más"}
+                                            {readMore ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                                        </button>
+                                    ) : null}
+                                </div>
+                            ) : null}
+                        </div>
+                    </div>
+
+                    <div className="w-full shrink-0 lg:ml-auto lg:w-80">
+                        <Reviews serieData={serieData} />
+                    </div>
+                </div>
+
+                {/* Géneros y autores */}
+                <div className="flex flex-col gap-3">
+                    {serieData.genres.length > 0 ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p className="w-20 text-[11px] font-semibold uppercase tracking-wider text-fg-muted/80">Géneros</p>
+                            {serieData.genres.map((genre)=>(
+                                <Link
+                                    key={genre}
+                                    to={`/app/library/${serieData.variant === "manga" ? "manga" : "novels"}?genre=${encodeURIComponent(genre)}`}
+                                    className="rounded-full border border-app-border px-3 py-1 text-xs font-medium text-fg-muted transition-colors hover:border-primary/50 hover:text-primary hover:no-underline"
+                                >
+                                    {genre}
+                                </Link>
+                            ))}
+                        </div>
+                    ) : null}
+                    {serieData.authors.length > 0 ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p className="w-20 text-[11px] font-semibold uppercase tracking-wider text-fg-muted/80">Autores</p>
+                            {serieData.authors.map((author)=>(
+                                <Link
+                                    key={author}
+                                    to={`/app/library/${serieData.variant === "manga" ? "manga" : "novels"}?author=${encodeURIComponent(author)}`}
+                                    className="rounded-full border border-app-border px-3 py-1 text-xs font-medium text-fg-muted transition-colors hover:border-primary/50 hover:text-primary hover:no-underline"
+                                >
+                                    {author}
+                                </Link>
+                            ))}
+                        </div>
+                    ) : null}
+                </div>
+
+                {/* Velocidad de lectura */}
+                {id && serieData.unreadBooks !== serieData.bookCount && serieBooks ? (
+                    <Accordion type="single" collapsible>
+                        <AccordionItem value="speed" className="rounded-lg border border-app-border bg-app-surface px-4">
+                            <AccordionTrigger>Tu velocidad de lectura</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="pt-1">
+                                    <SpeedGraph serieId={id} books={serieBooks} />
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                ) : null}
+
+                {/* Volúmenes */}
+                {serieBooks && serieBooks.length > 0 ? (
+                    <ul className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-5">
+                        {serieBooks.map((book, index)=>(
+                            <li key={book._id} className="[content-visibility:auto] [contain-intrinsic-size:auto_260px]">
+                                <CoverCard
+                                    kind="book"
+                                    book={book}
+                                    insideSerie
+                                    forceRead={unreadBooks === 0}
+                                    blurred={(serieData.bookCount - unreadBooks) < index}
+                                    noVariantIndicator
+                                />
+                            </li>
                         ))}
                     </ul>
-                </div>
-            )}
+                ) : (
+                    <EmptyState title="Sin volúmenes" description="Esta serie todavía no tiene libros en la biblioteca." />
+                )}
+            </div>
         </div>
     );
 }

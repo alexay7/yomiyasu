@@ -20,8 +20,9 @@ export const mokuroStyles = `
  * Script que se inyecta en el HTML generado por mokuro para hacerlo compatible
  * con el formato iframe dentro de otro documento.
  */
-export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDisplayOcr?:boolean}):string {
-    const displayOcrClick = options?.clickDisplayOcr ? "document.getElementById(\"menuDisplayOCR\").click();" : "";
+export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDisplayOcr?:boolean; sanePageIdx?:number}):string {
+    const displayOcrClick = options?.clickDisplayOcr ? "clickById(\"menuDisplayOCR\");" : "";
+    const sanePageIdx = options?.sanePageIdx ?? 0;
 
     return `
                 (function(){
@@ -29,6 +30,18 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                      * Recibe los mensajes del parent para realizar las acciones indicadas
                      */ 
                     let zoomEnabled = true;
+
+                    // Accesos defensivos a los controles de mokuro (pueden faltar en páginas no estándar)
+                    function clickById(id){
+                        const el = document.getElementById(id);
+                        if (el) el.click();
+                    }
+                    function setValueById(id, value){
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        el.value = value;
+                        el.dispatchEvent(new Event("change"));
+                    }
                     ${displayOcrClick}
     
                         window.addEventListener("message",
@@ -55,43 +68,39 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                                 case "setSettings":{
                                     switch(event.data.property){
                                         case "r2l":{
-                                            document.getElementById("menuR2l").click();
+                                            clickById("menuR2l");
                                             break;
                                         };
                                         case "ctrlToPan":{
-                                            document.getElementById("menuCtrlToPan").click();
+                                            clickById("menuCtrlToPan");
                                             break;
                                         };
                                         case "doublePage":{
-                                            document.getElementById("menuDoublePageView").click();
+                                            clickById("menuDoublePageView");
                                             break;
                                         };
                                         case "coverPage":{
-                                            document.getElementById("menuHasCover").click();
+                                            clickById("menuHasCover");
                                             break;
                                         };
                                         case "borders":{
-                                            document.getElementById("menuTextBoxBorders").click();
+                                            clickById("menuTextBoxBorders");
                                             break;
                                         };
                                         case "ocr":{
-                                            document.getElementById("menuDisplayOCR").click();
+                                            clickById("menuDisplayOCR");
                                             break;
                                         };
                                         case "fontSize":{
-                                            document.getElementById("menuFontSize").value=event.data.value;
-                                            const newEvent = new Event("change");
-                                            document.getElementById("menuFontSize").dispatchEvent(newEvent);
+                                            setValueById("menuFontSize", event.data.value);
                                             break;
                                         };
                                         case "defaultZoom":{
-                                            document.getElementById("menuDefaultZoom").value=event.data.value;
-                                            const newEvent = new Event("change");
-                                            document.getElementById("menuDefaultZoom").dispatchEvent(newEvent);
+                                            setValueById("menuDefaultZoom", event.data.value);
                                             break;
                                         };
                                         case "toggleBoxes":{
-                                            document.getElementById("menuToggleOCRTextBoxes").click();
+                                            clickById("menuToggleOCRTextBoxes");
                                             break;
                                         };
                                         case "enableZoom":{
@@ -177,8 +186,10 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                     ${readerSettings.panAndZoom ? "" : "pz.pause();zoomEnabled=false;"}
     
                     // Oculta el menú de mokuro
-                    document.getElementById('topMenu').style.display="none";
-                    document.getElementById('showMenuA').style.display="none";
+                    const topMenuEl = document.getElementById('topMenu');
+                    const showMenuEl = document.getElementById('showMenuA');
+                    if (topMenuEl) topMenuEl.style.display="none";
+                    if (showMenuEl) showMenuEl.style.display="none";
                     // Get color from localStorage
                     const color = window.localStorage.getItem("color-theme");
                     if (color === "dark") {
@@ -258,6 +269,8 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                     const preload = document.getElementById('preload-image');
     
                     function preloadImage() {
+                        if (!preload) return;
+
                         let preloadContent = '';
                   
                         for (let i = 0; i < 5; i++) {
@@ -276,6 +289,43 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                         preloadImage();
                         getText();
                         window.parent.postMessage({action:"newPage",value:new_page_idx},"*");
+                    }
+
+                    /**
+                     * Repara estados corruptos de mokuro.
+                     *
+                     * Mokuro persiste page_idx negativos (estado de "portada") y su
+                     * updatePage llama a getPage(state.page_idx) sin acotar: con un
+                     * índice inválido lanza una excepción, no pinta ninguna página y
+                     * el lector se queda en negro. Aquí se normaliza el estado y se
+                     * fuerza un repintado antes de que el usuario lo note.
+                     */
+                    try {
+                        const numPages = document.querySelectorAll('.pageContainer').length;
+
+                        if (numPages > 0) {
+                            const maxIdx = numPages - 1;
+                            const fallback = Math.min(Math.max(0, ${sanePageIdx}), maxIdx);
+                            let changed = false;
+
+                            if (!Number.isInteger(state.page_idx) || state.page_idx < 0 || state.page_idx > maxIdx) {
+                                state.page_idx = fallback;
+                                changed = true;
+                            }
+
+                            if (Number(state.page2_idx) > maxIdx) {
+                                state.page2_idx = -1;
+                                changed = true;
+                            }
+
+                            if (changed) {
+                                saveState();
+                            }
+
+                            updatePage(state.page_idx);
+                        }
+                    } catch (repairError) {
+                        console.warn("No se pudo reparar el estado de mokuro", repairError);
                     }
                 })()
                 `;

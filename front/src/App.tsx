@@ -1,12 +1,9 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { createTheme, responsiveFontSizes, ThemeProvider } from '@mui/material'
-import {esES} from "@mui/material/locale";
-import { ColorModeContext } from './contexts/ColorModeContext'
-import { Helmet } from 'react-helmet'
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router';
 import { Loading } from './pages/Loading/Loading';
 import { useAuth } from './contexts/AuthContext';
 import { ConfirmDialog } from './components/ConfirmDialog/ConfirmDialog';
+import { RouteFallback } from './components/AppLayout/RouteFallback';
 
 const AppLayout = lazy(() => import('./components/AppLayout/AppLayout'));
 const ProtectedLayout = lazy(() => import('./components/Protection/ProtectedLayout'));
@@ -29,72 +26,29 @@ const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
 
 function App() {
-  const [mode, setMode] = useState<"dark" | "light">("dark");
-
-  useEffect(() => {
-      setMode(window.localStorage.getItem("color-theme") as "dark" | "light" || "dark");
-  }, []);
-
-  const colorMode = useMemo(
-      () => ({
-          toggleColorMode: () => {
-              setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-          }
-      }),
-      []
-  );
-
-  let theme = useMemo(
-      () =>{
-          return createTheme(
-              {
-                  palette: {
-                      mode: mode,
-                      primary:{
-                          main:"#308054"
-                      }
-                  }
-              }, esES
-          )
-        },
-        [mode]
-  );
-
-  theme = responsiveFontSizes(theme);
-
   const {loading} = useAuth();
 
   return (
-    <ColorModeContext.Provider value={colorMode}>
-    <ThemeProvider theme={theme}>
-        <Helmet
-            meta={[
-                {
-                    name: "theme-color",
-                    content: "#101010"
-                }
-            ]}
-        >
-        </Helmet>
+        <>
         {loading ? <Loading/> : (
             <Routes>
                 <Route path="/" element={<Navigate to="/app"/>}/>
                 <Route path="/login" element={<Suspense fallback={<Loading/>}><Login/></Suspense>}/>
                 <Route path="/coderedeem" element={<Suspense fallback={<Loading/>}><Register/></Suspense>}/>
                 <Route path="/app" element={<ProtectedLayout><AppLayout/></ProtectedLayout>}>
-                    <Route index element={<Suspense fallback={<Loading/>}><Home/></Suspense>}/>
+                    <Route index element={<Suspense fallback={<RouteFallback/>}><Home/></Suspense>}/>
                     <Route path="library">
                         <Route index element={<Navigate to="manga" replace/>}/>
-                        <Route path="manga" element={<Suspense fallback={<Loading/>}><Library variant="manga"/></Suspense>}/>
-                        <Route path="novels" element={<Suspense fallback={<Loading/>}><Library variant="novela"/></Suspense>}/>
+                        <Route path="manga" element={<Suspense fallback={<RouteFallback/>}><Library variant="manga"/></Suspense>}/>
+                        <Route path="novels" element={<Suspense fallback={<RouteFallback/>}><Library variant="novela"/></Suspense>}/>
                     </Route>
-                    <Route path="series/:id" element={<Suspense fallback={<Loading/>}><Serie/></Suspense>}/>
-                    <Route path="words" element={<Suspense fallback={<Loading/>}><Words/></Suspense>}/>
-                    <Route path="history" element={<Suspense fallback={<Loading/>}><History/></Suspense>}/>
-                    <Route path="profile" element={<Suspense fallback={<Loading/>}><Stats/></Suspense>}/>
-                    <Route path="calendar" element={<Suspense fallback={<Loading/>}><Calendar/></Suspense>}/>
-                    <Route path="admin" element={<Suspense fallback={<Loading/>}><Admin/></Suspense>}/>
-                    <Route path="*" element={<Suspense fallback={<Loading/>}><NotFound/></Suspense>}/>
+                    <Route path="series/:id" element={<Suspense fallback={<RouteFallback/>}><Serie/></Suspense>}/>
+                    <Route path="words" element={<Suspense fallback={<RouteFallback/>}><Words/></Suspense>}/>
+                    <Route path="history" element={<Suspense fallback={<RouteFallback/>}><History/></Suspense>}/>
+                    <Route path="profile" element={<Suspense fallback={<RouteFallback/>}><Stats/></Suspense>}/>
+                    <Route path="calendar" element={<Suspense fallback={<RouteFallback/>}><Calendar/></Suspense>}/>
+                    <Route path="admin" element={<Suspense fallback={<RouteFallback/>}><Admin/></Suspense>}/>
+                    <Route path="*" element={<Suspense fallback={<RouteFallback/>}><NotFound/></Suspense>}/>
                 </Route>
                 <Route path="reader/:id" element={<Suspense fallback={<Loading/>}><Reader type="remote"/></Suspense>}/>
                 <Route path="ranobe/:id" element={<Suspense fallback={<Loading/>}><EpubReader/></Suspense>}/>
@@ -104,8 +58,7 @@ function App() {
             </Routes>
         )}
         <ConfirmDialog/>
-    </ThemeProvider>
-</ColorModeContext.Provider>
+        </>
   )
 }
 

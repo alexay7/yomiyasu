@@ -1,4 +1,3 @@
-import {NavigateFunction} from "react-router-dom";
 import {api} from "../api/api";
 import {RefreshResponse} from "../types/responses";
 import {setCookie} from "./cookies";
@@ -33,24 +32,7 @@ export async function checkRefreshToken():Promise<RefreshResponse> {
     }
 }
 
-export function goTo(navigate:NavigateFunction, link:string):void {
-    let origin = window.location.pathname.replace("login", "");
 
-    if (origin.includes("reader") || origin.includes("ranobe")) {
-        origin = "/";
-    }
-
-    window.localStorage.setItem("origin", origin);
-    navigate(link);
-}
-
-export function goBack(navigate:NavigateFunction):void {
-    let origin = window.localStorage.getItem("origin") || "/";
-    if (origin === window.location.pathname) {
-        origin = "/";
-    }
-    navigate(origin);
-}
 
 export function convertBase64(file:File):Promise<string | ArrayBuffer | null> {
     return new Promise((resolve, reject) => {

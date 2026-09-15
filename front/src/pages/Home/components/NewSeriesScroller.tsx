@@ -1,38 +1,26 @@
-import React, {useEffect} from "react";
-import {useQuery} from "react-query";
+import React from "react";
+import {useQuery} from "@tanstack/react-query";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
-import {useGlobal} from "../../../contexts/GlobalContext";
 import {SeriesFilter} from "../../../types/serie";
+import {keys} from "../../../lib/queryKeys";
 
 interface NewSeriesScrollerProps {
     variant:"manga" | "novela";
 }
 
 function NewSeriesScroller({variant}:NewSeriesScrollerProps):React.ReactElement {
-    const {reloaded} = useGlobal();
-    const {data:newSeries = [], refetch:newSeriesRefetch, isLoading, isError} = useQuery(["newseries", variant], async()=> {
-        const res = await api.get<SeriesFilter>(`series/${variant}?sort=!_id&limit=15`);
+    const {data:newSeries = [], refetch:newSeriesRefetch, isLoading, isError} = useQuery({
+        queryKey:keys.newSeries(variant),
+        queryFn:async()=> {
+            const res = await api.get<SeriesFilter>(`series/${variant}?sort=!_id&limit=15`);
 
-        if (!res) return [];
+            if (!res) return [];
 
-        return res.data;
+            return res.data;
+        }
     });
-
-    useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            await Promise.all([
-                newSeriesRefetch()
-            ]);
-        }
-
-        if (reloaded && reloaded !== "reviews") {
-            setTimeout(()=>{
-                void refetchBooks();
-            }, 1000);
-        }
-    }, [newSeriesRefetch, reloaded]);
 
     const title = `Series de ${variant === "manga" ? "manga" : "novelas"} nuevas`;
 
@@ -47,7 +35,9 @@ function NewSeriesScroller({variant}:NewSeriesScrollerProps):React.ReactElement 
     if (newSeries.length === 0) return <></>;
 
     return (
-        <ComponentScroller variant={variant} type="series" title={title} components={newSeries} noVariantIndicator/>
+        <ComponentScroller type="series" title={title} components={newSeries} noVariantIndicator
+            moreLink={`/app/library/${variant === "manga" ? "manga" : "novels"}?sortBy=!_id`}
+        />
     );
 }
 

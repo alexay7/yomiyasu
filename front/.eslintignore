@@ -1,2 +1,2 @@
-tailwind.config.js
+# El proyecto es TypeScript; se ignoran los JS sueltos (configs, builds)
 *.js

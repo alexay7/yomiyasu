@@ -1,7 +1,11 @@
 # Yomiyasu Front
 
-Frontend web (React 18 + Vite + MUI + Tailwind + zustand + react-query + socket.io-client)
-contra la API de Yomiyasu.
+Frontend web (React 19 + Vite + Tailwind CSS v4 + React Router 8 + zustand + TanStack
+Query v5 + socket.io-client) contra la API de Yomiyasu.
+
+El sistema de diseño propio vive en `src/ui/` (primitivas sobre Radix + Tailwind) con los
+tokens en `src/index.css` (`@theme`). Puede desplegarse con preflight de Tailwind sin
+dependencias de UI externas.
 
 ## Desarrollo
 
@@ -35,3 +39,10 @@ YOMIYASU_WS_TARGET=https://manga.manabe.es
 
 Reinicia `pnpm dev` tras cambiar los valores. `pnpm preview` hereda la misma configuración
 de proxy.
+
+## Portadas
+
+`CoverImage` (`src/components/CoverImage.tsx`) pide primero la miniatura webp de 480px que el
+backend genera en `exterior/thumbnails/` durante el rescan (`thumbUrl()` en `src/lib/media.ts`)
+y cae automáticamente a la portada original si todavía no existe (404). Por eso el front puede
+desplegarse antes que el backend + rescan sin romper ninguna imagen.

@@ -116,7 +116,7 @@ export async function deleteBookBookmark(bookId?:number):Promise<void> {
     });
 }
 
-export async function openNovel(connector:React.RefObject<HTMLIFrameElement>, bookData:Book, mouse?:boolean, incognito?:boolean):Promise<void> {
+export async function openNovel(connector:React.RefObject<HTMLIFrameElement | null>, bookData:Book, mouse?:boolean, incognito?:boolean):Promise<void> {
     // NOVELA
     if (!connector.current) return;
 

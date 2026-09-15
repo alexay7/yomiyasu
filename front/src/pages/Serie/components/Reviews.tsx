@@ -1,81 +1,112 @@
-import React, {Fragment} from "react";
-import {FullSerie} from "../../../types/serie";
-import {Divider, IconButton, Rating} from "@mui/material";
-import {Delete, Whatshot} from "@mui/icons-material";
-import {ReviewForm} from "./AddReview";
-import {useAuth} from "../../../contexts/AuthContext";
-import {api} from "../../../api/api";
+import {MessageSquarePlus, Trash2} from "lucide-react";
+import {useEffect, useState} from "react";
+import {useSearchParams} from "react-router";
 import {toast} from "react-toastify";
-import {useGlobal} from "../../../contexts/GlobalContext";
+import {api} from "../../../api/api";
+import {useAuth} from "../../../contexts/AuthContext";
+import {invalidateSerie} from "../../../lib/invalidate";
 import {confirmDialog} from "../../../stores/ConfirmStore";
+import type {FullSerie} from "../../../types/serie";
+import {Badge} from "../../../ui/Badge";
+import {EmptyState} from "../../../ui/EmptyState";
+import {FlameRating} from "../../../ui/FlameRating";
+import {IconButton} from "../../../ui/IconButton";
+import {Rating} from "../../../ui/Rating";
+import {ReviewFormDialog} from "./AddReview";
 
 interface ReviewProps {
-    serieData:FullSerie
+    serieData:FullSerie;
 }
 
-export function Reviews(props:ReviewProps):React.ReactElement {
-    const {serieData} = props;
+export function Reviews({serieData}:ReviewProps):React.ReactElement {
     const {userData} = useAuth();
-    const {forceReload} = useGlobal();
+    const [searchParams] = useSearchParams();
+    const [formOpen, setFormOpen] = useState(false);
+
+    // Flujo "has terminado la serie": abre el formulario automáticamente
+    useEffect(()=>{
+        if (searchParams.get("finished")) {
+            setFormOpen(true);
+        }
+        // Solo al montar
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     async function deleteReview(reviewId:string):Promise<void> {
         const res = await api.delete<{status:string}>(`reviews/${reviewId}`);
 
         if (res) {
             toast.success("Valoración borrada con éxito");
-            forceReload("reviews");
+            invalidateSerie(serieData._id);
         }
     }
 
     return (
-        <div className="border-[#0000008a] dark:border-[#212121] border-2 border-solid rounded-md p-2 dark:bg-[#363636] dark:text-white">
-            <div className="relative flex items-center justify-center py-3">
-                <p className="dark:text-white text-center font-semibold">Valoraciones de usuarios ({serieData.reviews.length})</p>
-                <ReviewForm serieData={serieData}/>
-            </div>
-            <Divider/>
-            <ul className="py-2 max-h-[18rem] overflow-y-auto">
-                {serieData.reviews.map((review)=>(
-                    <Fragment key={review._id}>
-                        <li className="relative flex flex-col py-2 gap-1">
-                            {userData?._id === review.user && (
-                                <IconButton size="small" className="absolute top-0 right-0" onClick={async()=>{
-                                    if (await confirmDialog("¿Seguro que quieres borrar la valoración?")) {
-                                        void deleteReview(review._id || "");
-                                    }
-                                }}
-                                >
-                                    <Delete color="error"/>
-                                </IconButton>
-                            )}
-                            <p><span className="font-semibold">Autor:</span> {review.name} <span className="text-xs align-top font-bold">{review.userLevel}</span></p>
+        <section className="flex flex-col rounded-xl border border-app-border bg-app-surface">
+            <header className="flex items-center justify-between gap-2 border-b border-app-border px-4 py-3">
+                <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-fg">Valoraciones</h3>
+                    <Badge variant="neutral">{serieData.reviews.length}</Badge>
+                </div>
+                <IconButton label="Añadir valoración" variant="primary" size="sm" onClick={()=>setFormOpen(true)}>
+                    <MessageSquarePlus />
+                </IconButton>
+            </header>
 
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold">Dificultad:</span>
-                                <Rating readOnly value={review.difficulty}
-                                    icon={<Whatshot color="primary"/>}
-                                    emptyIcon={<Whatshot/>}
-                                />
+            {serieData.reviews.length === 0 ? (
+                <EmptyState
+                    title="Todavía no hay valoraciones"
+                    description="Comparte tu dificultad y valoración con otros lectores."
+                    className="py-8"
+                />
+            ) : (
+                <ul className="flex max-h-96 flex-col divide-y divide-app-border overflow-y-auto">
+                    {serieData.reviews.map((review)=>(
+                        <li key={review._id} className="relative flex flex-col gap-2 px-4 py-3">
+                            {userData?._id === review.user ? (
+                                <IconButton
+                                    label="Borrar valoración"
+                                    variant="danger"
+                                    size="sm"
+                                    className="absolute right-2 top-2"
+                                    onClick={async()=>{
+                                        if (await confirmDialog("¿Seguro que quieres borrar la valoración?")) {
+                                            void deleteReview(review._id || "");
+                                        }
+                                    }}
+                                >
+                                    <Trash2 />
+                                </IconButton>
+                            ) : null}
+
+                            <p className="flex items-center gap-2 pr-8 text-sm text-fg">
+                                <span className="font-medium">{review.name}</span>
+                                <Badge variant="outline">{review.userLevel}</Badge>
+                            </p>
+
+                            <div className="flex items-center gap-2 text-xs text-fg-muted">
+                                <span>Dificultad</span>
+                                <FlameRating value={review.difficulty} difficulty={(review.difficulty / 5) * 10} />
                             </div>
 
-                            {review.valoration && (
-                                <div className="flex items-center gap-2">
-                                    <span className="font-semibold">Valoración:</span>
-                                    <Rating readOnly value={review.valoration / 2} max={5} precision={0.5}/>
+                            {review.valoration ? (
+                                <div className="flex items-center gap-2 text-xs text-fg-muted">
+                                    <span>Valoración</span>
+                                    <Rating value={review.valoration / 2} />
                                 </div>
-                            )}
+                            ) : null}
 
-                            {review.comment && (
-                                <div className="flex rounded-md flex-col gap-2 border-dashed border border-[#212121] p-2">
-                                    <span className="font-semibold">Comentario:</span>
-                                    <p className="dark:text-gray-300 text-gray-600 text-sm">{review.comment}</p>
-                                </div>
-                            )}
+                            {review.comment ? (
+                                <p className="rounded-lg border border-dashed border-app-border p-2 text-sm text-fg-muted">
+                                    {review.comment}
+                                </p>
+                            ) : null}
                         </li>
-                        <Divider/>
-                    </Fragment>
-                ))}
-            </ul>
-        </div>
+                    ))}
+                </ul>
+            )}
+
+            <ReviewFormDialog serie={serieData} open={formOpen} onOpenChange={setFormOpen} />
+        </section>
     );
 }

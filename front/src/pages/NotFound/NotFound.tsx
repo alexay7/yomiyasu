@@ -1,21 +1,22 @@
-import {SearchOff} from "@mui/icons-material";
-import {Button} from "@mui/material";
+import {SearchX} from "lucide-react";
 import React from "react";
-import {Helmet} from "react-helmet";
-import {Link} from "react-router-dom";
+import {useNavigate} from "react-router";
+import {useTitle} from "../../lib/useTitle";
+import {Button} from "../../ui/Button";
 
 export default function NotFound():React.ReactElement {
+    const navigate = useNavigate();
+
+    useTitle("Página no encontrada");
+
     return (
-        <div className="flex flex-col items-center justify-center gap-4 h-[100svh] dark:bg-app-bg text-center px-4">
-            <Helmet>
-                <title>YomiYasu - Página no encontrada</title>
-            </Helmet>
-            <SearchOff className="w-32 h-32" color="primary"/>
-            <h1 className="text-4xl dark:text-white">Página no encontrada</h1>
-            <p className="text-lg dark:text-gray-300">La página que buscas no existe o ha sido movida.</p>
-            <Link to="/app">
-                <Button variant="contained">Volver al inicio</Button>
-            </Link>
+        <div className="flex min-h-[70svh] flex-col items-center justify-center gap-4 px-4 text-center">
+            <span className="flex size-16 items-center justify-center rounded-full bg-tint text-fg-muted">
+                <SearchX className="size-8" strokeWidth={1.5} />
+            </span>
+            <h1 className="text-2xl font-bold text-fg">Página no encontrada</h1>
+            <p className="text-sm text-fg-muted">La página que buscas no existe o ha sido movida.</p>
+            <Button onClick={()=>navigate("/app")}>Volver al inicio</Button>
         </div>
     );
 }

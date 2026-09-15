@@ -1,11 +1,18 @@
-import {Check, Image} from "@mui/icons-material";
-import {Button, FormControl, FormControlLabel, IconButton, InputLabel, MenuItem, Select, TextField, Tooltip} from "@mui/material";
-import React, {FormEvent, useState} from "react";
-import {Helmet} from "react-helmet";
-import {useQuery} from "react-query";
-import {useSearchParams} from "react-router-dom";
+import {Check, CircleAlert, Image as ImageIcon, Link2, Music, Upload} from "lucide-react";
+import React, {type FormEvent, useEffect, useRef, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
+import {useSearchParams} from "react-router";
 import {toast} from "react-toastify";
 import {convertBase64} from "../../helpers/helpers";
+import {keys} from "../../lib/queryKeys";
+import {useTitle} from "../../lib/useTitle";
+import {Badge} from "../../ui/Badge";
+import {Button} from "../../ui/Button";
+import {Field} from "../../ui/Field";
+import {Input} from "../../ui/Input";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../ui/Select";
+import {Separator} from "../../ui/Separator";
+import {Textarea} from "../../ui/Textarea";
 
 interface AnkiAction {
     action:string,
@@ -19,6 +26,73 @@ interface AnkiAction {
             audio?:Record<string, unknown>[]
         }
     }
+}
+
+interface FieldSelectProps {
+    label:string;
+    value:string;
+    options:string[];
+    onChange:(value:string) => void;
+    /** Permite la opción "No añadir" (vacío). */
+    allowEmpty?:boolean;
+    id:string;
+}
+
+const NONE_VALUE = "__none__";
+
+function FieldSelect({label, value, options, onChange, allowEmpty = false, id}:FieldSelectProps):React.ReactElement {
+    return (
+        <Field label={label} htmlFor={id}>
+            <Select
+                value={allowEmpty && value === "" ? NONE_VALUE : value}
+                onValueChange={(next)=>onChange(next === NONE_VALUE ? "" : next)}
+            >
+                <SelectTrigger id={id} className="h-9">
+                    <SelectValue placeholder="Selecciona un campo" />
+                </SelectTrigger>
+                <SelectContent>
+                    {allowEmpty ? <SelectItem value={NONE_VALUE}>No añadir</SelectItem> : null}
+                    {options.map((option)=>(
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </Field>
+    );
+}
+
+function FilePicker({accept, file, onSelect, label}:{accept:string; file:File | null; onSelect:(file:File) => void; label:string}):React.ReactElement {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    return (
+        <div className="flex items-center gap-2">
+            <Button
+                variant="secondary"
+                size="sm"
+                icon={<Upload className="size-3.5" />}
+                onClick={()=>inputRef.current?.click()}
+            >
+                {file ? "Cambiar archivo" : label}
+            </Button>
+            {file ? (
+                <span className="flex min-w-0 items-center gap-1.5 text-xs text-success">
+                    <Check className="size-3.5 shrink-0" />
+                    <span className="truncate">{file.name}</span>
+                </span>
+            ) : null}
+            <input
+                ref={inputRef}
+                hidden
+                type="file"
+                accept={accept}
+                onChange={(e)=>{
+                    if (e.target.files && e.target.files.length > 0) {
+                        onSelect(e.target.files[0]);
+                    }
+                }}
+            />
+        </div>
+    );
 }
 
 function Anki():React.ReactElement {
@@ -39,62 +113,97 @@ function Anki():React.ReactElement {
     const [audioField, setAudioField] = useState("");
 
     const [connected, setConnect] = useState(false);
+    const [sending, setSending] = useState(false);
+
+    useTitle("Añadir carta a Anki");
 
     const ankiUrl = "http://localhost:8765";
 
-    const {data:userDecks, refetch:refetchDecks} = useQuery("decks", async()=>{
-        const body = {
-            action:"deckNames"
-        };
+    const {data:userDecks, refetch:refetchDecks} = useQuery({
+        queryKey:keys.ankiDecks,
+        queryFn:async()=>{
+            const body = {
+                action:"deckNames"
+            };
 
-        const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
-        if (res) {
-            return await res.json() as string[];
-        }
-        return [];
-    }, {refetchOnWindowFocus:false});
-
-    const {data:modelFields, refetch:refetchFields} = useQuery(["fields", note], async()=>{
-        const body = {
-            action:"modelFieldNames",
-            params:{
-                "modelName":note
-            }
-        };
-
-        if (note !== "") {
             const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
             if (res) {
                 return await res.json() as string[];
             }
+            return [];
+        },
+        refetchOnWindowFocus:false
+    });
+
+    const {data:modelFields, refetch:refetchFields} = useQuery({
+        queryKey:keys.ankiFields(note),
+        queryFn:async()=>{
+            const body = {
+                action:"modelFieldNames",
+                params:{
+                    "modelName":note
+                }
+            };
+
+            if (note !== "") {
+                const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
+                if (res) {
+                    return await res.json() as string[];
+                }
+            }
+            return [];
+        },
+        enabled:note !== "",
+        refetchOnWindowFocus:false
+    });
+
+    const {data:userModels, refetch:refetchModels} = useQuery({
+        queryKey:keys.ankiModels,
+        queryFn:async()=>{
+            const body = {
+                action:"modelNames"
+            };
+
+            const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
+            if (res) {
+                return await res.json() as string[];
+            }
+        },
+        refetchOnWindowFocus:false
+    });
+
+    async function checkConnection():Promise<void> {
+        try {
+            const res = await fetch(ankiUrl);
+            if (res) {
+                setConnect(true);
+                await refetchDecks();
+                await refetchModels();
+                if (note !== "") {
+                    await refetchFields();
+                }
+                return;
+            }
+        } catch {
+            // Anki no está accesible
         }
-        return [];
-    }, {refetchOnWindowFocus:false});
 
-    const {data:userModels, refetch:refetchModels} = useQuery("models", async()=>{
-        const body = {
-            action:"modelNames"
-        };
-
-        const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
-        if (res) {
-            return await res.json() as string[];
-        }
-    }, {refetchOnWindowFocus:false});
-
-    const {refetch} = useQuery("connect", async()=>{
         setConnect(false);
-        const res = await fetch(ankiUrl);
-        if (res) {
-            setConnect(true);
-            await refetchDecks();
-            await refetchModels();
-            await refetchFields();
-        }
-    }, {refetchOnWindowFocus:false});
+    }
+
+    useEffect(()=>{
+        void checkConnection();
+    // Solo comprobar la conexión al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     async function sendToAnki(e:FormEvent):Promise<void> {
         e.preventDefault();
+
+        if (!deck || !note || !wordField || !readingField || !definitionField) {
+            toast.error("Rellena todos los campos obligatorios");
+            return;
+        }
 
         if ((audio && !audioField) || (audioField && !audio)) {
             toast.error("Debes seleccionar el campo de audio además de un archivo de audio válido");
@@ -122,11 +231,14 @@ function Anki():React.ReactElement {
             }
         };
 
+        // Nombre de archivo único por carta para no pisar medios entre notas
+        const mediaSlug = (word || reading || "yomiyasu").replace(/[^\p{L}\p{N}]+/gu, "-").slice(0, 40) || "yomiyasu";
+
         if (image && imageField !== "") {
             const imageBase64 = await convertBase64(image);
             body.params.note.picture = [{
                 "data":(imageBase64 as string).split(",")[1],
-                "filename": "yomiyasu.png",
+                "filename": `${mediaSlug}-${Date.now()}.png`,
                 "deleteExisting":false,
                 "fields": [
                     imageField
@@ -138,7 +250,7 @@ function Anki():React.ReactElement {
             const audioBase64 = await convertBase64(audio);
             body.params.note.audio = [{
                 "data":(audioBase64 as string).split(",")[1],
-                "filename": "yomiyasu.mp3",
+                "filename": `${mediaSlug}-${Date.now()}.mp3`,
                 "deleteExisting":false,
                 "fields": [
                     audioField
@@ -146,159 +258,169 @@ function Anki():React.ReactElement {
             }];
         }
 
+        setSending(true);
 
-        const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
-        if (res) {
-            const resJson = await res.json() as {result:number, error:string};
-            if (resJson.result && resJson.result !== 0) {
-                toast.success("La carta se ha creado con éxito");
-                setWord("");
-                setReading("");
-                setDefinition("");
-                setImage(null);
-                setAudio(null);
-            } else {
-                toast.error(`Ha ocurrido un problema creando la carta: ${resJson.error}`);
+        try {
+            const res = await fetch(ankiUrl, {body:JSON.stringify(body), method:"POST"});
+
+            if (res) {
+                const resJson = await res.json() as {result:number, error:string};
+
+                if (resJson.result && resJson.result !== 0) {
+                    toast.success("La carta se ha creado con éxito");
+                    setWord("");
+                    setReading("");
+                    setDefinition("");
+                    setImage(null);
+                    setAudio(null);
+                } else {
+                    toast.error(`Ha ocurrido un problema creando la carta: ${resJson.error}`);
+                }
             }
+        } finally {
+            setSending(false);
         }
     }
 
+    const fields = modelFields ?? [];
+    const noteTypeMissing = note === "";
+
     return (
-        <div className="flex w-full dark:text-white flex-col items-center overflow-x-hidden h-[100svh]">
-            <Helmet>
-                <title>YomiYasu - Añadir carta a Anki</title>
-            </Helmet>
-            <Tooltip title="Haz click para reconectar">
-                <Button className="my-2" onClick={()=>void refetch()} color={connected ? "success" : "error"}>Anki está {connected ? "conectado" : "desconectado"}</Button>
-            </Tooltip>
-            <form onSubmit={sendToAnki} className="flex flex-col w-11/12 gap-4 items-center py-4">
-                <FormControl fullWidth>
-                    <InputLabel id="deck-label">Deck destino</InputLabel>
-                    <Select required className="text-white" fullWidth value={deck} onChange={(e)=>setDeck(e.target.value)} labelId="deck-label">
-                        {userDecks?.map((userDeck)=>(
-                            <MenuItem key={userDeck} value={userDeck}>{userDeck}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                    <InputLabel id="note-label">Tipo de nota</InputLabel>
-                    <Select required className="text-white" fullWidth value={note} onChange={(e)=>setNote(e.target.value)} labelId="note-label">
-                        {userModels?.map((userModel)=>(
-                            <MenuItem key={userModel} value={userModel}>{userModel}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                <div className="flex flex-col w-full gap-2">
-                    <p>Palabra *</p>
-                    <div className="flex flex-col gap-2">
-                        <FormControl fullWidth>
-                            <InputLabel id="word-label">Nombre del campo con la palabra</InputLabel>
-                            <Select required className="text-white" fullWidth value={wordField} onChange={(e)=>setWordField(e.target.value)} labelId="word-label">
-                                {modelFields?.map((modelField)=>(
-                                    <MenuItem key={modelField} value={modelField}>{modelField}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <TextField required fullWidth type="text" value={word} onChange={(e)=>setWord(e.target.value)} placeholder="Palabra"/>
-                    </div>
+        <div className="mx-auto flex min-h-[100svh] w-full max-w-3xl flex-col gap-6 px-4 py-6">
+            <header className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-xl font-bold text-fg">Añadir carta a Anki</h1>
+                    <Badge variant={connected ? "success" : "danger"}>
+                        {connected ? "Conectado" : "Desconectado"}
+                    </Badge>
                 </div>
-                <div className="flex flex-col w-full gap-2">
-                    <p>Lectura de la palabra *</p>
-                    <div className="flex flex-col gap-2">
-                        <FormControl fullWidth>
-                            <InputLabel id="reading-label">Nombre del campo con la lectura</InputLabel>
-                            <Select required className="text-white" fullWidth value={readingField} onChange={(e)=>setReadingField(e.target.value)} labelId="reading-label">
-                                {modelFields?.map((modelField)=>(
-                                    <MenuItem key={modelField} value={modelField}>{modelField}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <TextField required fullWidth type="text" value={reading} onChange={(e)=>setReading(e.target.value)} placeholder="Lectura"/>
-                    </div>
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Link2 className="size-3.5" />}
+                    onClick={()=>void checkConnection()}
+                >
+                    Reconectar
+                </Button>
+            </header>
+
+            {!connected ? (
+                <div className="flex items-start gap-2 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
+                    <CircleAlert className="mt-0.5 size-4 shrink-0" />
+                    <p>
+                        AnkiConnect no responde. Asegúrate de tener Anki abierto con el addon AnkiConnect y de añadir{" "}
+                        <span className="font-semibold">{window.location.host}</span> a la lista de hosts de confianza
+                        (campo &quot;webCorsOriginList&quot;).
+                    </p>
                 </div>
-                <div className="flex flex-col w-full gap-2">
-                    <p>Definiciones *</p>
-                    <div className="flex flex-col gap-2">
-                        <FormControl fullWidth>
-                            <InputLabel id="definition-label">Nombre del campo con las definiciones</InputLabel>
-                            <Select className="text-white" fullWidth value={definitionField} onChange={(e)=>setDefinitionField(e.target.value)} labelId="definition-label">
-                                {modelFields?.map((modelField)=>(
-                                    <MenuItem key={modelField} value={modelField}>{modelField}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <TextField required multiline rows={4} fullWidth type="text" value={definition} onChange={(e)=>setDefinition(e.target.value)} placeholder="Definiciones"/>
+            ) : null}
+
+            <form onSubmit={(e)=>void sendToAnki(e)} className="flex flex-col gap-5">
+                <section className="grid gap-4 sm:grid-cols-2">
+                    <FieldSelect
+                        id="anki-deck"
+                        label="Deck destino *"
+                        value={deck}
+                        options={userDecks ?? []}
+                        onChange={setDeck}
+                    />
+                    <FieldSelect
+                        id="anki-note"
+                        label="Tipo de nota *"
+                        value={note}
+                        options={userModels ?? []}
+                        onChange={(value)=>{
+                            setNote(value);
+                            setWordField("");
+                            setReadingField("");
+                            setDefinitionField("");
+                            setImageField("");
+                            setAudioField("");
+                        }}
+                    />
+                </section>
+
+                <Separator />
+
+                <section className="flex flex-col gap-3">
+                    <h2 className="text-sm font-semibold text-fg">Contenido</h2>
+                    {noteTypeMissing ? (
+                        <p className="text-xs text-fg-muted">Selecciona primero un tipo de nota para mapear sus campos.</p>
+                    ) : null}
+                    <FieldSelect
+                        id="anki-word-field"
+                        label="Campo de la palabra *"
+                        value={wordField}
+                        options={fields}
+                        onChange={setWordField}
+                    />
+                    <Field label="Palabra *" htmlFor="anki-word">
+                        <Input id="anki-word" required value={word} onChange={(e)=>setWord(e.target.value)} placeholder="Palabra" />
+                    </Field>
+                    <FieldSelect
+                        id="anki-reading-field"
+                        label="Campo de la lectura *"
+                        value={readingField}
+                        options={fields}
+                        onChange={setReadingField}
+                    />
+                    <Field label="Lectura *" htmlFor="anki-reading">
+                        <Input id="anki-reading" required value={reading} onChange={(e)=>setReading(e.target.value)} placeholder="Lectura" />
+                    </Field>
+                    <FieldSelect
+                        id="anki-definition-field"
+                        label="Campo de las definiciones *"
+                        value={definitionField}
+                        options={fields}
+                        onChange={setDefinitionField}
+                    />
+                    <Field label="Definiciones *" htmlFor="anki-definition">
+                        <Textarea id="anki-definition" required rows={4} value={definition} onChange={(e)=>setDefinition(e.target.value)} placeholder="Definiciones" />
+                    </Field>
+                </section>
+
+                <Separator />
+
+                <section className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-3">
+                        <h2 className="flex items-center gap-2 text-sm font-semibold text-fg">
+                            <ImageIcon className="size-4 text-fg-muted" />
+                            Imagen
+                        </h2>
+                        <FieldSelect
+                            id="anki-image-field"
+                            label="Campo de la imagen"
+                            value={imageField}
+                            options={fields}
+                            onChange={setImageField}
+                            allowEmpty
+                        />
+                        <FilePicker accept="image/*" file={image} label="Seleccionar imagen…" onSelect={setImage} />
                     </div>
-                </div>
-                <div className="flex flex-col w-full gap-2">
-                    <p>Imagen</p>
-                    <div className="flex flex-col gap-2">
-                        <FormControl fullWidth>
-                            <InputLabel id="image-label">Nombre del campo con la imagen</InputLabel>
-                            <Select className="text-white" fullWidth value={imageField} onChange={(e)=>setImageField(e.target.value)} labelId="image-label">
-                                <MenuItem value="">No añadir imagen</MenuItem>
-                                {modelFields?.map((modelField)=>(
-                                    <MenuItem key={modelField} value={modelField}>{modelField}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <div className="flex gap-2 items-center">
-                            {image && (
-                                <Check color="success"/>
-                            )}
-                            <FormControlLabel label="Seleccionar imagen..." control={(
-                                <IconButton component="label">
-                                    <Image/>
-                                    <input hidden type="file" accept="image/*" onChange={(e)=>{
-                                        if (e.target.files && e.target.files?.length > 0) {
-                                            setImage(e.target.files[0]);
-                                        }
-                                    }}
-                                    />
-                                </IconButton>
-                            )}
-                            />
-                        </div>
+
+                    <div className="flex flex-col gap-3">
+                        <h2 className="flex items-center gap-2 text-sm font-semibold text-fg">
+                            <Music className="size-4 text-fg-muted" />
+                            Audio
+                        </h2>
+                        <FieldSelect
+                            id="anki-audio-field"
+                            label="Campo del audio"
+                            value={audioField}
+                            options={fields}
+                            onChange={setAudioField}
+                            allowEmpty
+                        />
+                        <FilePicker accept="audio/*" file={audio} label="Seleccionar audio…" onSelect={setAudio} />
                     </div>
+                </section>
+
+                <div className="flex justify-end pt-2">
+                    <Button type="submit" size="lg" disabled={!connected} loading={sending}>
+                        Crear carta
+                    </Button>
                 </div>
-                <div className="flex flex-col w-full gap-2">
-                    <p>Audio</p>
-                    <div className="flex flex-col gap-2">
-                        <FormControl fullWidth>
-                            <InputLabel id="audio-label">Nombre del campo con el audio</InputLabel>
-                            <Select className="text-white" fullWidth value={audioField} onChange={(e)=>setAudioField(e.target.value)} labelId="audio-label">
-                                <MenuItem value="">No añadir audio</MenuItem>
-                                {modelFields?.map((modelField)=>(
-                                    <MenuItem key={modelField} value={modelField}>{modelField}</MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <div className="flex gap-2 items-center">
-                            {audio && (
-                                <Check color="success"/>
-                            )}
-                            <FormControlLabel label="Seleccionar audio..." control={(
-                                <IconButton component="label">
-                                    <Image/>
-                                    <input hidden type="file" accept="audio/*" onChange={(e)=>{
-                                        if (e.target.files && e.target.files?.length > 0) {
-                                            setAudio(e.target.files[0]);
-                                        }
-                                    }}
-                                    />
-                                </IconButton>
-                            )}
-                            />
-                        </div>
-                    </div>
-                </div>
-                <Button type="submit" disabled={!connected}>Crear carta</Button>
             </form>
-            {!connected && (
-                <p className="mx-4 text-sm pb-4">* Asegúrate de añadir {window.location.host} a la lista de hosts de confianza en la configuración de AnkiConnect.
-                    Debe estar en el campo &quot;webCorsOriginList&quot;
-                </p>
-            )}
         </div>
     );
 }

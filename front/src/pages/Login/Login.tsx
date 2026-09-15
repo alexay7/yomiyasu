@@ -1,72 +1,90 @@
-import React, {useState, useEffect} from "react";
-import TextField from "@mui/material/TextField";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import {Button, Divider} from "@mui/material";
+import React, {useState} from "react";
+import {useLocation, useNavigate} from "react-router";
+import {AuthCard} from "../../components/AuthCard/AuthCard";
 import {useAuth} from "../../contexts/AuthContext";
-import {useNavigate} from "react-router-dom";
-import PersonIcon from "@mui/icons-material/Person";
-import {goTo} from "../../helpers/helpers";
-import {Helmet} from "react-helmet";
+import {useTitle} from "../../lib/useTitle";
+import {Button} from "../../ui/Button";
+import {Field} from "../../ui/Field";
+import {Input} from "../../ui/Input";
 
 function Login():React.ReactElement {
-    const {loginUser, loading, loggedIn} = useAuth();
+    const {loginUser} = useAuth();
     const [emailUser, setEmailUser] = useState("");
     const [password, setPassword] = useState("");
-    const [rememberMe, setRememberMe] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
-    useEffect(()=>{
-        if (loggedIn) {
-            goTo(navigate, "/");
-        }
-    }, [loading, loggedIn, navigate]);
+    useTitle("Iniciar sesión");
+
+    // Destino solicitado antes de iniciar sesión (p. ej. deep link al lector)
+    const from = (location.state as {from?:string} | null)?.from || "/";
 
     async function handleSubmit(e:React.FormEvent<HTMLFormElement>):Promise<void> {
         e.preventDefault();
 
         if (!emailUser || !password) return;
 
-        const response = await loginUser(emailUser, password);
-        if (response && response.status === "ok") {
-            goTo(navigate, "/");
+        setSubmitting(true);
+
+        try {
+            const response = await loginUser(emailUser, password);
+
+            if (response && response.status === "ok") {
+                navigate(from, {replace:true});
+            }
+        } finally {
+            setSubmitting(false);
         }
     }
 
     return (
-        <div className="h-[100svh] flex justify-center items-center bg-cover bg-gradient-radial from-gray-500 to-[#000011]">
-            <Helmet>
-                <title>YomiYasu - Login</title>
-            </Helmet>
-            <div className="dark:bg-[#2D2D2D] bg-white w-11/12 md:w-2/3 lg:w-1/2 xl:w-1/3 rounded-xl dark:text-white flex flex-col items-center py-8">
-                <h1>Inicio de Sesión</h1>
-                <Divider className="w-3/4 pt-2"/>
-                <div className="border-4 border-primary border-solid rounded-full p-2 my-4">
-                    <PersonIcon sx={{fontSize:"120px"}} className="text-primary"/>
+        <AuthCard
+            title="Inicio de sesión"
+            subtitle="Tu biblioteca de manga y novelas con OCR"
+            footer={
+                <div className="flex flex-col gap-2">
+                    <Button variant="secondary" fullWidth onClick={()=>navigate("/offline")}>
+                        Abrir lector local (sin cuenta)
+                    </Button>
+                    <p className="text-center text-xs text-fg-muted">
+                        ¿Tienes un código de invitación?{" "}
+                        <button
+                            type="button"
+                            className="font-medium text-primary hover:underline"
+                            onClick={()=>navigate("/coderedeem")}
+                        >
+                            Crear cuenta
+                        </button>
+                    </p>
                 </div>
-                <form className="flex flex-col gap-4 w-1/2" onSubmit={handleSubmit}>
-                    <TextField required type="text" className="w-full shadow-md" id="usernameemail"
-                        label="Nombre de Usuario/Email" variant="standard"
-                        value={emailUser} onChange={(e)=>setEmailUser(e.target.value)}
+            }
+        >
+            <form className="flex flex-col gap-4" onSubmit={(e)=>void handleSubmit(e)}>
+                <Field label="Nombre de usuario o email" htmlFor="login-user">
+                    <Input
+                        id="login-user"
+                        required
+                        autoComplete="username"
+                        value={emailUser}
+                        onChange={(e)=>setEmailUser(e.target.value)}
                     />
-                    <TextField required autoComplete="currentPassword" type="password"
-                        className="w-full shadow-md" id="password" label="Contraseña" variant="standard"
-                        value={password} onChange={(e)=>setPassword(e.target.value)}
+                </Field>
+                <Field label="Contraseña" htmlFor="login-password">
+                    <Input
+                        id="login-password"
+                        required
+                        type="password"
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e)=>setPassword(e.target.value)}
                     />
-                    <FormControlLabel className="select-none flex items-center" control={(
-                        <Checkbox checked={rememberMe} onChange={(e)=>{
-                            setRememberMe(e.target.checked);
-                        }}
-                        />)} label="Recuérdame"
-                    />
-                    <Button type="submit" variant="contained">Iniciar Sesión</Button>
-                </form>
-                <Divider className="w-full my-4"/>
-                <div className="w-1/2">
-                <Button variant="contained" className="bg-white text-[#2D2D2D] w-full" onClick={()=>goTo(navigate, "/offline")}>Lector Local</Button>
-                </div>
-            </div>
-        </div>
+                </Field>
+                <Button type="submit" fullWidth loading={submitting} className="mt-2">
+                    Iniciar sesión
+                </Button>
+            </form>
+        </AuthCard>
     );
 }
 

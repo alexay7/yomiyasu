@@ -1,65 +1,90 @@
-import React from "react";
-import {Helmet} from "react-helmet";
-import loadable from "@loadable/component";
-import {useSettingsStore} from "../../stores/SettingsStore";
+import React, {lazy, Suspense} from "react";
 import {LazySection} from "../../components/LazySection/LazySection";
+import {ScrollerSkeleton} from "../../components/Skeletons/Skeletons";
+import {useTitle} from "../../lib/useTitle";
+import {useSettingsStore} from "../../stores/SettingsStore";
 
-const NewBooksScroller = loadable(() => import("./components/NewBooksScroller"));
-const ProgressScroller = loadable(() => import("./components/ProgressScroller"));
-const TableroScroller = loadable(() => import("./components/TableroScroller"));
-const ReadLaterScroller = loadable(() => import("./components/ReadLaterScroller"));
-const NewSeriesScroller = loadable(() => import("./components/NewSeriesScroller"));
-const RecentSeriesScroller = loadable(() => import("./components/RecentSeriesScroller"));
+const NewBooksScroller = lazy(() => import("./components/NewBooksScroller"));
+const ProgressScroller = lazy(() => import("./components/ProgressScroller"));
+const TableroScroller = lazy(() => import("./components/TableroScroller"));
+const ReadLaterScroller = lazy(() => import("./components/ReadLaterScroller"));
+const NewSeriesScroller = lazy(() => import("./components/NewSeriesScroller"));
+const RecentSeriesScroller = lazy(() => import("./components/RecentSeriesScroller"));
+
+function Section({title, children}:{title:string; children:React.ReactNode}):React.ReactElement {
+    return <Suspense fallback={<ScrollerSkeleton title={title}/>}>{children}</Suspense>;
+}
 
 function Home():React.ReactElement {
     const {siteSettings} = useSettingsStore();
 
+    useTitle("Inicio");
+
+    const showManga = ["both", "manga"].includes(siteSettings.mainView);
+    const showNovels = ["both", "novels"].includes(siteSettings.mainView);
+
     return (
-        <div className="dark:bg-app-bg bg-white overflow-y-scroll h-[calc(100svh-4rem)]">
-            <Helmet>
-                <title>YomiYasu</title>
-            </Helmet>
-            <div className="dark:text-white px-8 py-4 flex flex-col gap-4">
-                <ProgressScroller/>
-                <TableroScroller/>
-                {["both", "manga"].includes(siteSettings.mainView) && (
+        <div className="min-h-full bg-white dark:bg-app-bg">
+            <div className="flex flex-col gap-4 px-4 py-4 dark:text-white lg:px-8">
+                <Suspense fallback={<ScrollerSkeleton title="En progreso"/>}>
+                    <ProgressScroller/>
+                    <TableroScroller/>
+                </Suspense>
+
+                {showManga && (
                     <LazySection>
-                        <ReadLaterScroller variant="manga"/>
+                        <Section title={'"Leer más tarde" manga'}>
+                            <ReadLaterScroller variant="manga"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "novels"].includes(siteSettings.mainView) && (
+                {showNovels && (
                     <LazySection>
-                        <ReadLaterScroller variant="novela"/>
+                        <Section title={'"Leer más tarde" novelas'}>
+                            <ReadLaterScroller variant="novela"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "manga"].includes(siteSettings.mainView) && (
+                {showManga && (
                     <LazySection>
-                        <NewBooksScroller variant="manga"/>
+                        <Section title="Mangas nuevos">
+                            <NewBooksScroller variant="manga"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "novels"].includes(siteSettings.mainView) && (
+                {showNovels && (
                     <LazySection>
-                        <NewBooksScroller variant="novela"/>
+                        <Section title="Novelas nuevas">
+                            <NewBooksScroller variant="novela"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "manga"].includes(siteSettings.mainView) && (
+                {showManga && (
                     <LazySection>
-                        <NewSeriesScroller variant="manga"/>
+                        <Section title="Series de manga nuevas">
+                            <NewSeriesScroller variant="manga"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "novels"].includes(siteSettings.mainView) && (
+                {showNovels && (
                     <LazySection>
-                        <NewSeriesScroller variant="novela"/>
+                        <Section title="Series de novelas nuevas">
+                            <NewSeriesScroller variant="novela"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "manga"].includes(siteSettings.mainView) && (
+                {showManga && (
                     <LazySection>
-                        <RecentSeriesScroller variant="manga"/>
+                        <Section title="Series de manga con volúmenes nuevos">
+                            <RecentSeriesScroller variant="manga"/>
+                        </Section>
                     </LazySection>
                 )}
-                {["both", "novels"].includes(siteSettings.mainView) && (
+                {showNovels && (
                     <LazySection>
-                        <RecentSeriesScroller variant="novela"/>
+                        <Section title="Series de novelas con volúmenes nuevos">
+                            <RecentSeriesScroller variant="novela"/>
+                        </Section>
                     </LazySection>
                 )}
             </div>
@@ -68,4 +93,3 @@ function Home():React.ReactElement {
 }
 
 export default Home;
-

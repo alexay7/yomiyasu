@@ -1,45 +1,35 @@
-import React, {useEffect} from "react";
-import {useQuery} from "react-query";
+import React from "react";
+import {useQuery} from "@tanstack/react-query";
 import {BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
-import {useGlobal} from "../../../contexts/GlobalContext";
 import {useSettingsStore} from "../../../stores/SettingsStore";
+import {keys} from "../../../lib/queryKeys";
 
 function TableroScroller():React.ReactElement {
-    const {reloaded} = useGlobal();
     const {siteSettings} = useSettingsStore();
 
-    const {data:tableroData, refetch:tableroRefetch, isLoading, isError} = useQuery(["tablero", siteSettings.mainView], async()=> {
-        const res = await api.get<BookWithProgress[]>("readprogress/tablero");
+    const {data:tableroData, refetch:tableroRefetch, isLoading, isError} = useQuery({
+        queryKey:keys.tablero(siteSettings.mainView),
+        queryFn:async()=> {
+            const res = await api.get<BookWithProgress[]>("readprogress/tablero");
 
-        if (!res) return [];
+            if (!res) return [];
 
-        switch (siteSettings.mainView) {
-            case "manga":{
-                return res.filter((serie)=> serie.variant === "manga");
-            }
-            case "novels":{
-                return res.filter((serie)=> serie.variant === "novela");
-            }
-            default:{
-                return res;
+            switch (siteSettings.mainView) {
+                case "manga":{
+                    return res.filter((serie)=> serie.variant === "manga");
+                }
+                case "novels":{
+                    return res.filter((serie)=> serie.variant === "novela");
+                }
+                default:{
+                    return res;
+                }
             }
         }
     });
-
-    useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            await tableroRefetch();
-        }
-
-        if (reloaded && reloaded !== "reviews") {
-            setTimeout(()=>{
-                void refetchBooks();
-            }, 1000);
-        }
-    }, [tableroRefetch, reloaded]);
 
     if (isLoading) return <ScrollerSkeleton title="Tu tablero"/>;
 

@@ -45,8 +45,3 @@ export interface BookProgress {
     status:"unread" | "reading" | "completed",
     characters?:number
 }
-
-export interface BooksFilter {
-    data:BookWithProgress[],
-    pages:number
-}

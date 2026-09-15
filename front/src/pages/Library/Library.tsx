@@ -1,267 +1,263 @@
-import React, {useEffect, useState} from "react";
-import {useQuery} from "react-query";
+import {keepPreviousData, useQuery} from "@tanstack/react-query";
+import {ArrowLeft, BookOpen, Dices, Images, RefreshCw, SearchX, X} from "lucide-react";
+import React from "react";
+import {useNavigate} from "react-router";
+import {toast} from "react-toastify";
 import {api} from "../../api/api";
-import {Alphabet, SeriesFilter} from "../../types/serie";
-import {SerieComponent} from "../../components/SerieComponent/SerieComponent";
-import {IconButton, Menu, MenuItem, Pagination, Tooltip} from "@mui/material";
-import {useNavigate, useSearchParams} from "react-router-dom";
-import {ArrowBack, DashboardCustomize, RestorePage} from "@mui/icons-material";
-import {goBack} from "../../helpers/helpers";
-import {useGlobal} from "../../contexts/GlobalContext";
-import {LibrarySettings} from "./components/LibrarySettings";
+import {CoverCard} from "../../components/CoverCard/CoverCard";
 import {useAuth} from "../../contexts/AuthContext";
-import {LibraryFilter} from "./components/LibraryFilter";
-import {Helmet} from "react-helmet";
-import {LibraryRandom} from "./components/LibraryRandom";
-import {LibraryGridSkeleton, SectionError} from "../../components/Skeletons/Skeletons";
+import {buildAlphabetQuery, buildSeriesQuery, useLibraryFilters} from "../../lib/useLibraryFilters";
+import {keys} from "../../lib/queryKeys";
+import {confirmDialog} from "../../stores/ConfirmStore";
 import {useSettingsStore} from "../../stores/SettingsStore";
+import type {Alphabet, SerieWithProgress, SeriesFilter} from "../../types/serie";
+import {Button} from "../../ui/Button";
+import {EmptyState} from "../../ui/EmptyState";
+import {ErrorState} from "../../ui/ErrorState";
+import {IconButton} from "../../ui/IconButton";
+import {Pagination} from "../../ui/Pagination";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../ui/Select";
+import {SegmentedControl} from "../../ui/SegmentedControl";
+import {AlphabetStrip} from "./components/AlphabetStrip";
+import {LibraryGridSkeleton} from "./components/LibraryGridSkeleton";
+import {LibraryFiltersPopover} from "./components/LibraryFiltersPopover";
+import {activeFilterCount, sortOptions} from "./components/libraryFilterUtils";
 
 interface LibraryProps {
     variant: "manga" | "novela";
 }
 
+const statusLabels: Record<string, string> = {
+    ENDED: "Finalizada",
+    PUBLISHING: "En publicación",
+};
+
+const progressLabels: Record<string, string> = {
+    completed: "Completadas",
+    reading: "En progreso",
+    unread: "Sin empezar",
+};
+
 function Library({variant}:LibraryProps):React.ReactElement {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const genre = searchParams.get("genre");
-    const author = searchParams.get("author");
-    const sortby = searchParams.get("sortBy");
-    const min = searchParams.get("min");
-    const max = searchParams.get("max");
-    const readprogress = searchParams.get("readprogress");
-    const status = searchParams.get("status");
-    const readlist = searchParams.get("readlist");
-    const pageParam = parseInt(searchParams.get("page") || "1");
-    const {reloaded} = useGlobal();
+    const navigate = useNavigate();
     const {userData} = useAuth();
     const {siteSettings, modifySiteSettings} = useSettingsStore();
-    const [selectedLetter, setSelectedLetter] = useState("ALL");
-    const elements = siteSettings.libraryLimit || window.localStorage.getItem("limit") || "25";
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    const navigate = useNavigate();
+    const defaultLimit = siteSettings.libraryLimit || window.localStorage.getItem("limit") || "25";
+    const {filters, setFilter, setPage, clearFilters, hasActiveFilters, queryParams} = useLibraryFilters(defaultLimit);
 
-    const {data:series = {pages:1, data:[]}, refetch:refetchSeries, isLoading, isError} = useQuery(
-        ["seriesData", variant, selectedLetter, pageParam, elements, genre, author, sortby, min, max, readprogress, status, readlist],
-        async()=>{
-            let link = `series/${variant}?`;
+    const seriesParams = buildSeriesQuery(filters, true);
+    const seriesParamsString = seriesParams.toString();
 
-            if (selectedLetter !== "ALL") {
-                link += `firstLetter=${selectedLetter.replace("#", "SPECIAL")}&`;
-            }
-
-            if (genre) {
-                link += `genre=${genre}&`;
-            }
-
-            if (readprogress) {
-                link += `readprogress=${readprogress}&`;
-            }
-
-            if (author) {
-                link += `author=${author}&`;
-            }
-
-            if (sortby) {
-                link += `sort=${sortby}&`;
-            } else {
-                link += "sort=sortName&";
-            }
-
-            if (min) {
-                link += `min=${min}&`;
-            }
-
-            if (max) {
-                link += `max=${max}&`;
-            }
-
-            if (status) {
-                link += `status=${status}&`;
-            }
-
-            if (readlist) {
-                link += "readlist=true&";
-            }
-
-            link += `page=${pageParam}&limit=${elements}`;
-
-            return api.get<SeriesFilter>(link);
-        },
-        {keepPreviousData:true}
-    );
-
-    const {data:alphabet, refetch:refetchAlphabet} = useQuery(["alphabet", variant, genre, status, author, min, max], async()=>{
-        let link = `series/${variant}/alphabet?`;
-
-        if (genre) {
-            link += `genre=${genre}&`;
+    const {data:series = {pages:1, data:[]}, isLoading, isError, refetch} = useQuery({
+        queryKey:keys.seriesList(variant, seriesParamsString),
+        placeholderData:keepPreviousData,
+        queryFn:async()=>{
+            const res = await api.get<SeriesFilter>(`series/${variant}?${seriesParamsString}`);
+            return res ?? {pages:1, data:[]};
         }
-
-        if (status) {
-            link += `status=${status}&`;
-        }
-
-        if (author) {
-            link += `author=${author}&`;
-        }
-
-        if (min) {
-            link += `min=${min}&`;
-        }
-
-        if (max) {
-            link += `max=${max}&`;
-        }
-
-        return api.get<Alphabet[]>(link);
     });
 
-    useEffect(()=>{
-        if (!reloaded) return;
+    const alphabetParams = buildAlphabetQuery(filters);
+    const alphabetParamsString = alphabetParams.toString();
 
-        void refetchAlphabet();
-        void refetchSeries();
-    }, [refetchAlphabet, refetchSeries, reloaded]);
+    const {data:alphabet = []} = useQuery({
+        queryKey:keys.seriesAlphabet(variant, alphabetParamsString),
+        queryFn:async()=>{
+            const res = await api.get<Alphabet[]>(`series/${variant}/alphabet?${alphabetParamsString}`);
+            return res ?? [];
+        }
+    });
 
-    function handleClick(event: React.MouseEvent<HTMLElement>):void {
-        setAnchorEl(event.currentTarget);
+    const {data:genresAndArtists = {genres:[], authors:[]}} = useQuery({
+        queryKey:keys.genresAndArtists,
+        queryFn:async()=>{
+            return (await api.get<{genres:string[], authors:string[]}>("series/genresAndArtists")) ?? {genres:[], authors:[]};
+        }
+    });
+
+    async function rollDice():Promise<void> {
+        const randomParams = buildSeriesQuery(filters, false);
+
+        try {
+            const serie = await api.get<SerieWithProgress>(`series/${variant}/random?${randomParams.toString()}`);
+
+            if (!serie) {
+                toast.error("Ninguna serie coincide con los filtros indicados");
+                return;
+            }
+
+            navigate(`/app/series/${serie._id}`);
+        } catch {
+            toast.error("Ninguna serie coincide con los filtros indicados");
+        }
     }
 
-    function handleClose():void {
-        setAnchorEl(null);
+    async function rescanLibrary():Promise<void> {
+        if (!await confirmDialog("¿Reescanear la biblioteca? Puede tardar un rato.")) return;
+
+        try {
+            await api.get(`rescan/${variant}`);
+            toast.success("Reescaneo terminado");
+        } catch {
+            toast.error("No se pudo reescanear la biblioteca");
+        }
     }
+
+    const activeCount = activeFilterCount(filters);
+    const chips: Array<{key:string; label:string; onRemove:()=>void}> = [];
+
+    if (filters.letter !== "ALL") chips.push({key:"letter", label:`Letra: ${filters.letter}`, onRemove:()=>setFilter("letter", "ALL")});
+    if (filters.genre) chips.push({key:"genre", label:filters.genre, onRemove:()=>setFilter("genre", null)});
+    if (filters.author) chips.push({key:"author", label:filters.author, onRemove:()=>setFilter("author", null)});
+    if (filters.status) chips.push({key:"status", label:statusLabels[filters.status] ?? filters.status, onRemove:()=>setFilter("status", null)});
+    if (filters.readProgress !== "all") chips.push({key:"progress", label:progressLabels[filters.readProgress] ?? filters.readProgress, onRemove:()=>setFilter("readProgress", "all")});
+    if (filters.readlist) chips.push({key:"readlist", label:"Leer más tarde", onRemove:()=>setFilter("readlist", false)});
+    if (filters.min > 0 || filters.max < 10) chips.push({key:"difficulty", label:`Dificultad ${filters.min}–${filters.max}`, onRemove:()=>{
+        setFilter("min", 0);
+        setFilter("max", 10);
+    }});
 
     return (
-        <div className="dark:bg-app-bg pb-4">
-            <Helmet>
-                <title>YomiYasu - Biblioteca</title>
-            </Helmet>
-            <div className="z-20 w-fill dark:bg-app-sidebar bg-app-sidebar flex items-center justify-between h-14 border-x border-0 border-solid border-app-border">
-                <div className="flex items-center mx-4">
-                    <Tooltip title="Volver atrás">
-                        <IconButton onClick={()=>goBack(navigate)}>
-                            <ArrowBack/>
+        <div className="flex min-h-full flex-col">
+            <div className="sticky top-0 z-20 border-b border-app-border bg-app-sidebar">
+                <div className="flex h-14 items-center gap-1.5 px-3">
+                    <IconButton label="Volver atrás" onClick={()=>navigate(-1)}>
+                        <ArrowLeft />
+                    </IconButton>
+                    {userData?.admin ? (
+                        <IconButton label="Reescanear biblioteca" onClick={()=>void rescanLibrary()}>
+                            <RefreshCw />
                         </IconButton>
-                    </Tooltip>
-                    {userData?.admin && (
-                        <LibrarySettings variant={variant}/>
-                    )}
-                </div>
-                <div className="flex items-center mx-4">
-                    <div className="">
-                        <IconButton className="text-center" onClick={(e)=>{
-                            handleClick(e);
+                    ) : null}
+
+                    {/* En pantallas pequeñas la biblioteca cambia de variante aquí */}
+                    <SegmentedControl
+                        className="ml-1 lg:hidden"
+                        size="sm"
+                        aria-label="Tipo de biblioteca"
+                        value={variant}
+                        onChange={(value)=>{
+                            const path = value === "manga" ? "/app/library/manga" : "/app/library/novels";
+                            const query = queryParams.toString();
+                            navigate(query ? `${path}?${query}` : path);
                         }}
-                        >
-                            <DashboardCustomize/>
-                        </IconButton>
-                        <Menu id="long-menu" anchorEl={anchorEl}
-                            open={Boolean(anchorEl)} onClose={handleClose} disableScrollLock={true}
-                        >
-                            <MenuItem selected={elements === "10"} onClick={()=>{
-                                modifySiteSettings("libraryLimit", "10");
-                                handleClose();
-                            }}
-                            >
-                                10
-                            </MenuItem>
-                            <MenuItem selected={elements === "25"} onClick={()=>{
-                                modifySiteSettings("libraryLimit", "25");
-                                handleClose();
-                            }}
-                            >
-                                25
-                            </MenuItem>
-                            <MenuItem selected={elements === "50"} onClick={()=>{
-                                modifySiteSettings("libraryLimit", "50");
-                                handleClose();
-                            }}
-                            >
-                                50
-                            </MenuItem>
-                            <MenuItem selected={elements === "100"} onClick={()=>{
-                                modifySiteSettings("libraryLimit", "100");
-                                handleClose();
-                            }}
-                            >
-                                100
-                            </MenuItem>
-                        </Menu>
-                    </div>
-                    <LibraryRandom variant={variant}/>
-                    <LibraryFilter searchParams={searchParams} setSearchParams={setSearchParams}/>
-                </div>
-            </div>
-            <div className="flex flex-col">
-                {/* Elegir alfabeto */}
-                <div className="flex w-full justify-center gap-1 flex-wrap h-12">
-                    {alphabet?.map((letter)=>{
-                        let textColor = "dark:text-white text-black";
-                        let disabled = false;
+                        options={[
+                            {value:"manga", icon:<Images />, label:<span className="hidden sm:inline">Mangas</span>},
+                            {value:"novela", icon:<BookOpen />, label:<span className="hidden sm:inline">Novelas</span>},
+                        ]}
+                    />
 
-                        if (letter.group.toUpperCase() === selectedLetter) {
-                            textColor = "text-primary";
-                        } else if (letter.count === 0) {
-                            textColor = "dark:text-gray-700 text-gray-300";
-                            disabled = true;
-                        }
-
-                        return (
-                            <IconButton disabled={disabled} onClick={()=>{
-                                setSelectedLetter(letter.group.toUpperCase());
-
-                                const next = new URLSearchParams(searchParams);
-                                next.delete("page");
-                                setSearchParams(next);
-                            }} className={`${textColor} text-sm font-semibold`} key={letter.group}
-                            >
-                                {letter.group.toUpperCase()}
-                            </IconButton>
-                        );
-                    })}
-                </div>
-
-                <div className="flex flex-col overflow-y-scroll h-[calc(100svh-10.5rem)]">
-                    {isLoading && (
-                        <LibraryGridSkeleton count={Math.min(parseInt(elements), 25)}/>
-                    )}
-
-                    {isError && (
-                        <SectionError message="No se pudo cargar la biblioteca" onRetry={()=>{
-                            void refetchSeries();
-                        }}/>
-                    )}
-
-                    {!isLoading && !isError && (
-                        <div className="flex w-full items-center justify-center">
-                            {series.data.length > 0 ? (
-                                <ul className="flex flex-wrap p-8 py-4 gap-4">
-                                    {series.data.map((serie)=>(
-                                        <SerieComponent variant={variant} key={serie._id} serieData={serie} noVariantIndicator/>
+                    <div className="ml-auto flex items-center gap-2">
+                        <LibraryFiltersPopover
+                            filters={filters}
+                            setFilter={setFilter}
+                            clearFilters={clearFilters}
+                            genres={genresAndArtists.genres}
+                            authors={genresAndArtists.authors}
+                        />
+                        <div className="hidden items-center gap-2 sm:flex">
+                            <Select value={filters.sortBy} onValueChange={(v)=>setFilter("sortBy", v)}>
+                                <SelectTrigger className="h-8 w-44 text-[13px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sortOptions.map((option)=>(
+                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                                     ))}
-                                </ul>
-
-                            ) : (
-                                <div className="flex items-center flex-col py-8 justify-center text-center">
-                                    <RestorePage className="w-40 h-40" color="primary"/>
-                                    <p className="text-3xl dark:text-white">Esta biblioteca está vacía...</p>
-                                </div>
-                            )}
+                                </SelectContent>
+                            </Select>
+                            <Select
+                                value={filters.limit}
+                                onValueChange={(v)=>{
+                                    setFilter("limit", v);
+                                    modifySiteSettings("libraryLimit", v);
+                                }}
+                            >
+                                <SelectTrigger className="h-8 w-[4.5rem] text-[13px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {["10", "25", "50", "100"].map((limit)=>(
+                                        <SelectItem key={limit} value={limit}>{limit}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
-                    )}
-
-                    {series.pages > 1 && (
-                        <div className="sticky bottom-0 z-10 mt-auto flex items-center justify-center gap-4 py-2 border-t border-solid border-app-border bg-app-bg">
-                            <Pagination onChange={(_, p)=>{
-                                const next = new URLSearchParams(searchParams);
-                                next.set("page", `${p}`);
-                                setSearchParams(next);
-                            }} page={pageParam} color="primary" count={series.pages}
-                            />
-                            <p className="text-sm dark:text-white">Página {pageParam} de {series.pages}</p>
-                        </div>
-                    )}
+                        <IconButton label="Elegir serie al azar" variant="solid" size="sm" onClick={()=>void rollDice()} className="size-8">
+                            <Dices />
+                        </IconButton>
+                    </div>
                 </div>
+
+                {chips.length > 0 ? (
+                    <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto px-3 pb-2">
+                        {chips.map((chip)=>(
+                            <button
+                                key={chip.key}
+                                type="button"
+                                onClick={chip.onRemove}
+                                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-tint px-2.5 py-1 text-xs font-medium text-fg transition-colors hover:bg-app-border"
+                            >
+                                {chip.label}
+                                <X className="size-3 text-fg-muted" />
+                            </button>
+                        ))}
+                        {activeCount > 0 ? (
+                            <button
+                                type="button"
+                                onClick={clearFilters}
+                                className="shrink-0 px-2 text-xs font-medium text-primary hover:underline"
+                            >
+                                Limpiar todo
+                            </button>
+                        ) : null}
+                    </div>
+                ) : null}
+
+                <AlphabetStrip alphabet={alphabet} selected={filters.letter} onSelect={(letter)=>setFilter("letter", letter)} />
+            </div>
+
+            <div className="flex flex-1 flex-col">
+                {isLoading ? <LibraryGridSkeleton count={Math.min(parseInt(filters.limit), 25)} /> : null}
+
+                {isError ? (
+                    <ErrorState
+                        title="No se pudo cargar la biblioteca"
+                        onRetry={()=>void refetch()}
+                    />
+                ) : null}
+
+                {!isLoading && !isError && series.data.length === 0 ? (
+                    <EmptyState
+                        icon={SearchX}
+                        title={hasActiveFilters ? "Sin resultados" : "Esta biblioteca está vacía"}
+                        description={hasActiveFilters
+                            ? "Ninguna serie coincide con los filtros seleccionados."
+                            : "Añade series a tu biblioteca y aparecerán aquí."}
+                    >
+                        {hasActiveFilters ? (
+                            <Button variant="secondary" size="sm" onClick={clearFilters}>Limpiar filtros</Button>
+                        ) : null}
+                    </EmptyState>
+                ) : null}
+
+                {!isLoading && !isError && series.data.length > 0 ? (
+                    <ul className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-5 p-4 lg:p-6">
+                        {series.data.map((serie)=>(
+                            <li key={serie._id} className="[content-visibility:auto] [contain-intrinsic-size:auto_260px]">
+                                <CoverCard kind="serie" serie={serie} noVariantIndicator />
+                            </li>
+                        ))}
+                    </ul>
+                ) : null}
+
+                {series.pages > 1 ? (
+                    <div className="sticky bottom-0 z-10 mt-auto flex items-center justify-center gap-4 border-t border-app-border bg-app-bg/95 py-2 backdrop-blur">
+                        <Pagination page={filters.page} pages={series.pages} onPageChange={setPage} />
+                        <p className="hidden text-xs text-fg-muted sm:block">Página {filters.page} de {series.pages}</p>
+                    </div>
+                ) : null}
             </div>
         </div>
     );

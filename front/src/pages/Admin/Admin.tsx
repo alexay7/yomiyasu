@@ -1,140 +1,189 @@
-import React, {Fragment, useEffect} from "react";
-import {Helmet} from "react-helmet";
-import {LoggedUser} from "../../types/user";
-import {useQuery} from "react-query";
-import {api} from "../../api/api";
-import {DataGrid, GridColDef} from "@mui/x-data-grid";
-import {Checkbox, IconButton, Tooltip} from "@mui/material";
+import {Check, ShieldCheck, Trash2, User} from "lucide-react";
+import React, {useMemo, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
 import {toast} from "react-toastify";
+import {api} from "../../api/api";
 import {useAuth} from "../../contexts/AuthContext";
-import {UserCreator} from "./components/UserCreator";
-import {Delete, Person} from "@mui/icons-material";
-import {useNavigate} from "react-router-dom";
+import {invalidateUsers} from "../../lib/invalidate";
+import {keys} from "../../lib/queryKeys";
+import {useTitle} from "../../lib/useTitle";
 import {confirmDialog} from "../../stores/ConfirmStore";
+import {LoggedUser} from "../../types/user";
+import {Checkbox} from "../../ui/Checkbox";
+import {EmptyState} from "../../ui/EmptyState";
+import {ErrorState} from "../../ui/ErrorState";
+import {Tooltip} from "../../ui/Tooltip";
+import {IconButton} from "../../ui/IconButton";
+import {Table, type SortDirection, type TableColumn, type TableSort} from "../../ui/Table";
+import {Spinner} from "../../ui/Spinner";
+import {UserCreator} from "./components/UserCreator";
+
+interface UserRow {
+    id:string;
+    username:string;
+    email:string;
+    admin:boolean;
+}
 
 export default function Admin():React.ReactElement {
     const {userData} = useAuth();
+    const [sort, setSort] = useState<TableSort | null>(null);
 
-    const navigate = useNavigate();
+    useTitle("Administración");
 
-    useEffect(()=>{
-        if (userData && !userData.admin) {
-            navigate("/");
-        }
-    }, [userData, navigate]);
+    const isAdmin = Boolean(userData?.admin);
 
-    const {data = [], refetch} = useQuery("users", async()=>{
-        const res = await api.get<LoggedUser[]>("users");
+    const {data = [], isLoading, isError, refetch} = useQuery({
+        queryKey:keys.users,
+        queryFn:async()=>{
+            const res = await api.get<LoggedUser[]>("users");
 
-        if (!res) return [];
+            if (!res) return [];
 
-        const parsedRow = res.map((x)=>{
-            return {
-                id:x._id,
-                username:x.username,
-                email:x.email,
-                admin:x.admin
-            };
-        });
-
-        return parsedRow;
+            return res.map((user)=>({
+                id:user._id,
+                username:user.username,
+                email:user.email,
+                admin:user.admin
+            }));
+        },
+        enabled:isAdmin
     });
 
-    async function makeAdmin(user:{id:string, email:string}, checked:boolean):Promise<void> {
-        if (await confirmDialog(`¿Estás seguro de que quieres ${checked ? "dar" : "quitar"} permisos de administrador a ${user.email}?`)) {
-            const res = await api.post(`users/${user.id}/admin`, {admin:checked});
-            if (res) {
-                await refetch();
-            }
+    const sortedRows = useMemo(()=>{
+        if (!sort) return data;
+
+        const factor = sort.direction === "asc" ? 1 : -1;
+
+        return [...data].sort((a, b)=>{
+            const left = String(a[sort.field as keyof UserRow] ?? "");
+            const right = String(b[sort.field as keyof UserRow] ?? "");
+            return left.localeCompare(right) * factor;
+        });
+    }, [data, sort]);
+
+    async function toggleAdmin(user:UserRow, checked:boolean):Promise<void> {
+        if (!await confirmDialog(`¿Estás seguro de que quieres ${checked ? "dar" : "quitar"} permisos de administrador a ${user.email}?`)) {
             return;
         }
-        toast.error("Acción cancelada");
+
+        const res = await api.post(`users/${user.id}/admin`, {admin:checked});
+
+        if (res) {
+            invalidateUsers();
+            void refetch();
+        }
     }
 
-    async function deleteUser(user:{id:string, email:string}):Promise<void> {
-        if (await confirmDialog(`¿Estás seguro de que quieres eliminar a ${user.email} de la base de datos?`)) {
-            const res = await api.delete(`users/${user.id}`);
-            if (res) {
-                await refetch();
-            }
+    async function deleteUser(user:UserRow):Promise<void> {
+        if (!await confirmDialog(`¿Estás seguro de que quieres eliminar a ${user.email} de la base de datos?`)) {
             return;
         }
-        toast.error("Acción cancelada");
+
+        const res = await api.delete(`users/${user.id}`);
+
+        if (res) {
+            toast.success("Usuario eliminado");
+            invalidateUsers();
+            void refetch();
+        }
     }
 
-    const columns: GridColDef[] = [
+    function handleSortChange(field:string, direction:SortDirection):void {
+        setSort({field, direction});
+    }
+
+    const columns:Array<TableColumn<UserRow>> = [
+        {key:"username", header:"Nombre de usuario", sortable:true, render:(row)=>row.username},
+        {key:"email", header:"Correo electrónico", sortable:true, render:(row)=><span className="text-fg-muted">{row.email}</span>},
         {
-            field: "id",
-            headerName: "Id de usuario",
-            width:150
-        },
-        {
-            field: "username",
-            headerName: "Nombre de usuario",
-            flex:1
-        },
-        {
-            field: "email",
-            headerName: "Correo electrónico",
-            flex:2
-        },
-        {
-            field: "admin",
-            headerName: "¿Es Admin?",
-            width: 100,
-            sortable:false,
-            filterable:false,
-            renderCell:(params)=>(
-                <Checkbox disabled={params.row.id === userData?._id} checked={params.value as boolean} onChange={(_, c)=>{
-                    void makeAdmin(params.row, c);
-                }}
-                />
+            key:"admin",
+            header:"¿Es admin?",
+            width:"8rem",
+            align:"center",
+            render:(row)=>(
+                <span className="inline-flex justify-center">
+                    <Checkbox
+                        checked={row.admin}
+                        disabled={row.id === userData?._id}
+                        aria-label={`Permisos de administrador de ${row.username}`}
+                        onCheckedChange={(checked)=>void toggleAdmin(row, checked === true)}
+                    />
+                </span>
             )
         },
         {
-            field: "delete",
-            headerName: "Eliminar usuario",
-            width: 150,
-            sortable:false,
-            filterable:false,
-            renderCell:(params)=>(
-                <Fragment>
-                    {params.row.id === userData?._id ? (
-                        <Tooltip title="Eres tú">
-                            <IconButton color="info">
-                                <Person/>
-                            </IconButton>
-                        </Tooltip>
-                    ) : (
-                        <IconButton color="error" onClick={()=>{
-                            void deleteUser(params.row);
-                        }}
-                        >
-                            <Delete/>
-                        </IconButton>
-                    )}
-                </Fragment>
+            key:"delete",
+            header:"Eliminar",
+            width:"6rem",
+            align:"center",
+            render:(row)=>(
+                row.id === userData?._id ? (
+                    <Tooltip content="Eres tú">
+                        <span className="inline-flex justify-center text-fg-muted">
+                            <User className="size-4" />
+                        </span>
+                    </Tooltip>
+                ) : (
+                    <IconButton
+                        label={`Eliminar a ${row.username}`}
+                        variant="danger"
+                        size="sm"
+                        onClick={()=>void deleteUser(row)}
+                    >
+                        <Trash2 />
+                    </IconButton>
+                )
             )
         }
     ];
 
-    return (
-        <div className="flex flex-col w-full dark:bg-app-bg gap-8 overflow-y-scroll h-[calc(100svh-4rem)]">
-            <Helmet>
-                <title>YomiYasu - Panel Admin</title>
-            </Helmet>
-            <div className="m-8 flex flex-col gap-4">
-
-                <div className="flex justify-between py-4">
-                    <h2 className="dark:text-white pt-2 text-2xl">Lista de usuarios</h2>
-                    <UserCreator refetch={()=> void refetch()}/>
-                </div>
-                <DataGrid className="dark:bg-app-surface" rows={data} columns={columns}
-                    rowCount={data.length}
-                    sortingMode="server"
-                    disableColumnFilter
-                />
+    if (!userData) {
+        return (
+            <div className="flex justify-center py-24">
+                <Spinner size={24} className="text-fg-muted" />
             </div>
+        );
+    }
+
+    if (!isAdmin) {
+        return (
+            <EmptyState
+                icon={ShieldCheck}
+                title="Acceso restringido"
+                description="No tienes permisos de administrador."
+            />
+        );
+    }
+
+    if (isError) {
+        return <ErrorState title="No se pudo cargar la lista de usuarios" onRetry={()=>void refetch()} />;
+    }
+
+    return (
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 lg:px-8">
+            <header className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl font-bold text-fg">Administración</h1>
+                    <p className="text-sm text-fg-muted">{data.length} usuarios registrados</p>
+                </div>
+                <UserCreator refetch={()=>void refetch()} />
+            </header>
+
+            <Table
+                columns={columns}
+                rows={sortedRows}
+                getRowId={(row)=>row.id}
+                loading={isLoading}
+                sort={sort}
+                onSortChange={handleSortChange}
+                empty="No hay usuarios"
+            />
+
+            <p className="flex items-center gap-1.5 text-xs text-fg-muted">
+                <Check className="size-3.5" />
+                Los cambios de permisos y borrados requieren confirmación.
+            </p>
         </div>
     );
 }

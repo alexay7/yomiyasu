@@ -1,35 +1,22 @@
-import React, {useEffect} from "react";
-import {useQuery} from "react-query";
+import React from "react";
+import {useQuery} from "@tanstack/react-query";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
-import {useGlobal} from "../../../contexts/GlobalContext";
 import {SerieWithProgress} from "../../../types/serie";
+import {keys} from "../../../lib/queryKeys";
 
 interface ReadLaterScrollerProps {
     variant:"manga" | "novela";
 }
 
 function ReadLaterScroller({variant}:ReadLaterScrollerProps):React.ReactElement {
-    const {reloaded} = useGlobal();
-    const {data:readlist, refetch:readlistRefetch, isLoading, isError} = useQuery(["readlist", variant], async()=> {
-        const res = await api.get<SerieWithProgress[]>(`series/${variant}/readlist`);
-        return res;
+    const {data:readlist, refetch:readlistRefetch, isLoading, isError} = useQuery({
+        queryKey:keys.readlist(variant),
+        queryFn:async()=> {
+            return api.get<SerieWithProgress[]>(`series/${variant}/readlist`);
+        }
     });
-
-    useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            await Promise.all([
-                readlistRefetch()
-            ]);
-        }
-
-        if (reloaded && reloaded !== "reviews") {
-            setTimeout(()=>{
-                void refetchBooks();
-            }, 1000);
-        }
-    }, [readlistRefetch, reloaded]);
 
     if (isLoading) return <ScrollerSkeleton title={`"Leer más tarde" ${variant}`}/>;
 
@@ -42,7 +29,7 @@ function ReadLaterScroller({variant}:ReadLaterScrollerProps):React.ReactElement 
     if (!readlist || readlist.length === 0) return <></>;
 
     return (
-        <ComponentScroller type="series" variant={variant} title={`"Leer más tarde" ${variant}`} components={readlist} noVariantIndicator/>
+        <ComponentScroller type="series" title={`"Leer más tarde" ${variant}`} components={readlist} noVariantIndicator/>
     );
 }
 

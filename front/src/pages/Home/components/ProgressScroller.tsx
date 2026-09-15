@@ -1,50 +1,39 @@
-import React, {useEffect} from "react";
-import {useQuery} from "react-query";
-import {Link} from "react-router-dom";
-import {MenuBook} from "@mui/icons-material";
-import {Button} from "@mui/material";
+import React from "react";
+import {useQuery} from "@tanstack/react-query";
+import {useNavigate} from "react-router";
+import {LibraryBig} from "lucide-react";
 import {BookWithProgress} from "../../../types/book";
 import {api} from "../../../api/api";
 import {ComponentScroller} from "../../../components/ComponentScroller/ComponentScroller";
 import {SectionError, ScrollerSkeleton} from "../../../components/Skeletons/Skeletons";
-import {useGlobal} from "../../../contexts/GlobalContext";
 import {useSettingsStore} from "../../../stores/SettingsStore";
+import {keys} from "../../../lib/queryKeys";
+import {Button} from "../../../ui/Button";
 
 function ProgressScroller():React.ReactElement {
-    const {reloaded} = useGlobal();
     const {siteSettings} = useSettingsStore();
+    const navigate = useNavigate();
 
-    const {data:progresoData = [], refetch:progressRefetch, isLoading, isError} = useQuery(["progreso", siteSettings.mainView], async()=> {
-        const res = await api.get<BookWithProgress[]>("readprogress/reading");
+    const {data:progresoData = [], refetch:progressRefetch, isLoading, isError} = useQuery({
+        queryKey:keys.reading(siteSettings.mainView),
+        queryFn:async()=> {
+            const res = await api.get<BookWithProgress[]>("readprogress/reading");
 
-        if (!res) return [];
+            if (!res) return [];
 
-        switch (siteSettings.mainView) {
-            case "manga":{
-                return res.filter((book)=> book.variant === "manga");
-            }
-            case "novels":{
-                return res.filter((book)=> book.variant === "novela");
-            }
-            default:{
-                return res;
+            switch (siteSettings.mainView) {
+                case "manga":{
+                    return res.filter((book)=> book.variant === "manga");
+                }
+                case "novels":{
+                    return res.filter((book)=> book.variant === "novela");
+                }
+                default:{
+                    return res;
+                }
             }
         }
     });
-
-    useEffect(()=>{
-        async function refetchBooks():Promise<void> {
-            await Promise.all([
-                progressRefetch()
-            ]);
-        }
-
-        if (reloaded && reloaded !== "reviews") {
-            setTimeout(()=>{
-                void refetchBooks();
-            }, 1000);
-        }
-    }, [progressRefetch, reloaded]);
 
     if (isLoading) return <ScrollerSkeleton title="En progreso"/>;
 
@@ -58,16 +47,16 @@ function ProgressScroller():React.ReactElement {
         const libraryLink = siteSettings.mainView === "novels" ? "/app/library/novels" : "/app/library/manga";
 
         return (
-            <div>
-                <h2>En progreso</h2>
-                <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-                    <MenuBook className="w-16 h-16" color="primary"/>
-                    <p className="text-xl dark:text-white">Todavía no has empezado ninguna serie</p>
-                    <Link to={libraryLink}>
-                        <Button variant="contained">Explorar la biblioteca</Button>
-                    </Link>
+            <section className="flex flex-col gap-2">
+                <h2 className="text-base font-semibold text-fg">En progreso</h2>
+                <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                    <span className="flex size-14 items-center justify-center rounded-full bg-tint text-primary">
+                        <LibraryBig className="size-7" strokeWidth={1.5} />
+                    </span>
+                    <p className="text-base font-semibold text-fg">Todavía no has empezado ninguna serie</p>
+                    <Button onClick={()=>navigate(libraryLink)}>Explorar la biblioteca</Button>
                 </div>
-            </div>
+            </section>
         );
     }
 

@@ -1,74 +1,90 @@
 import React, {useState} from "react";
-import {useQuery} from "react-query";
+import {useQuery} from "@tanstack/react-query";
 import {api} from "../../../api/api";
-import {UserProgress} from "../../../types/user";
-import {Helmet} from "react-helmet";
-import LogGrid, {LogData} from "../components/LogGrid";
-import {Alert, Snackbar} from "@mui/material";
+import {keys} from "../../../lib/queryKeys";
+import {useTitle} from "../../../lib/useTitle";
+import type {UserProgress} from "../../../types/user";
+import type {SortDirection, TableSort} from "../../../ui/Table";
+import {Snackbar} from "../../../ui/Snackbar";
+import {LogTable, type LogData} from "../components/LogTable";
+
+const PAGE_SIZE = 25;
 
 function History():React.ReactElement {
-    const [total, setTotal] = useState(0);
-    const [sortField, setSortField] = useState("!lastUpdateDate");
-    const [paginationModel, setPaginationModel] = useState({
-        pageSize: 25,
-        page: 0
-    });
+    const [sort, setSort] = useState<TableSort>({field:"lastUpdateDate", direction:"desc"});
+    const [page, setPage] = useState(1);
     const [copied, setCopied] = useState(false);
 
-    const {data:progressData = [], refetch:refetchProgress, isSuccess, isLoading} = useQuery(["progresses", paginationModel, sortField], async()=>{
-        const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${paginationModel.page + 1}&limit=${paginationModel.pageSize}&sort=${sortField}`);
+    useTitle("Historial");
 
-        if (!res) return [];
+    const apiSort = `${sort.direction === "desc" ? "!" : ""}${sort.field}`;
 
-        setTotal(res.total);
+    const {data = {rows:[], total:0}, refetch, isSuccess, isLoading} = useQuery({
+        queryKey:keys.progressLogs({page, sort:apiSort}),
+        queryFn:async()=>{
+            const res = await api.get<{data:UserProgress[], total:number}>(`readprogress/all?page=${page}&limit=${PAGE_SIZE}&sort=${apiSort}`);
 
-        const rows:LogData[] = [];
+            if (!res) return {rows:[], total:0};
 
-        res.data.forEach((progress)=>{
-            let thumbnail = progress.variant === "manga" ? `/mangas/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}` : `/novelas/${progress.bookInfo.seriePath}/${progress.bookInfo.thumbnailPath}`;
+            const rows:LogData[] = [];
 
-            if (progress.bookInfo.mokured) {
-                thumbnail = `/novelas/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`;
-            }
+            res.data.forEach((progress)=>{
+                let thumbnail = progress.variant === "manga" ? `/mangas/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}` : `/novelas/${progress.bookInfo.seriePath}/${progress.bookInfo.thumbnailPath}`;
 
-            rows.push({
-                id:progress._id,
-                bookId:progress.bookInfo._id,
-                image:`/api/static/${thumbnail}`,
-                book:progress.bookInfo.visibleName,
-                serie:progress.serieInfo.visibleName,
-                tipo:progress.variant,
-                status:progress.status,
-                currentPage:progress.currentPage,
-                startDate:progress.startDate,
-                endDate:progress.endDate,
-                time:progress.time,
-                lastUpdateDate:progress.lastUpdateDate,
-                characters:progress.characters || 0
+                if (progress.bookInfo.mokured) {
+                    thumbnail = `/novelas/${progress.bookInfo.seriePath}/${progress.bookInfo.imagesFolder}/${progress.bookInfo.thumbnailPath}`;
+                }
+
+                rows.push({
+                    id:progress._id,
+                    bookId:progress.bookInfo._id,
+                    image:`/api/static/${thumbnail}`,
+                    book:progress.bookInfo.visibleName,
+                    serie:progress.serieInfo.visibleName,
+                    tipo:progress.variant,
+                    status:progress.status,
+                    currentPage:progress.currentPage,
+                    startDate:progress.startDate,
+                    endDate:progress.endDate,
+                    time:progress.time,
+                    lastUpdateDate:progress.lastUpdateDate,
+                    characters:progress.characters || 0
+                });
             });
-        });
 
-        return rows;
+            return {rows, total:res.total};
+        }
     });
 
+    function handleSortChange(field:string, direction:SortDirection):void {
+        setSort({field, direction});
+        setPage(1);
+    }
+
+    const pages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
+
     return (
-        <div className="dark:bg-app-bg overflow-y-scroll h-[calc(100svh-4rem)] px-4">
-            <Helmet>
-                <title>YomiYasu - Historial</title>
-            </Helmet>
-            <Snackbar
-                open={copied}
-                autoHideDuration={2000}
-                onClose={()=>setCopied(false)}
-            >
-                <Alert severity="success">Log copiado al portapapeles</Alert>
-            </Snackbar>
-            <div className="flex flex-col py-4">
-                <h1 className="dark:text-white px-4 pb-8 pt-2 text-2xl">Historial de Lectura</h1>
-                <LogGrid data={progressData} total={total} setSortField={setSortField} setPaginationModel={setPaginationModel}
-                    refetch={()=>void refetchProgress()} setCopied={setCopied} loading={isLoading || !isSuccess}
-                />
-            </div>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8">
+            <header className="flex flex-col gap-1">
+                <h1 className="text-xl font-bold text-fg">Historial de lectura</h1>
+                <p className="text-sm text-fg-muted">
+                    {data.total.toLocaleString()} registros. Haz click en una fila para copiar el log.
+                </p>
+            </header>
+
+            <LogTable
+                data={data.rows}
+                loading={isLoading || !isSuccess}
+                refetch={()=>void refetch()}
+                onCopied={()=>setCopied(true)}
+                sort={sort}
+                onSortChange={handleSortChange}
+                page={page}
+                pages={pages}
+                onPageChange={setPage}
+            />
+
+            <Snackbar open={copied} onOpenChange={setCopied} message="Log copiado al portapapeles" />
         </div>
     );
 }

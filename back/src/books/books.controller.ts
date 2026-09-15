@@ -10,6 +10,7 @@ import {UsersService} from "../users/users.service";
 import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UpdateBookDto, UpdateCoverDto} from "./dto/update-book.dto";
 import {getCharacterCount, getNovelCharacterCount} from "./helpers/helpers";
+import {ensureThumbnail} from "./helpers/thumbnail";
 import {join} from "path";
 import {CacheInterceptor, CacheTTL, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
@@ -156,6 +157,9 @@ export class BooksController {
         const cover = join(mainFolderPath, "novelas", foundBook.seriePath, foundBook.path + ".jpg");
 
         await fs.writeFile(cover, image);
+
+        // Regenera la miniatura para que la nueva portada se vea al momento
+        await ensureThumbnail(mainFolderPath, join("novelas", foundBook.seriePath, foundBook.path + ".jpg"));
 
         return {status:"ok"};
     }

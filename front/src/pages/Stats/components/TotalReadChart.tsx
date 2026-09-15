@@ -1,92 +1,80 @@
-import React from "react";
-
+import {
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    type ChartData,
+    type ChartOptions,
+    Filler,
+    Legend,
+    LinearScale,
+    Title,
+    Tooltip,
+} from "chart.js";
+import {useMemo} from "react";
 import {Bar} from "react-chartjs-2";
-import {Chart as ChartJS, LinearScale, CategoryScale, PointElement, LineElement, BarElement, Title, Filler, ChartData, Point} from "chart.js";
-import {useTheme} from "@mui/material";
+import {useIsDarkMode} from "../../../lib/colorMode";
+import {chartTokens} from "../../../lib/tokens";
 
-ChartJS.register(LinearScale, CategoryScale, PointElement, LineElement, BarElement, Title, Filler);
+ChartJS.register(LinearScale, CategoryScale, BarElement, Title, Legend, Filler, Tooltip);
 
-interface DataPoint {
-    month: string;
-    totalHours: number;
+interface HoursPoint {
+    month:string;
+    totalHours:number;
 }
 
-
-interface HoursProps {
-    data:{
-        manga:DataPoint[];
-        novelas:DataPoint[];
-    },
-    labels?:string[];
+interface TotalReadChartProps {
+    data:{manga:HoursPoint[], novelas:HoursPoint[]};
+    labels:string[];
 }
 
-function TotalReadChart(props:HoursProps):React.ReactElement {
-    const {data, labels} = props;
-    const theme = useTheme();
+function TotalReadChart({data, labels}:TotalReadChartProps):React.ReactElement {
+    const isDark = useIsDarkMode();
+    const tokens = chartTokens(isDark);
 
-    const style = getComputedStyle(document.body);
-    const primCol = `${style.getPropertyValue("--primary-color")}39`;
-    const accCol = style.getPropertyValue("--primary-color");
-    const secCol = `${style.getPropertyValue("--accent-color")}39`;
-    const secAccCol = style.getPropertyValue("--accent-color");
-
-    const chartData:ChartData<"bar", (number | Point | null)[], unknown> = {
-        labels: labels,
+    const chartData = useMemo<ChartData<"bar">>(()=>({
+        labels:labels.length === 1 ? labels.concat(labels) : labels,
         datasets: [
             {
                 label: "Manga",
-                data: data.manga.map((item) => item.totalHours),
-                borderColor: accCol,
-                backgroundColor: primCol,
-                borderWidth: 3
+                data:data.manga.map((item)=>item.totalHours),
+                backgroundColor: tokens.primary,
+                borderRadius: 4,
+                stack: "horas",
             },
             {
-                label: "Novelas",
-                data: data.novelas.map((item) => item.totalHours),
-                borderColor: secAccCol,
-                backgroundColor: secCol,
-                borderWidth: 3
-            }
-        ]
-    };
-
-    const chartOptions  = {
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: "Horas totales",
-                    color:theme.palette.mode === "dark" ? "white" : "black"
-                },
-                grace:"10%",
-                ticks: {
-                    color: theme.palette.mode === "dark" ? "white" : "black"
-                },
-                stacked:true
+                label: "Novela",
+                data:data.novelas.map((item)=>item.totalHours),
+                backgroundColor: tokens.accent,
+                borderRadius: 4,
+                stack: "horas",
             },
-            x: {
-                title: {
-                    display: true,
-                    text: "Meses",
-                    color:theme.palette.mode === "dark" ? "white" : "black"
-                },
-                ticks: {
-                    color: theme.palette.mode === "dark" ? "white" : "black"
-                },
-                stacked:true
-            }
-        },
-        elements:{
-            line:{
-                tension:0.4
-            }
-        },
-        color:theme.palette.mode === "dark" ? "white" : "black",
-        maintainAspectRatio: false
-    };
+        ],
+    }), [data, labels, tokens.primary, tokens.accent]);
 
-    return <Bar data={chartData} options={{...chartOptions, plugins:{tooltip:{mode:"index", intersect:false}}}} />;
+    const options = useMemo<ChartOptions<"bar">>(()=>({
+        maintainAspectRatio: false,
+        color: tokens.fg,
+        scales: {
+            x: {
+                stacked: true,
+                ticks: {color: tokens.fgMuted},
+                grid: {display: false},
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true,
+                ticks: {color: tokens.fgMuted},
+                grid: {color: tokens.border},
+                title: {display: true, text: "Horas", color: tokens.fgMuted},
+            },
+        },
+        plugins: {
+            legend: {labels: {color: tokens.fg, boxWidth: 12}},
+            tooltip: {mode: "index", intersect: false},
+        },
+    }), [tokens.fg, tokens.fgMuted, tokens.border]);
+
+    return <Bar data={chartData} options={options} />;
 }
 
 export default TotalReadChart;

@@ -12,6 +12,8 @@ interface SettingsState {
     modifySiteSettings:<K extends keyof SiteConfig>(key:K, value:SiteConfig[K])=>void;
     openSettings:boolean;
     setOpenSettings:(v:boolean)=>void;
+    sidebarCollapsed:boolean;
+    setSidebarCollapsed:(v:boolean)=>void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -49,34 +51,23 @@ export const useSettingsStore = create<SettingsState>()(
             setSiteSettings: (v) => set({siteSettings:v}),
             modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}}),
             openSettings: false,
-            setOpenSettings: (v) => set({openSettings: v})
+            setOpenSettings: (v) => set({openSettings: v}),
+            sidebarCollapsed: false,
+            setSidebarCollapsed: (v) => set({sidebarCollapsed: v})
         }),
         {
             name:"yomiyasu-settings",
             storage:createJSONStorage(()=>localStorage),
+            // openSettings es estado efímero de UI: no debe restaurarse entre sesiones
+            partialize: (state) => ({
+                readerSettings: state.readerSettings,
+                siteSettings: state.siteSettings,
+                sidebarCollapsed: state.sidebarCollapsed
+            }),
             merge: (source, target) => {
                 const prev = source as SettingsState;
-                return {...target, ...prev};
+                return {...target, ...prev, openSettings: false};
             }
         }
     )
 );
-
-export function defaultSets():unknown {
-    return {
-        page_idx: 0,
-        page2_idx: -1,
-        hasCover: false,
-        r2l: true,
-        singlePageView: false,
-        ctrlToPan: false,
-        textBoxBorders: false,
-        editableText: false,
-        displayOCR: true,
-        fontSize: "auto",
-        eInkMode: false,
-        defaultZoomMode: "fit to screen",
-        toggleOCRTextBoxes: false,
-        openHTML:false
-    };
-}

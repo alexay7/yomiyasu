@@ -1,9 +1,7 @@
-import {NavigateFunction} from "react-router-dom";
+import {NavigateFunction} from "react-router";
 import {api} from "../api/api";
 import {Book, BookWithProgress} from "../types/book";
-import {SerieWithProgress} from "../types/serie";
 import {openNovel} from "./ttu";
-import {goTo} from "./helpers";
 import {confirmDialog} from "../stores/ConfirmStore";
 
 type MoveBook = {
@@ -13,7 +11,7 @@ type MoveBook = {
     variant:"manga",
 } | {
     variant:"novela",
-    connector:React.RefObject<HTMLIFrameElement>,
+    connector:React.RefObject<HTMLIFrameElement | null>,
 });
 
 export async function nextBook(props:MoveBook):Promise<void> {
@@ -28,11 +26,11 @@ export async function nextBook(props:MoveBook):Promise<void> {
     }
 
     if (foundBook._id === "end") {
-        goTo(navigate, `/app/series/${book.serie}?finished=true`);
+        navigate(`/app/series/${book.serie}?finished=true`);
         return;
     }
     if (variant === "manga" || book.mokured) {
-        goTo(navigate, `/reader/${foundBook._id}`);
+        navigate(`/reader/${foundBook._id}`);
         return;
     }
 
@@ -54,11 +52,11 @@ export async function prevBook(props:MoveBook):Promise<void> {
     }
 
     if (foundBook._id === "start") {
-        goTo(navigate, `/app/series/${book.serie}`);
+        navigate(`/app/series/${book.serie}`);
         return;
     }
     if (variant === "manga" || book.mokured) {
-        goTo(navigate, `/reader/${foundBook._id}`);
+        navigate(`/reader/${foundBook._id}`);
         return;
     }
 
@@ -68,9 +66,3 @@ export async function prevBook(props:MoveBook):Promise<void> {
     await openNovel(connector, foundBook, false, false);
 }
 
-export async function iBook(serieData:SerieWithProgress, navigate:NavigateFunction):Promise<void> {
-    if (serieData.unreadBooks === 0) {
-        if (!await confirmDialog("Ya has leído este volumen. ¿Quieres iniciar un nuevo progreso de lectura?")) return;
-    }
-    goTo(navigate, `/reader/${serieData.currentBook}`);
-}
