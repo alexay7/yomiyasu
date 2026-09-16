@@ -64,6 +64,8 @@ export class AppService {
           const mainFolderPath = join(process.cwd(), "..", "exterior", "mangas");
           let areChanges = false;
 
+          this.cleanupLeakedZips(join(process.cwd(), "..", "exterior"));
+
           const items = fs.readdirSync(mainFolderPath);
 
           // Escanea directorios y archivos html
@@ -246,6 +248,8 @@ export class AppService {
               bookPath?: string;
           }[] = [];
 
+          this.cleanupLeakedZips(join(process.cwd(), "..", "exterior"));
+
           const items = fs.readdirSync(mainFolderPath);
 
           // Escanea directorios y archivos html
@@ -400,6 +404,30 @@ export class AppService {
       } catch (e) {
           this.logger.error("Something went wrong");
           console.error(e);
+      }
+  }
+
+  /**
+   * Elimina los .zip residuales que las versiones anteriores de la descarga
+   * de series dejaban en la raíz de exterior/. Las descargas actuales se
+   * envían directamente al cliente, así que cualquier .zip ahí es basura.
+   */
+  private cleanupLeakedZips(exteriorRoot: string) {
+      let removed = 0;
+
+      for (const item of fs.readdirSync(exteriorRoot)) {
+          if (!item.endsWith(".zip")) continue;
+
+          try {
+              fs.unlinkSync(join(exteriorRoot, item));
+              removed++;
+          } catch (error) {
+              this.logger.warn(`No se pudo borrar el zip residual ${item}: ${error}`);
+          }
+      }
+
+      if (removed > 0) {
+          this.logger.log(`\x1b[34mBorrados ${removed} zips residuales de exterior/`);
       }
   }
 

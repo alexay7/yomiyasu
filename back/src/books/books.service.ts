@@ -3,6 +3,7 @@ import {InjectModel} from "@nestjs/mongoose";
 import {Book, BookDocument} from "./schemas/book.schema";
 import {Model, Types} from "mongoose";
 import {SearchQuery, UpdateBook, UserBook} from "./interfaces/query";
+import {resolveInside, ZIP_COMPRESSION_LEVEL} from "./helpers/zipDownload";
 import * as archiver from "archiver";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -106,43 +107,82 @@ export class BooksService {
 
   async zipBooksFromSerie(serie:Types.ObjectId){
     const books = await this.bookModel.find({serie}).sort({sortName:1});
+    const mainFolderPath = path.join(process.cwd(), "..", "exterior", "mangas");
 
-    await Promise.all(books.map(async book=>{
-        const mainFolderPath = path.join(process.cwd(), "..", "exterior", "mangas");
+    const tasks = books.map((book) => async () => {
+        if (!book.seriePath || !book.imagesFolder) return;
 
-        const zipPath = path.join(mainFolderPath, book.seriePath,`${book.imagesFolder}.cbz`);
-        const folderPath = path.join(mainFolderPath, book.seriePath, book.imagesFolder);
+        const folderPath = resolveInside(mainFolderPath, book.seriePath, book.imagesFolder);
+        const zipPath = `${folderPath}.cbz`;
 
         // Check if zip exists
         if (fs.existsSync(zipPath)) {
             return;
         }
 
-        await this.zipImagesFolder(folderPath, zipPath);
-  }))
-}
-
-  async zipImagesFolder(folderPath:string, zipPath:string){
-    // Create a zip file with the contents of the folder
-    const output = fs.createWriteStream(zipPath);
-    const archive = archiver("zip", {zlib: {level: 9}});
-    output.on("close", () => {
-        console.log(archive.pointer() + " total bytes");
-        console.log("archiver has been finalized and the output file descriptor has closed.");
-    });
-    archive.on("warning", (err) => {
-        if (err.code === "ENOENT") {
-            console.log(err);
-        } else {
-            throw err;
+        if (!fs.existsSync(folderPath)) {
+            this.logger.warn(`No se pudo crear el cbz de ${book.path}: falta la carpeta ${folderPath}`);
+            return;
         }
+
+        await this.zipImagesFolder(folderPath, zipPath);
+        this.logger.log(`Cbz creado: ${zipPath}`);
     });
-    archive.on("error", (err) => {
-        throw err;
+
+    // Número limitado de zips en paralelo para no saturar el disco ni la CPU
+    let next = 0;
+    const worker = async () => {
+        while (next < tasks.length) {
+            const task = tasks[next++];
+
+            try {
+                await task();
+            } catch (error) {
+                this.logger.error("Error al crear un cbz de la serie", error);
+            }
+        }
+    };
+
+    await Promise.all(
+        Array.from({length: Math.min(4, tasks.length)}, worker)
+    );
+  }
+
+  async zipImagesFolder(folderPath:string, zipPath:string): Promise<void>{
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver("zip", {zlib: {level: ZIP_COMPRESSION_LEVEL}});
+
+    let settle: (error?: Error) => void = () => {};
+    const finished = new Promise<void>((resolve, reject) => {
+        let done = false;
+
+        settle = (error?: Error) => {
+            if (done) return;
+            done = true;
+
+            if (error) reject(error);
+            else resolve();
+        };
     });
+
+    output.on("close", () => settle());
+    output.on("error", (error) => settle(error));
+    archive.on("error", (error) => settle(error));
+    archive.on("warning", (error) => {
+        if (error.code !== "ENOENT") settle(error);
+    });
+
     archive.pipe(output);
     archive.directory(folderPath, false);
-    await archive.finalize();
+    archive.finalize().then(() => settle(), (error) => settle(error));
+
+    try {
+        await finished;
+    } catch (error) {
+        // No dejar cbz a medias en la biblioteca
+        await fs.remove(zipPath);
+        throw error;
+    }
   }
 
   async findById(id: Types.ObjectId): Promise<Book | null> {

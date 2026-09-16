@@ -1,4 +1,4 @@
-import {Controller, Get, Inject, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors, Res, BadRequestException, StreamableFile, InternalServerErrorException} from "@nestjs/common";
+import {Controller, Get, Inject, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors, Res, BadRequestException} from "@nestjs/common";
 import {BooksService} from "./books.service";
 import {Request, Response} from "express";
 import {Types} from "mongoose";
@@ -11,11 +11,11 @@ import {WebsocketsGateway} from "../websockets/websockets.gateway";
 import {UpdateBookDto, UpdateCoverDto} from "./dto/update-book.dto";
 import {getCharacterCount, getNovelCharacterCount} from "./helpers/helpers";
 import {ensureThumbnail} from "./helpers/thumbnail";
+import {resolveInside, streamFileToResponse, streamZipToResponse} from "./helpers/zipDownload";
 import {join} from "path";
 import {CacheInterceptor, CacheTTL, CACHE_MANAGER} from "@nestjs/cache-manager";
 import {Cache} from "cache-manager";
 import * as path from "path";
-import * as archiver from "archiver";
 import * as fs from "fs-extra";
 import EPub from "epub2";
 
@@ -220,70 +220,39 @@ export class BooksController {
     }
 
     @Get(":bookId/download")
-    async downloadZip(@Res({passthrough:true}) res:Response, @Param("bookId", ParseObjectIdPipe) book:Types.ObjectId) {
-        
+    async downloadZip(@Res() res:Response, @Param("bookId", ParseObjectIdPipe) book:Types.ObjectId) {
         const foundBook = await this.booksService.findById(book);
 
-        if (foundBook?.variant === "novela") {
-            const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", "novelas", foundBook?.seriePath);
+        if (!foundBook) throw new NotFoundException();
 
-            // Send the epub file
-            res.setHeader("Content-Type", "application/epub+zip");
-            res.setHeader(
-                "Content-Disposition",
-                `attachment; filename=${encodeURI(foundBook.path)}.epub`
-            );
+        if (!foundBook.seriePath || !foundBook.path) throw new BadRequestException();
 
-            const readStream = fs.createReadStream(path.join(sourceFolderPath, foundBook.path + ".epub"));
+        const exteriorRoot = path.join(__dirname, "..", "..", "..", "exterior");
 
-            return new StreamableFile(readStream);
+        if (foundBook.variant === "novela") {
+            const epubPath = resolveInside(exteriorRoot, "novelas", foundBook.seriePath, `${foundBook.path}.epub`);
+
+            if (!fs.existsSync(epubPath)) throw new NotFoundException();
+
+            await streamFileToResponse(res, epubPath, "application/epub+zip", `${foundBook.path}.epub`);
+
+            return;
         }
 
-        if (!foundBook?.seriePath || !foundBook.path) throw new BadRequestException();
+        if (!foundBook.imagesFolder) throw new BadRequestException();
 
-        const sourceFolderPath = path.join(__dirname, "..", "..", "..", "exterior", "mangas", foundBook?.seriePath);
+        const imagesFolderPath = resolveInside(exteriorRoot, "mangas", foundBook.seriePath, foundBook.imagesFolder);
+        const htmlPath = resolveInside(exteriorRoot, "mangas", foundBook.seriePath, `${foundBook.path}.html`);
 
-        try {
-        // Crear un archivo ZIP
-            const folderPath = path.join(sourceFolderPath, foundBook?.imagesFolder);
-            const zipFileName = `${foundBook.sortName}.zip`;
-            const zipFilePath = path.join(__dirname, "..", "..", "..", "exterior", zipFileName);
-  
-            // Create a write stream to the zip file
-            const output = fs.createWriteStream(zipFilePath);
-  
-            // Create a new archiver instance
-            const archive = archiver("zip", {
-                zlib: {level: 9} // Compression level (0-9)
-            });
-  
-            // Pipe the archive to the output stream
-            archive.pipe(output);
-  
-            // Add the entire folder to the archive
-            archive.directory(folderPath, foundBook.imagesFolder);
-            archive.file(path.join(sourceFolderPath, foundBook.path + ".html"), {name:foundBook.path + ".html"});
-  
-            // Finalize the archive
-            await archive.finalize();
-  
-            // Set the response headers
-            res.setHeader("Content-Type", "application/zip");
-            res.setHeader(
-                "Content-Disposition",
-                `attachment; filename=${zipFileName}`
-            );
-  
-            const readStream = fs.createReadStream(zipFilePath);
+        if (!fs.existsSync(imagesFolderPath) || !fs.existsSync(htmlPath)) throw new NotFoundException();
 
-            readStream.on("close", async()=>{
-                await fs.unlink(zipFilePath);
-            });
-
-            return new StreamableFile(readStream);
-        } catch (error) {
-            console.error("Error al crear y enviar el archivo ZIP:", error);
-            throw new InternalServerErrorException();
-        }
+        await streamZipToResponse(
+            res,
+            [
+                {kind: "directory", path: imagesFolderPath, name: foundBook.imagesFolder},
+                {kind: "file", path: htmlPath, name: `${foundBook.path}.html`}
+            ],
+            `${foundBook.sortName}.zip`
+        );
     }
 }
