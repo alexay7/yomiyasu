@@ -45,8 +45,16 @@ export const useSettingsStore = create<SettingsState>()(
                 startCronoOnPage: false,
                 mainView: "both",
                 showCrono: false,
+                idleTimeout: 0,
                 kindleEmail: undefined,
-                libraryLimit: "25"
+                libraryLimit: "25",
+                showBoardProgress: true,
+                showBoardTablero: true,
+                showBoardReadLater: true,
+                showBoardPaused: false,
+                showBoardNewBooks: true,
+                showBoardNewSeries: true,
+                showBoardRecentSeries: true
             },
             setSiteSettings: (v) => set({siteSettings:v}),
             modifySiteSettings: (key, value) => set({siteSettings: {...get().siteSettings, [key]: value}}),
@@ -65,8 +73,16 @@ export const useSettingsStore = create<SettingsState>()(
                 sidebarCollapsed: state.sidebarCollapsed
             }),
             merge: (source, target) => {
-                const prev = source as SettingsState;
-                return {...target, ...prev, openSettings: false};
+                const prev = source as Partial<SettingsState>;
+                return {
+                    ...target,
+                    ...prev,
+                    // Mezcla anidada: los ajustes persistidos de versiones antiguas no deben
+                    // borrar las claves nuevas (p. ej. tableros del inicio)
+                    readerSettings: {...target.readerSettings, ...prev.readerSettings},
+                    siteSettings: {...target.siteSettings, ...prev.siteSettings},
+                    openSettings: false
+                };
             }
         }
     )

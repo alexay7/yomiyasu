@@ -46,7 +46,6 @@ export default function LocalReader({readerVars:{currentPage,
             iframe: iframe.current,
             settings: readerSettings,
             onToggleToolbar: ()=>setShowToolbar((prev)=>!prev),
-            clickDisplayOcr: true,
             onLoaded: iframeOnLoad
         });
     }

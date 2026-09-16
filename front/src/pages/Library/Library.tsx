@@ -8,9 +8,10 @@ import {CoverCard} from "../../components/CoverCard/CoverCard";
 import {useAuth} from "../../contexts/AuthContext";
 import {buildAlphabetQuery, buildSeriesQuery, useLibraryFilters} from "../../lib/useLibraryFilters";
 import {keys} from "../../lib/queryKeys";
+import {rollRandomSerie, saveRandomCriteria} from "../../lib/randomSerie";
 import {confirmDialog} from "../../stores/ConfirmStore";
 import {useSettingsStore} from "../../stores/SettingsStore";
-import type {Alphabet, SerieWithProgress, SeriesFilter} from "../../types/serie";
+import type {Alphabet, SeriesFilter} from "../../types/serie";
 import {Button} from "../../ui/Button";
 import {EmptyState} from "../../ui/EmptyState";
 import {ErrorState} from "../../ui/ErrorState";
@@ -44,7 +45,7 @@ function Library({variant}:LibraryProps):React.ReactElement {
     const {siteSettings, modifySiteSettings} = useSettingsStore();
 
     const defaultLimit = siteSettings.libraryLimit || window.localStorage.getItem("limit") || "25";
-    const {filters, setFilter, setPage, clearFilters, hasActiveFilters, queryParams} = useLibraryFilters(defaultLimit);
+    const {filters, setFilter, setFilters, setPage, clearFilters, hasActiveFilters, queryParams} = useLibraryFilters(defaultLimit);
 
     const seriesParams = buildSeriesQuery(filters, true);
     const seriesParamsString = seriesParams.toString();
@@ -77,17 +78,18 @@ function Library({variant}:LibraryProps):React.ReactElement {
     });
 
     async function rollDice():Promise<void> {
-        const randomParams = buildSeriesQuery(filters, false);
+        // Recuerda los criterios de la tirada para poder repetirla desde la serie (#180)
+        saveRandomCriteria(variant, filters);
 
         try {
-            const serie = await api.get<SerieWithProgress>(`series/${variant}/random?${randomParams.toString()}`);
+            const serie = await rollRandomSerie(variant);
 
             if (!serie) {
                 toast.error("Ninguna serie coincide con los filtros indicados");
                 return;
             }
 
-            navigate(`/app/series/${serie._id}`);
+            navigate(`/app/series/${serie._id}`, {state:{randomRoll:variant}});
         } catch {
             toast.error("Ninguna serie coincide con los filtros indicados");
         }
@@ -114,9 +116,12 @@ function Library({variant}:LibraryProps):React.ReactElement {
     if (filters.readProgress !== "all") chips.push({key:"progress", label:progressLabels[filters.readProgress] ?? filters.readProgress, onRemove:()=>setFilter("readProgress", "all")});
     if (filters.readlist) chips.push({key:"readlist", label:"Leer más tarde", onRemove:()=>setFilter("readlist", false)});
     if (filters.min > 0 || filters.max < 10) chips.push({key:"difficulty", label:`Dificultad ${filters.min}–${filters.max}`, onRemove:()=>{
-        setFilter("min", 0);
-        setFilter("max", 10);
+        setFilters([["min", 0], ["max", 10]]);
     }});
+    if (filters.vmin > 0 || filters.vmax < 10) chips.push({key:"valoration", label:`Valoración ${filters.vmin}–${filters.vmax}`, onRemove:()=>{
+        setFilters([["vmin", 0], ["vmax", 10]]);
+    }});
+    if (filters.reviews > 0) chips.push({key:"reviews", label:`≥ ${filters.reviews} valoraciones`, onRemove:()=>setFilter("reviews", 0)});
 
     return (
         <div className="flex min-h-full flex-col">
@@ -152,6 +157,7 @@ function Library({variant}:LibraryProps):React.ReactElement {
                         <LibraryFiltersPopover
                             filters={filters}
                             setFilter={setFilter}
+                            setFilters={setFilters}
                             clearFilters={clearFilters}
                             genres={genresAndArtists.genres}
                             authors={genresAndArtists.authors}

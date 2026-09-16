@@ -2,6 +2,7 @@ import {Injectable, ForbiddenException} from "@nestjs/common";
 import {Model, Types} from "mongoose";
 import {InjectModel} from "@nestjs/mongoose";
 import {Review} from "./schemas/review.schema";
+import {UpdateReviewDto} from "./dto/update-review.dto";
 
 @Injectable()
 export class ReviewsService {
@@ -60,7 +61,7 @@ export class ReviewsService {
 
     async getSerieValoration(serie:Types.ObjectId) {
         const pipe = await this.reviewModel.aggregate()
-            .match({serie:new Types.ObjectId(serie)})
+            .match({serie:new Types.ObjectId(serie), valoration:{$ne:null}})
             .group({
                 _id:null,
                 totalRating:{$sum:"$valoration"},
@@ -73,6 +74,20 @@ export class ReviewsService {
         if (pipe.length > 0) {
             return pipe[0].averageRating;
         }
+    }
+
+    async editReview(userId:Types.ObjectId, id:Types.ObjectId, review:UpdateReviewDto) {
+        const foundReview = await this.reviewModel.findOneAndUpdate(
+            {_id:id, user:userId},
+            {$set:review},
+            {new:true, runValidators:true}
+        );
+
+        if (!foundReview) {
+            throw new ForbiddenException();
+        }
+
+        return foundReview;
     }
 
     async removeReview(userId:Types.ObjectId, id:Types.ObjectId) {

@@ -2,26 +2,35 @@ import {ReaderConfig} from "../types/settings";
 
 /**
  * Estilos que se inyectan en el HTML generado por mokuro para adaptarlo al lector.
+ *
+ * `origin` es el origen del front (p. ej. https://manga.manabe.es). Las fuentes
+ * se referencian con URL absoluta porque el lector local carga el HTML como
+ * blob URL, donde las rutas relativas no resuelven.
  */
-export const mokuroStyles = `
+export function mokuroStyles(origin:string):string {
+    return `
             @font-face {
                 font-family: "Zen Antique";
-                src: url("/fonts/ZenAntique.ttf") format("truetype");;
+                src: url("${origin}/fonts/ZenAntique.ttf") format("truetype");
             }
             @font-face {
                 font-family: "IPA";
-                src: url("/fonts/ipaexg.ttf") format("truetype");;
+                src: url("${origin}/fonts/ipaexg.ttf") format("truetype");
             }
-    
+            @font-face {
+                font-family: "Noto Sans JP";
+                src: url("${origin}/fonts/NotoSansJP.woff2") format("woff2");
+            }
+
             .pageContainer * { font-family: var(--user-font); }
             `;
+}
 
 /**
  * Script que se inyecta en el HTML generado por mokuro para hacerlo compatible
  * con el formato iframe dentro de otro documento.
  */
-export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDisplayOcr?:boolean; sanePageIdx?:number}):string {
-    const displayOcrClick = options?.clickDisplayOcr ? "clickById(\"menuDisplayOCR\");" : "";
+export function buildMokuroScript(readerSettings:ReaderConfig, options?:{sanePageIdx?:number}):string {
     const sanePageIdx = options?.sanePageIdx ?? 0;
 
     return `
@@ -42,7 +51,6 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                         el.value = value;
                         el.dispatchEvent(new Event("change"));
                     }
-                    ${displayOcrClick}
     
                         window.addEventListener("message",
                         (event) => {
@@ -288,7 +296,11 @@ export function buildMokuroScript(readerSettings:ReaderConfig, options?:{clickDi
                         oldUpdate(new_page_idx);
                         preloadImage();
                         getText();
-                        window.parent.postMessage({action:"newPage",value:new_page_idx},"*");
+                        // Se reporta state.page_idx (ya normalizado por mokuro a la
+                        // primera página del par) y no el argumento crudo: el slider
+                        // puede caer en la segunda página del spread y esa se guardaba
+                        // como progreso, descuadrando el conteo de caracteres.
+                        window.parent.postMessage({action:"newPage",value:state.page_idx},"*");
                     }
 
                     /**

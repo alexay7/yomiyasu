@@ -1,4 +1,4 @@
-import {MessageSquarePlus, Trash2} from "lucide-react";
+import {MessageSquarePlus, Pencil, Trash2} from "lucide-react";
 import {useEffect, useState} from "react";
 import {useSearchParams} from "react-router";
 import {toast} from "react-toastify";
@@ -6,7 +6,7 @@ import {api} from "../../../api/api";
 import {useAuth} from "../../../contexts/AuthContext";
 import {invalidateSerie} from "../../../lib/invalidate";
 import {confirmDialog} from "../../../stores/ConfirmStore";
-import type {FullSerie} from "../../../types/serie";
+import type {FullSerie, Review} from "../../../types/serie";
 import {Badge} from "../../../ui/Badge";
 import {EmptyState} from "../../../ui/EmptyState";
 import {FlameRating} from "../../../ui/FlameRating";
@@ -22,6 +22,7 @@ export function Reviews({serieData}:ReviewProps):React.ReactElement {
     const {userData} = useAuth();
     const [searchParams] = useSearchParams();
     const [formOpen, setFormOpen] = useState(false);
+    const [editingReview, setEditingReview] = useState<Review | null>(null);
 
     // Flujo "has terminado la serie": abre el formulario automáticamente
     useEffect(()=>{
@@ -48,7 +49,10 @@ export function Reviews({serieData}:ReviewProps):React.ReactElement {
                     <h3 className="text-sm font-semibold text-fg">Valoraciones</h3>
                     <Badge variant="neutral">{serieData.reviews.length}</Badge>
                 </div>
-                <IconButton label="Añadir valoración" variant="primary" size="sm" onClick={()=>setFormOpen(true)}>
+                <IconButton label="Añadir valoración" variant="primary" size="sm" onClick={()=>{
+                    setEditingReview(null);
+                    setFormOpen(true);
+                }}>
                     <MessageSquarePlus />
                 </IconButton>
             </header>
@@ -64,19 +68,31 @@ export function Reviews({serieData}:ReviewProps):React.ReactElement {
                     {serieData.reviews.map((review)=>(
                         <li key={review._id} className="relative flex flex-col gap-2 px-4 py-3">
                             {userData?._id === review.user ? (
-                                <IconButton
-                                    label="Borrar valoración"
-                                    variant="danger"
-                                    size="sm"
-                                    className="absolute right-2 top-2"
-                                    onClick={async()=>{
-                                        if (await confirmDialog("¿Seguro que quieres borrar la valoración?")) {
-                                            void deleteReview(review._id || "");
-                                        }
-                                    }}
-                                >
-                                    <Trash2 />
-                                </IconButton>
+                                <div className="absolute right-2 top-2 flex gap-1">
+                                    <IconButton
+                                        label="Editar valoración"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={()=>{
+                                            setEditingReview(review);
+                                            setFormOpen(true);
+                                        }}
+                                    >
+                                        <Pencil />
+                                    </IconButton>
+                                    <IconButton
+                                        label="Borrar valoración"
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={async()=>{
+                                            if (await confirmDialog("¿Seguro que quieres borrar la valoración?")) {
+                                                void deleteReview(review._id || "");
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 />
+                                    </IconButton>
+                                </div>
                             ) : null}
 
                             <p className="flex items-center gap-2 pr-8 text-sm text-fg">
@@ -106,7 +122,10 @@ export function Reviews({serieData}:ReviewProps):React.ReactElement {
                 </ul>
             )}
 
-            <ReviewFormDialog serie={serieData} open={formOpen} onOpenChange={setFormOpen} />
+            <ReviewFormDialog serie={serieData} review={editingReview} open={formOpen} onOpenChange={(value)=>{
+                setFormOpen(value);
+                if (!value) setEditingReview(null);
+            }} />
         </section>
     );
 }

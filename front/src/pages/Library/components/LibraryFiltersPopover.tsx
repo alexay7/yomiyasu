@@ -14,12 +14,13 @@ import {activeFilterCount, sortOptions} from "./libraryFilterUtils";
 interface LibraryFiltersPopoverProps {
   filters: LibraryFilters;
   setFilter: (key: keyof Omit<LibraryFilters, "page">, value: string | number | boolean | null) => void;
+  setFilters: (updates: Array<[keyof Omit<LibraryFilters, "page">, string | number | boolean | null]>) => void;
   clearFilters: () => void;
   genres: string[];
   authors: string[];
 }
 
-export function LibraryFiltersPopover({filters, setFilter, clearFilters, genres, authors}:LibraryFiltersPopoverProps):React.ReactElement {
+export function LibraryFiltersPopover({filters, setFilter, setFilters, clearFilters, genres, authors}:LibraryFiltersPopoverProps):React.ReactElement {
   const count = activeFilterCount(filters);
 
   return (
@@ -72,9 +73,35 @@ export function LibraryFiltersPopover({filters, setFilter, clearFilters, genres,
               max={10}
               step={1}
               onValueCommit={(values)=>{
-                setFilter("min", values[0]);
-                setFilter("max", values[1]);
+                setFilters([["min", values[0]], ["max", values[1]]]);
               }}
+            />
+          </Field>
+
+          <Field label={`Valoración: ${filters.vmin} – ${filters.vmax}`}>
+            <Slider
+              value={[filters.vmin, filters.vmax]}
+              min={0}
+              max={10}
+              step={1}
+              onValueCommit={(values)=>{
+                setFilters([["vmin", values[0]], ["vmax", values[1]]]);
+              }}
+            />
+          </Field>
+
+          <Field label="Nº mínimo de valoraciones" htmlFor="filter-reviews">
+            <Input
+              id="filter-reviews"
+              type="number"
+              min={0}
+              size="sm"
+              value={filters.reviews === 0 ? "" : `${filters.reviews}`}
+              onChange={(e)=>{
+                const parsed = parseInt(e.target.value);
+                setFilter("reviews", isNaN(parsed) || parsed < 0 ? 0 : parsed);
+              }}
+              placeholder="Cualquiera"
             />
           </Field>
 

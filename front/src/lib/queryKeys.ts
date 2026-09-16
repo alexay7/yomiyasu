@@ -30,6 +30,7 @@ export const keys = {
   newSeries: (variant: string) => ["new-series", variant] as const,
   recentSeries: (variant: string) => ["recent-series", variant] as const,
   readlist: (variant: string) => ["readlist", variant] as const,
+  paused: (variant: string) => ["paused", variant] as const,
 
   // Progreso e historial
   progressLogs: (params?: unknown) => ["progress-logs", params] as const,

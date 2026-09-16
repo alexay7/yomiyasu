@@ -14,7 +14,7 @@ class SeriesSearchT {
     name?:string;
 
     @IsString()
-    sort?:"createdDate" | "bookCount" | "lastModifiedDate" | "sortName" | "difficulty" | "_id" | "characters";
+    sort?:"createdDate" | "bookCount" | "lastModifiedDate" | "sortName" | "difficulty" | "valoration" | "_id" | "characters";
 
     @IsString()
     status?:"PUBLISHING" | "ENDED";
@@ -37,6 +37,18 @@ class SeriesSearchT {
     @Type(()=>Number)
     @IsNumber()
     max?:number;
+
+    @Type(()=>Number)
+    @IsNumber()
+    valorationMin?:number;
+
+    @Type(()=>Number)
+    @IsNumber()
+    valorationMax?:number;
+
+    @Type(()=>Number)
+    @IsNumber()
+    valorationCount?:number;
 
     @IsString()
     readprogress?:"completed" | "reading" | "unread";

@@ -139,13 +139,14 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
     useEffect(()=>{
         const prevSiteSettings = localStorage.getItem("site");
         if (prevSiteSettings) {
-            setSiteSettings(JSON.parse(prevSiteSettings));
+            // Mezcla con los valores actuales: los ajustes antiguos no traen las claves nuevas
+            setSiteSettings({...useSettingsStore.getState().siteSettings, ...JSON.parse(prevSiteSettings)});
             localStorage.removeItem("site");
         }
 
         const prevReaderSettings = localStorage.getItem("reader");
         if (prevReaderSettings) {
-            setReaderSettings(JSON.parse(prevReaderSettings));
+            setReaderSettings({...useSettingsStore.getState().readerSettings, ...JSON.parse(prevReaderSettings)});
             localStorage.removeItem("reader");
         }
     }, [setSiteSettings, setReaderSettings]);

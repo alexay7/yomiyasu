@@ -13,7 +13,7 @@ function invalidate(prefix: readonly unknown[]): void {
   void queryClient.invalidateQueries({ queryKey: prefix });
 }
 
-/** Estanterías del inicio: en progreso, tablero, novedades y leer más tarde. */
+/** Estanterías del inicio: en progreso, tablero, novedades, leer más tarde y pausadas. */
 function invalidateShelves(): void {
   invalidate(["reading"]);
   invalidate(["tablero"]);
@@ -21,6 +21,7 @@ function invalidateShelves(): void {
   invalidate(["new-series"]);
   invalidate(["recent-series"]);
   invalidate(["readlist"]);
+  invalidate(["paused"]);
 }
 
 /** Listados y alfabeto de biblioteca. */

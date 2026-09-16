@@ -76,7 +76,18 @@ export function seedMokuroPage(
   const settings = readMokuroSettings(book);
   const maxPageIdx = totalPages && totalPages > 0 ? totalPages - 1 : Number.MAX_SAFE_INTEGER;
 
-  settings.page_idx = Math.min(Math.max(0, page - 1), maxPageIdx);
+  let pageIdx = Math.min(Math.max(0, page - 1), maxPageIdx);
+
+  // Normaliza a la primera página del par: progresos antiguos podían guardar la
+  // segunda página de un spread (p. ej. tras usar el slider) y al reabrir el
+  // lector mostraba una página desplazada.
+  if (!settings.singlePageView && pageIdx > 0) {
+    const isPageFirstOfPair = settings.hasCover ? (pageIdx === 0 || pageIdx % 2 === 1) : pageIdx % 2 === 0;
+
+    if (!isPageFirstOfPair) pageIdx--;
+  }
+
+  settings.page_idx = pageIdx;
 
   if (settings.page2_idx > maxPageIdx) {
     settings.page2_idx = -1;
@@ -92,8 +103,6 @@ interface InjectMokuroParams {
   /** Estado previo para sincronizar solo los ajustes que difieren (modo remoto). */
   storedSettings?: MokuroStoredSettings;
   onToggleToolbar: () => void;
-  /** Lector local: activa el OCR al abrir. */
-  clickDisplayOcr?: boolean;
   onLoaded?: () => void;
   /** Total de páginas del libro (para reparar estados corruptos de mokuro). */
   totalPages?: number;
@@ -108,7 +117,6 @@ export function injectMokuroShim({
   settings,
   storedSettings,
   onToggleToolbar,
-  clickDisplayOcr = false,
   onLoaded,
   totalPages
 }:InjectMokuroParams):void {
@@ -130,14 +138,11 @@ export function injectMokuroShim({
   const sanePageIdx = Math.min(Math.max(0, storedSettings?.page_idx ?? 0), maxPageIdx);
 
   const customStyles = doc.createElement("style");
-  customStyles.innerHTML = mokuroStyles;
+  customStyles.innerHTML = mokuroStyles(window.location.origin);
 
   const customMokuro = doc.createElement("script");
   customMokuro.dataset.yomiyasuShim = "true";
-  customMokuro.innerHTML = buildMokuroScript(settings, {
-    ...(clickDisplayOcr ? {clickDisplayOcr:true} : {}),
-    sanePageIdx
-  });
+  customMokuro.innerHTML = buildMokuroScript(settings, {sanePageIdx});
 
   const preload = doc.createElement("div");
   preload.id = "preload-image";
@@ -146,6 +151,10 @@ export function injectMokuroShim({
   doc.head.appendChild(customMokuro);
   doc.head.appendChild(customStyles);
 
+  // La fuente elegida por el usuario debe aplicarse también al reabrir un libro
+  // (antes solo se aplicaba al cambiar el selector de fuente).
+  doc.body.style.setProperty("--user-font", settings.fontFamily);
+
   // Muestra/oculta las barras superior/inferior con doble click
   doc.body.addEventListener("dblclick", onToggleToolbar);
 
@@ -153,27 +162,20 @@ export function injectMokuroShim({
     win?.postMessage({action:"setSettings", property, value});
   }
 
-  if (storedSettings) {
-    // Solo enviar los ajustes que difieren del estado que mokuro ya tiene
-    if (settings.r2l !== storedSettings.r2l) post("r2l");
-    if (settings.ctrlToPan !== storedSettings.ctrlToPan) post("ctrlToPan");
-    post("defaultZoom", settings.defaultZoomMode);
-    if (settings.displayOCR !== storedSettings.displayOCR) post("ocr");
-    if (settings.singlePageView !== storedSettings.singlePageView) post("doublePage");
-    if (settings.hasCover !== storedSettings.hasCover) post("coverPage");
-    if (settings.textBoxBorders !== storedSettings.textBoxBorders) post("borders");
-    post("fontSize", settings.fontSize);
-    if (settings.toggleOCRTextBoxes !== storedSettings.toggleOCRTextBoxes) post("toggleBoxes");
-  } else {
-    // Lector local: aplicar todo sin comparar
-    post("r2l");
-    post("ctrlToPan");
-    post("defaultZoom", settings.defaultZoomMode);
-    post("ocr");
-    post("doublePage");
-    post("coverPage");
-    post("borders");
-    post("fontSize", settings.fontSize);
-    post("toggleBoxes");
-  }
+  // Las opciones de mokuro son toggles (un click invierte el estado), así que
+  // solo se envían las que difieren del estado de partida. En remoto ese estado
+  // es el que mokuro persistió para el volumen; en local el blob genera una
+  // clave de storage nueva por sesión, de modo que mokuro siempre carga sus
+  // valores por defecto (idénticos a defaultMokuroSettings).
+  const baseline = storedSettings ?? defaultMokuroSettings();
+
+  if (settings.r2l !== baseline.r2l) post("r2l");
+  if (settings.ctrlToPan !== baseline.ctrlToPan) post("ctrlToPan");
+  post("defaultZoom", settings.defaultZoomMode);
+  if (settings.displayOCR !== baseline.displayOCR) post("ocr");
+  if (settings.singlePageView !== baseline.singlePageView) post("doublePage");
+  if (settings.hasCover !== baseline.hasCover) post("coverPage");
+  if (settings.textBoxBorders !== baseline.textBoxBorders) post("borders");
+  post("fontSize", settings.fontSize);
+  if (settings.toggleOCRTextBoxes !== baseline.toggleOCRTextBoxes) post("toggleBoxes");
 }

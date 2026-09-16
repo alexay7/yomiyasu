@@ -1,4 +1,4 @@
-import {ArrowLeft, CircleArrowLeft, CircleArrowRight, CircleQuestionMark, Maximize, Minimize} from "lucide-react";
+import {ArrowLeft, CircleArrowLeft, CircleArrowRight, CircleQuestionMark, Languages, Maximize, Minimize} from "lucide-react";
 import React, {useEffect, useRef, useState} from "react";
 import {useTitle} from "../../lib/useTitle";
 import {useNavigate, useParams, useSearchParams} from "react-router";
@@ -19,7 +19,7 @@ import {useFullscreen} from "../../helpers/useFullscreen";
 import {IconButton} from "../../ui/IconButton";
 import {Tooltip} from "../../ui/Tooltip";
 import {keys} from "../../lib/queryKeys";
-import {useReaderTimerStore, useReadingTimerTicker} from "../../stores/ReaderStore";
+import {notifyReadingActivity, useIdleTimerPause, useReaderTimerStore, useReadingTimerTicker} from "../../stores/ReaderStore";
 
 const epubShortcuts:ShortcutItem[] = [
     {keys:["t"], description:"Activar o pausar el cronómetro"},
@@ -54,7 +54,7 @@ export default function EpubReader():React.ReactElement {
     const {ttuConnector} = useGlobal();
     const [searchParams] = useSearchParams();
     const bookId = searchParams.get("yomiyasuId");
-    const {siteSettings} = useSettingsStore();
+    const {siteSettings, readerSettings, modifyReaderSettings} = useSettingsStore();
     const navigate = useNavigate();
     const [showToolBar, setShowToolbar] = useState(true);
     const [chars, setChars] = useState(0);
@@ -65,6 +65,7 @@ export default function EpubReader():React.ReactElement {
     const {isFullscreen, toggleFullscreen} = useFullscreen();
 
     useReadingTimerTicker();
+    useIdleTimerPause(siteSettings.idleTimeout);
 
     const iframe = useRef<HTMLIFrameElement>(null);
 
@@ -82,6 +83,9 @@ export default function EpubReader():React.ReactElement {
     // Ref para poder guardar desde listeners sin re-registrarlos
     const bookDataRef = useRef(bookData);
     bookDataRef.current = bookData;
+
+    // Evita re-restaurar el cronómetro del mismo libro si la query refetchea a mitad de lectura
+    const restoredBookId = useRef<string | undefined>(undefined);
 
     // Guarda el progreso cuando la pestaña pasa a segundo plano o se cierra
     useEffect(()=>{
@@ -121,7 +125,8 @@ export default function EpubReader():React.ReactElement {
             const currentChars = await getBookProgress(parseInt(id || ""));
             setChars(currentChars);
 
-            if (bookProgress) {
+            if (bookProgress && restoredBookId.current !== id) {
+                restoredBookId.current = id ?? undefined;
                 useReaderTimerStore.getState().setTimer(bookProgress.time || 0);
             }
         }
@@ -131,7 +136,7 @@ export default function EpubReader():React.ReactElement {
 
     useEffect(()=>{
         function getselectedText(text:string):void {
-            if (text !== "" && text !== "\n") {
+            if (text !== "" && text !== "\n" && readerSettings.nativeDictionary) {
                 document.body.style.cursor = "wait";
                 setSearchWord(text);
                 document.body.style.cursor = "default";
@@ -152,7 +157,7 @@ export default function EpubReader():React.ReactElement {
         return () => {
             removeEventListener("message", handleNewMessage);
         };
-    }, []);
+    }, [readerSettings.nativeDictionary]);
 
 
     useEffect(() => {
@@ -269,6 +274,15 @@ export default function EpubReader():React.ReactElement {
                         <h1 className="text-lg lg:text-xl text-ellipsis overflow-hidden whitespace-nowrap max-w-[10ch] lg:max-w-[30ch]">{bookData?.visibleName}</h1>
                     </div>
                     <div className="flex items-center flex-row px-2 gap-1 grow lg:w-1/2 justify-end">
+                        <Tooltip content={readerSettings.nativeDictionary ? "Desactivar diccionario nativo" : "Activar diccionario nativo"}>
+                            <IconButton
+                                label={readerSettings.nativeDictionary ? "Desactivar diccionario nativo" : "Activar diccionario nativo"}
+                                onClick={()=>modifyReaderSettings("nativeDictionary", !readerSettings.nativeDictionary)}
+                                className={readerSettings.nativeDictionary ? "text-primary" : "text-app-text"}
+                            >
+                                <Languages />
+                            </IconButton>
+                        </Tooltip>
                         <StopWatchMenu characters={chars} oldProgress={bookProgress}
                             refreshProgress={refreshProgress}
                             bookData={bookData}
@@ -289,10 +303,19 @@ export default function EpubReader():React.ReactElement {
             <div className={twMerge("select-none", showToolBar ? "lg:mt-[3rem] mt-[3.5rem]" : "")}>
                 <iframe className={twMerge("w-full", showToolBar ? "h-[calc(100svh-7rem)] lg:h-[calc(100svh-5.5rem)]" : "h-screen")} ref={iframe} src={`/ebook/b?id=${id}`}
                     onLoad={(e)=>{
+                        const iframeWindow = e.currentTarget.contentWindow;
+
                         // El documento del iframe se reemplaza al navegar: registrar aquí
-                        e.currentTarget.contentWindow?.document.addEventListener("dblclick", ()=>{
+                        iframeWindow?.document.addEventListener("dblclick", ()=>{
                             setShowToolbar((prev)=>!prev);
                         });
+
+                        // Actividad de lectura (pasar página, scroll): latido del cronómetro
+                        iframeWindow?.addEventListener("keydown", notifyReadingActivity, {passive:true});
+                        iframeWindow?.addEventListener("pointerdown", notifyReadingActivity, {passive:true});
+                        iframeWindow?.addEventListener("wheel", notifyReadingActivity, {passive:true});
+                        iframeWindow?.addEventListener("touchstart", notifyReadingActivity, {passive:true});
+                        iframeWindow?.addEventListener("scroll", notifyReadingActivity, {passive:true, capture:true});
                     }}
                 />
             </div>

@@ -115,6 +115,27 @@ export class SeriesService {
           result.match({difficulty:{$lt:query.max + 1}});
       }
 
+      if (query.valorationMin && query.valorationMin !== 0) {
+          result.match({valoration:{$gte:query.valorationMin}});
+      }
+
+      if (query.valorationMax && query.valorationMax !== 10) {
+          result.match({valoration:{$ne:null, $lte:query.valorationMax}});
+      }
+
+      if (query.valorationCount && query.valorationCount > 0) {
+          result.lookup({
+              from:"reviews",
+              let: {serie_id: "$_id"},
+              as:"valorationStats",
+              pipeline:[
+                  {"$match":{$expr:{$eq:["$$serie_id", "$serie"]}}},
+                  {"$match":{"valoration":{$ne:null}}},
+                  {"$count":"total"}
+              ]
+          }).match({"valorationStats.0.total":{$gte:query.valorationCount}});
+      }
+
       if (query.firstLetter) {
           if (query.firstLetter === "SPECIAL") {
               result.match({"sortName":{$regex:"^[^a-zA-Z]", $options:"i"}});
@@ -132,6 +153,11 @@ export class SeriesService {
           if (query.sort.includes("difficulty")) {
               result.match({difficulty:{$exists:true}});
               result.match({difficulty:{$ne:0}});
+          }
+
+          if (query.sort.includes("valoration")) {
+              result.match({valoration:{$exists:true}});
+              result.match({valoration:{$ne:0}});
           }
 
           if (query.sort.includes("!")) {
@@ -212,6 +238,27 @@ export class SeriesService {
   
           if (query.max && query.max !== 10) {
               pipe.match({difficulty:{$lt:query.max + 1}});
+          }
+
+          if (query.valorationMin && query.valorationMin !== 0) {
+              pipe.match({valoration:{$gte:query.valorationMin}});
+          }
+
+          if (query.valorationMax && query.valorationMax !== 10) {
+              pipe.match({valoration:{$ne:null, $lte:query.valorationMax}});
+          }
+
+          if (query.valorationCount && query.valorationCount > 0) {
+              pipe.lookup({
+                  from:"reviews",
+                  let: {serie_id: "$_id"},
+                  as:"valorationStats",
+                  pipeline:[
+                      {"$match":{$expr:{$eq:["$$serie_id", "$serie"]}}},
+                      {"$match":{"valoration":{$ne:null}}},
+                      {"$count":"total"}
+                  ]
+              }).match({"valorationStats.0.total":{$gte:query.valorationCount}});
           }
       }
       pipe.project({

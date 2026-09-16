@@ -60,3 +60,6 @@ export class Book {
 export const BookSchema = SchemaFactory.createForClass(Book);
 
 BookSchema.index({path:1, variant:1}, {unique:true});
+// getSerieBooks consulta por serie y ordena por sortName: sin este índice cada
+// serie del listado provoca un COLLSCAN (patrón N+1 de filterSeries)
+BookSchema.index({serie:1, sortName:1});

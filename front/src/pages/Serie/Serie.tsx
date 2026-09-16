@@ -25,6 +25,7 @@ import {IconButton} from "../../ui/IconButton";
 import {Spinner} from "../../ui/Spinner";
 import {Tooltip} from "../../ui/Tooltip";
 import {Reviews} from "./components/Reviews";
+import {RerollFab} from "./components/RerollFab";
 import SpeedGraph from "./components/SpeedGraph";
 
 function Serie():React.ReactElement {
@@ -309,6 +310,8 @@ function Serie():React.ReactElement {
                     <EmptyState title="Sin volúmenes" description="Esta serie todavía no tiene libros en la biblioteca." />
                 )}
             </div>
+
+            <RerollFab />
         </div>
     );
 }

@@ -20,7 +20,7 @@ import {ShortcutItem, ShortcutsDialog} from "./components/ShortcutsDialog";
 import {confirmDialog} from "../../stores/ConfirmStore";
 import {keys} from "../../lib/queryKeys";
 import {readMokuroSettings, seedMokuroPage} from "../../lib/mokuro";
-import {useReaderTimerStore, useReadingTimerTicker} from "../../stores/ReaderStore";
+import {notifyReadingActivity, useIdleTimerPause, useReaderTimerStore, useReadingTimerTicker} from "../../stores/ReaderStore";
 
 const mangaShortcuts:ShortcutItem[] = [
     {keys:["←", "Espacio"], description:"Página anterior (izquierda)"},
@@ -93,6 +93,7 @@ function Reader(props:ReaderProps):React.ReactElement {
     });
 
     useReadingTimerTicker();
+    useIdleTimerPause(siteSettings.idleTimeout);
 
     const saveProgress = useCallback(async(keepAlive = false):Promise<void> => {
         if (!bookData) return;
@@ -106,6 +107,10 @@ function Reader(props:ReaderProps):React.ReactElement {
 
     const saveProgressRef = useRef(saveProgress);
     saveProgressRef.current = saveProgress;
+
+    // Evita re-restaurar el cronómetro/página del mismo libro si las queries
+    // refetchean a mitad de lectura (reconexión, LIBRARY_UPDATE, etc.)
+    const restoredBookId = useRef<string | undefined>(undefined);
 
     useEffect(()=>{
         if(!id) return;
@@ -147,6 +152,9 @@ function Reader(props:ReaderProps):React.ReactElement {
 
     useEffect(()=>{
         if (isLoading || !bookData) return;
+        if (restoredBookId.current === bookData._id) return;
+
+        restoredBookId.current = bookData._id;
 
         useReaderTimerStore.getState().setTimer(bookProgress && bookProgress.time && bookProgress.time !== 0 ? bookProgress.time : parseInt(window.localStorage.getItem(bookData._id) || "0"));
 
@@ -278,6 +286,8 @@ function Reader(props:ReaderProps):React.ReactElement {
                 case "newPage": {
                     const {value} = e.data as {value:number};
                     if (value || value === 0) {
+                        notifyReadingActivity();
+
                         if(bookData){
                             if ((value < -1 && !readerSettings.singlePageView) || (value < 0 && readerSettings.singlePageView)) {
                                 if (!await confirmDialog("¿Volver al libro anterior?")) return;

@@ -63,6 +63,16 @@ export class SerieprogressService {
             .lookup({from:"books", localField:"serie", foreignField:"serie", as:"serieBooks"});
     }
 
+    async getUserPausedSeries(user:Types.ObjectId, variant:"manga" | "novela") {
+        const result = await this.serieProgressModel.aggregate()
+            .match({user:new Types.ObjectId(user), paused:true})
+            .lookup({from:"series", localField:"serie", foreignField:"_id", as:"serieInfo"})
+            .unwind({path:"$serieInfo"})
+            .match({"serieInfo.variant":variant});
+
+        return result.map(x=>x.serieInfo);
+    }
+
     async pauseSerie(user:Types.ObjectId, serie:Types.ObjectId) {
         return this.serieProgressModel.findOneAndUpdate({user, serie}, {paused:true}, {new:true});
     }

@@ -1,6 +1,7 @@
-import {Controller, Post, Body, Req, UseGuards, UnauthorizedException, Param, Delete, BadRequestException, NotFoundException} from "@nestjs/common";
+import {Controller, Post, Patch, Body, Req, UseGuards, UnauthorizedException, Param, Delete, BadRequestException, NotFoundException} from "@nestjs/common";
 import {ReviewsService} from "./reviews.service";
 import {CreateReviewDto} from "./dto/create-review.dto";
+import {UpdateReviewDto} from "./dto/update-review.dto";
 import {Review} from "./schemas/review.schema";
 import {JwtAuthGuard} from "../auth/strategies/jwt.strategy";
 import {Types} from "mongoose";
@@ -36,6 +37,27 @@ export class ReviewsController {
         const valoration = await this.reviewsService.getSerieValoration(createReviewDto.serie);
 
         await this.seriesService.editSerie(createReviewDto.serie, {difficulty, valoration});
+
+        return response;
+    }
+
+    @Patch(":id")
+    async edit(@Req() req:Request, @Param("id", ParseObjectIdPipe) reviewId:Types.ObjectId, @Body() updateReviewDto: UpdateReviewDto) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const foundReview = await this.reviewsService.findById(reviewId);
+
+        if (!foundReview) throw new NotFoundException();
+
+        const response = await this.reviewsService.editReview(userId, reviewId, updateReviewDto);
+
+        const difficulty = await this.reviewsService.getSerieDifficulty(foundReview.serie);
+
+        const valoration = await this.reviewsService.getSerieValoration(foundReview.serie);
+
+        await this.seriesService.editSerie(foundReview.serie, {difficulty:difficulty || 0, valoration:valoration || 0});
 
         return response;
     }

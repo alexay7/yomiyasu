@@ -1,10 +1,11 @@
-import {ChevronLeft, ChevronRight} from "lucide-react";
+import {ChevronLeft, ChevronRight, Dices} from "lucide-react";
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {Link} from "react-router";
+import {Link, useNavigate} from "react-router";
 import type {BookWithProgress} from "../../types/book";
 import type {SerieWithProgress} from "../../types/serie";
 import {IconButton} from "../../ui/IconButton";
 import {CoverCard} from "../CoverCard/CoverCard";
+import {useOpenBook} from "../../lib/useOpenBook";
 
 interface ComponentScrollerProps {
   title: string;
@@ -23,6 +24,8 @@ interface ComponentScrollerProps {
  */
 export function ComponentScroller(props:ComponentScrollerProps):React.ReactElement {
   const {title, components, type, deck, noVariantIndicator, moreLink} = props;
+  const navigate = useNavigate();
+  const openBook = useOpenBook();
   const ulRef = useRef<HTMLUListElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -60,6 +63,22 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
 
   const isEmpty = !components || components.length === 0;
 
+  /** Abre un elemento al azar del propio estante ("¿qué leo ahora?"). */
+  function openRandom():void {
+    if (isEmpty) return;
+
+    const index = Math.floor(Math.random() * components.length);
+
+    if (type === "books") {
+      const book = (components as BookWithProgress[])[index];
+      void openBook(book, {confirmReread:true});
+      return;
+    }
+
+    const serie = (components as SerieWithProgress[])[index];
+    navigate(`/app/series/${serie._id}`);
+  }
+
   return (
     <section className="flex flex-col">
       <div className="flex items-center justify-between gap-2">
@@ -73,6 +92,9 @@ export function ComponentScroller(props:ComponentScrollerProps):React.ReactEleme
               Ver todo
             </Link>
           ) : null}
+          <IconButton label="Abrir uno al azar" size="sm" variant="solid" disabled={isEmpty} onClick={openRandom}>
+            <Dices />
+          </IconButton>
           <IconButton label="Desplazar a la izquierda" size="sm" variant="solid" disabled={atStart} onClick={()=>scrollBy(-1)}>
             <ChevronLeft />
           </IconButton>

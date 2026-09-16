@@ -24,6 +24,16 @@ export interface SiteConfig {
     startCronoOnPage:boolean;
     mainView:"manga" | "novels" | "both";
     showCrono:boolean;
+    /** Minutos sin pasar página antes de pausar el cronómetro automáticamente (0 = desactivado). */
+    idleTimeout:number;
     kindleEmail:string | undefined;
     libraryLimit:string;
+    /** Tableros visibles en el inicio. */
+    showBoardProgress:boolean;
+    showBoardTablero:boolean;
+    showBoardReadLater:boolean;
+    showBoardPaused:boolean;
+    showBoardNewBooks:boolean;
+    showBoardNewSeries:boolean;
+    showBoardRecentSeries:boolean;
 }

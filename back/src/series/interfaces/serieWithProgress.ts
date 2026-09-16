@@ -5,6 +5,7 @@ import {Serie} from "../schemas/series.schema";
 export interface SerieWithProgress extends Serie {
     unreadBooks:number;
     readlist:boolean;
+    paused:boolean;
     thumbnailPath:string;
     type?:string;
     totalCharacters?:number;

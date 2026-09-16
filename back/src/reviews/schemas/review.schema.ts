@@ -31,3 +31,6 @@ export class Review {
 }
 
 export const ReviewSchema = SchemaFactory.createForClass(Review);
+
+// Las agregaciones de dificultad/valoración por serie no tienen índice hoy
+ReviewSchema.index({serie:1});

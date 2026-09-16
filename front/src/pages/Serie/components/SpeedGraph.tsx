@@ -30,12 +30,17 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     const isDark = useIsDarkMode();
     const tokens = chartTokens(isDark);
 
+    // Solo las lecturas terminadas entran en la gráfica y en el cálculo: los
+    // documentos en curso (sin endDate) nacen con caracteres acumulados y poco
+    // tiempo, lo que dispara velocidades irreales y porcentajes absurdos.
+    const completedSpeed = serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null);
+
     const chartData:ChartData<"line", (number | Point | null)[], unknown> = {
-        labels: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.endDate).toLocaleDateString("es")}`),
+        labels: completedSpeed.map((item) => `${books.find((x)=>x._id === item.book)?.visibleName} - ${new Date(item.endDate).toLocaleDateString("es")}`),
         datasets: [
             {
                 label: "Velocidad",
-                data: serieSpeed.filter((x)=>x.endDate !== undefined && x.endDate !== null).map((item) => item.meanReadSpeed),
+                data: completedSpeed.map((item) => item.meanReadSpeed),
                 fill: true,
                 borderColor: tokens.primary,
                 backgroundColor: `${tokens.primary}26`,
@@ -49,9 +54,11 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
     };
 
     function calculateSpeed():string {
-        if (!serieSpeed || serieSpeed.length === 0) return "";
-        const difference = Math.round((serieSpeed[serieSpeed.length - 1].meanReadSpeed - serieSpeed[0].meanReadSpeed) /
-        serieSpeed[0].meanReadSpeed * 100);
+        if (completedSpeed.length < 2) return "";
+        const firstSpeed = completedSpeed[0].meanReadSpeed;
+        const lastSpeed = completedSpeed[completedSpeed.length - 1].meanReadSpeed;
+        if (!firstSpeed || !lastSpeed) return "";
+        const difference = Math.round((lastSpeed - firstSpeed) / firstSpeed * 100);
         if (difference > 0) {
             return `ha aumentado un ${difference}%`;
         }
@@ -94,10 +101,15 @@ function SpeedGraph(props:SpeedGraphProps):React.ReactElement {
         maintainAspectRatio: false
     };
 
+    const speedText = calculateSpeed();
+
     return (
         <div className="h-52 flex flex-col gap-2">
             {serieSpeed && serieSpeed.length > 0 && (
-                <p className="text-xs">Tu velocidad <span className="text-primary font-semibold">{calculateSpeed()}</span> desde que empezaste esta serie. Has pasado {formatTime(calculateTime())} leyendo esta serie.</p>
+                <p className="text-xs">
+                    {speedText ? <>Tu velocidad <span className="text-primary font-semibold">{speedText}</span> desde que empezaste esta serie. </> : null}
+                    Has pasado {formatTime(calculateTime())} leyendo esta serie.
+                </p>
             )}
             <Line data={chartData} options={{...chartOptions, plugins:{tooltip:{mode:"index", intersect:false}}}} />
         </div>

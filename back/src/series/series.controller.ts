@@ -83,7 +83,6 @@ export class SeriesController {
 
         const foundSeries = await this.seriesService.filterSeries(userId, variant, query);
 
-        let seriesWithProgress = [];
         let skip = 0;
         let pages = foundSeries.pages;
 
@@ -91,39 +90,41 @@ export class SeriesController {
             skip = (query.page - 1) * query.limit;
         }
 
-        for (const serie of foundSeries.data) {
-
+        const seriesWithProgress = (await Promise.all(foundSeries.data.map(async(serie)=>{
             const serieBooks = await this.booksService.getSerieBooks(serie._id);
 
-            if (serieBooks.length > 0) {
+            if (serieBooks.length === 0) return null;
 
-                const serieData = this.serieProgressService.getSerieProgress(serie, serieBooks);
-                const readlist = serie.seriereadlist;
+            const serieData = this.serieProgressService.getSerieProgress(serie, serieBooks);
+            const readlist = serie.seriereadlist;
 
-                if (serieData) {
-                    const serieWithProgress:SerieWithProgress = {
-                        ...serie,
-                        readlist,
-                        ...serieData
-                    };
-                
-                    if ((query.readlist && readlist) || 
-                        (query.readprogress === "completed" && serieData.unreadBooks === 0) ||
-                        (query.readprogress === "reading" && ((serieData.unreadBooks !== serieWithProgress.bookCount) && (serieData.unreadBooks && serieData.unreadBooks > 0))) ||
-                        (query.readprogress === "unread" && serieData.unreadBooks === serieWithProgress.bookCount) ||
-                        (!query.readlist && !query.readprogress)) {
-                        seriesWithProgress.push(serieWithProgress);
-                    }
-                }
+            if (!serieData) return null;
+
+            const serieWithProgress:SerieWithProgress = {
+                ...serie,
+                readlist,
+                ...serieData
+            };
+
+            if ((query.readlist && readlist) || 
+                (query.readprogress === "completed" && serieData.unreadBooks === 0) ||
+                (query.readprogress === "reading" && ((serieData.unreadBooks !== serieWithProgress.bookCount) && (serieData.unreadBooks && serieData.unreadBooks > 0))) ||
+                (query.readprogress === "unread" && serieData.unreadBooks === serieWithProgress.bookCount) ||
+                (!query.readlist && !query.readprogress)) {
+                return serieWithProgress;
             }
-        }
+
+            return null;
+        }))).filter((serie):serie is SerieWithProgress => serie !== null);
+
+        let paginatedSeries:SerieWithProgress[] = seriesWithProgress;
 
         if (query.readprogress || query.readlist) {
             pages = Math.ceil(seriesWithProgress.length / query.limit);
-            seriesWithProgress = seriesWithProgress.slice(skip, skip + query.limit);
+            paginatedSeries = seriesWithProgress.slice(skip, skip + query.limit);
         }
 
-        const response = {data:seriesWithProgress, pages};
+        const response = {data:paginatedSeries, pages};
 
         await this.cacheManager.set(`${userId}-${req.url}`, response);
 
@@ -260,6 +261,49 @@ export class SeriesController {
                     ...serieElem,
                     readlist,
                     ...serieData
+                };
+        
+                return serieWithProgress;
+            }
+        
+            // Si serieData no existe, devolvemos null para mantener el orden correcto en el array final.
+            return null;
+        });
+        
+        // Esperamos a que todas las promesas se resuelvan.
+        const seriesWithProgress = await Promise.all(promises);
+        
+        // Filtramos los valores nulos que se devolvieron en el caso de serieData no exista.
+        const response =  seriesWithProgress.filter((item) => item !== null);
+        
+        await this.cacheManager.set(`${userId}-${req.url}`, response);
+
+        return response;
+    }
+
+    @Get(":variant/paused")
+    async getPausedSeries(@Req() req:Request, @Param("variant") variant:"manga" | "novela") {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        const cached = await this.cacheManager.get(`${userId}-${req.url}`);
+        if (cached) {
+            return cached;
+        }
+
+        const foundSeries = await this.serieProgressService.getUserPausedSeries(userId, variant);
+
+        const promises = foundSeries.map(async(serieElem) => {
+            const serieData = await this.booksService.getSerieStats(userId, serieElem._id, variant);
+            const readlist = await this.readListsService.isInReadlist(userId, serieElem._id);
+        
+            if (serieData) {
+                const serieWithProgress: SerieWithProgress = {
+                    ...serieElem,
+                    readlist,
+                    ...serieData,
+                    paused:true
                 };
         
                 return serieWithProgress;

@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {toast} from "react-toastify";
 import {api} from "../../../api/api";
 import {invalidateSerie} from "../../../lib/invalidate";
@@ -15,6 +15,8 @@ interface ReviewFormDialogProps {
   serie: SerieWithProgress;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Reseña a editar; si no se pasa, el formulario crea una nueva. */
+  review?: Review | null;
 }
 
 const difficultyLabels: Record<number, string> = {
@@ -25,18 +27,24 @@ const difficultyLabels: Record<number, string> = {
   5: "Muy difícil para mi nivel",
 };
 
-export function ReviewFormDialog({serie, open, onOpenChange}:ReviewFormDialogProps):React.ReactElement {
+export function ReviewFormDialog({serie, open, onOpenChange, review}:ReviewFormDialogProps):React.ReactElement {
   const [difficulty, setDifficulty] = useState(0);
   const [rating, setRating] = useState(0);
   const [userLevel, setUserLevel] = useState(window.localStorage.getItem("userlevel") || "Principiante");
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
 
-  function reset():void {
-    setDifficulty(0);
-    setRating(0);
-    setComment("");
-  }
+  const isEditing = !!review;
+
+  // Al abrir, precarga la reseña a editar o parte de cero
+  useEffect(()=>{
+    if (!open) return;
+
+    setDifficulty(review?.difficulty ?? 0);
+    setRating(review?.valoration ? review.valoration / 2 : 0);
+    setComment(review?.comment ?? "");
+    setUserLevel(review?.userLevel ?? window.localStorage.getItem("userlevel") ?? "Principiante");
+  }, [open, review]);
 
   async function save():Promise<void> {
     if (!userLevel || difficulty < 1) {
@@ -44,8 +52,7 @@ export function ReviewFormDialog({serie, open, onOpenChange}:ReviewFormDialogPro
       return;
     }
 
-    const review: Review = {
-      serie: serie._id,
+    const reviewBody = {
       userLevel,
       difficulty,
       valoration: rating > 0 ? rating * 2 : null,
@@ -55,11 +62,12 @@ export function ReviewFormDialog({serie, open, onOpenChange}:ReviewFormDialogPro
     setSaving(true);
 
     try {
-      const res = await api.post<Review, Review>("reviews", review);
+      const res = review?._id
+        ? await api.patch<typeof reviewBody, Review>(`reviews/${review._id}`, reviewBody)
+        : await api.post<typeof reviewBody & {serie:string}, Review>("reviews", {...reviewBody, serie:serie._id});
 
       if (res) {
-        toast.success("Valoración emitida con éxito");
-        reset();
+        toast.success(isEditing ? "Valoración actualizada con éxito" : "Valoración emitida con éxito");
         onOpenChange(false);
         invalidateSerie(serie._id);
         return;
@@ -74,10 +82,7 @@ export function ReviewFormDialog({serie, open, onOpenChange}:ReviewFormDialogPro
   return (
     <Dialog
       open={open}
-      onOpenChange={(value)=>{
-        onOpenChange(value);
-        if (!value) reset();
-      }}
+      onOpenChange={onOpenChange}
     >
       <DialogContent size="sm">
         <form
@@ -88,7 +93,7 @@ export function ReviewFormDialog({serie, open, onOpenChange}:ReviewFormDialogPro
           }}
         >
           <DialogHeader>
-            <DialogTitle>Deja tu valoración personal</DialogTitle>
+            <DialogTitle>{isEditing ? "Edita tu valoración" : "Deja tu valoración personal"}</DialogTitle>
           </DialogHeader>
           <DialogBody className="flex flex-col gap-5">
             <Field label="¿Cuál consideras que es tu nivel de japonés? *">
@@ -134,7 +139,7 @@ export function ReviewFormDialog({serie, open, onOpenChange}:ReviewFormDialogPro
           </DialogBody>
           <DialogFooter>
             <Button variant="secondary" type="button" onClick={()=>onOpenChange(false)}>Cancelar</Button>
-            <Button type="submit" loading={saving}>Publicar valoración</Button>
+            <Button type="submit" loading={saving}>{isEditing ? "Guardar cambios" : "Publicar valoración"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

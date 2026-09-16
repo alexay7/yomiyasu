@@ -54,3 +54,7 @@ export class ReadProgress {
 }
 
 export const ReadProgressSchema = SchemaFactory.createForClass(ReadProgress);
+
+// Consultas frecuentes: progreso de un libro (lector) y velocidad de una serie
+ReadProgressSchema.index({user:1, book:1});
+ReadProgressSchema.index({user:1, serie:1});

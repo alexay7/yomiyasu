@@ -94,6 +94,47 @@ export function SettingsSheet():React.ReactElement {
                 checked={siteSettings.antispoilers}
                 onCheckedChange={(c)=>modifySiteSettings("antispoilers", c)}
               />
+              <div className="flex flex-col gap-1 pt-2">
+                <h4 className="text-sm font-medium text-fg">Tableros del inicio</h4>
+                <p className="text-xs text-fg-muted">Elige qué secciones quieres ver en el inicio</p>
+                <div className="mt-1 flex flex-col">
+                  <SettingSwitch
+                    label="En progreso"
+                    checked={siteSettings.showBoardProgress}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardProgress", c)}
+                  />
+                  <SettingSwitch
+                    label="Tu tablero"
+                    checked={siteSettings.showBoardTablero}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardTablero", c)}
+                  />
+                  <SettingSwitch
+                    label="Leer más tarde"
+                    checked={siteSettings.showBoardReadLater}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardReadLater", c)}
+                  />
+                  <SettingSwitch
+                    label="Pausadas"
+                    checked={siteSettings.showBoardPaused}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardPaused", c)}
+                  />
+                  <SettingSwitch
+                    label="Libros nuevos"
+                    checked={siteSettings.showBoardNewBooks}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardNewBooks", c)}
+                  />
+                  <SettingSwitch
+                    label="Series nuevas"
+                    checked={siteSettings.showBoardNewSeries}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardNewSeries", c)}
+                  />
+                  <SettingSwitch
+                    label="Series con volúmenes nuevos"
+                    checked={siteSettings.showBoardRecentSeries}
+                    onCheckedChange={(c)=>modifySiteSettings("showBoardRecentSeries", c)}
+                  />
+                </div>
+              </div>
             </section>
 
             <section className="flex flex-col gap-4">
@@ -125,6 +166,24 @@ export function SettingsSheet():React.ReactElement {
                 checked={siteSettings.showCrono}
                 onCheckedChange={(c)=>modifySiteSettings("showCrono", c)}
               />
+              <Field label="Pausar cronómetro tras inactividad" hint="Se reanuda al cambiar de página">
+                <Select
+                  value={String(siteSettings.idleTimeout ?? 0)}
+                  onValueChange={(v)=>modifySiteSettings("idleTimeout", Number(v))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Nunca</SelectItem>
+                    <SelectItem value="1">1 minuto</SelectItem>
+                    <SelectItem value="3">3 minutos</SelectItem>
+                    <SelectItem value="5">5 minutos</SelectItem>
+                    <SelectItem value="10">10 minutos</SelectItem>
+                    <SelectItem value="15">15 minutos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
             </section>
 
             <section className="flex flex-col gap-4">
