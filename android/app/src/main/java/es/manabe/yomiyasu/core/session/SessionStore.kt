@@ -1,6 +1,6 @@
 package es.manabe.yomiyasu.core.session
 
-import es.manabe.yomiyasu.app.DebugConfig
+import es.manabe.yomiyasu.app.ServerConfig
 import es.manabe.yomiyasu.core.models.AuthUser
 import es.manabe.yomiyasu.core.models.LoginRequest
 import es.manabe.yomiyasu.core.models.LoginResponse
@@ -63,12 +63,22 @@ class SessionStore @Inject constructor(
     }
 
     suspend fun bootstrap() {
+        var canAutoLogin = false
+
         bootstrapMutex.withLock {
             if (bootstrapped) return@withLock
             bootstrapped = true
 
             uuid = tokenStore.getString(Key.Uuid) ?: UUID.randomUUID().toString().lowercase()
                 .also { tokenStore.setString(Key.Uuid, it) }
+
+            if (api.activeBaseUrl == null) {
+                // Sin servidor no hay nada que restaurar; el login pedirá la URL.
+                updateState(State.LoggedOut)
+                return@withLock
+            }
+
+            canAutoLogin = true
 
             accessToken = tokenStore.getString(Key.AccessToken)
             refreshToken = tokenStore.getString(Key.RefreshToken)
@@ -85,13 +95,15 @@ class SessionStore @Inject constructor(
             }
         }
 
-        autoLoginIfRequested()
+        if (canAutoLogin) {
+            autoLoginIfRequested()
+        }
     }
 
     private suspend fun autoLoginIfRequested() {
         if (_state.value is State.LoggedIn) return
-        val user = DebugConfig.autoLoginUser ?: return
-        val password = DebugConfig.autoLoginPassword ?: return
+        val user = ServerConfig.autoLoginUser ?: return
+        val password = ServerConfig.autoLoginPassword ?: return
         runCatching { login(user, password) }
             .onFailure { error ->
                 android.util.Log.w("SessionStore", "Auto-login fallido: ${error.message}")
@@ -172,6 +184,14 @@ class SessionStore @Inject constructor(
                 StatusResponse.serializer(),
             )
         }
+        clearSession(notice)
+    }
+
+    /**
+     * Cierra la sesión solo en el dispositivo, sin llamar al servidor. Se usa
+     * al cambiar de servidor, cuando los tokens pertenecen al anterior.
+     */
+    fun clearLocalSession(notice: String? = null) {
         clearSession(notice)
     }
 

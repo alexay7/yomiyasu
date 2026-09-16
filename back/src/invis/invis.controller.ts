@@ -29,7 +29,15 @@ export class InvisController {
     @Post("redeem")
     @Throttle(1, 60)
     async registerUser(@Body() body:RegisterUserDto) {
-        const invi = await this.invisService.useCode(body.code);
+        // Si aún no existe ningún usuario, este registro crea la cuenta de
+        // administrador sin necesidad de código de invitación
+        const isFirstUser = (await this.usersService.countUsers()) === 0;
+
+        if (isFirstUser) {
+            return this.authService.signUp({...body}, true);
+        }
+
+        const invi = body.code ? await this.invisService.useCode(body.code) : null;
 
         if (!invi) throw new UnauthorizedException("Invalid code");
 

@@ -17,6 +17,11 @@ class YomiyasuApplication : Application(), SingletonImageLoader.Factory {
     @Inject
     lateinit var session: SessionStore
 
+    override fun onCreate() {
+        super.onCreate()
+        ServerConfig.loadPersisted(this)
+    }
+
     private val imageClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)

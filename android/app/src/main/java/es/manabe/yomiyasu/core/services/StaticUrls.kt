@@ -13,8 +13,9 @@ class StaticUrls @Inject constructor(
     private val api: ApiClient,
 ) {
 
-    fun url(path: String): HttpUrl {
-        val builder = api.baseUrl.newBuilder()
+    fun url(path: String): HttpUrl? {
+        val baseUrl = api.activeBaseUrl ?: return null
+        val builder = baseUrl.newBuilder()
             .addPathSegment("api")
             .addPathSegment("static")
 

@@ -3,6 +3,7 @@ import XCTest
 struct E2ECredentials {
     let user: String
     let password: String
+    let server: String?
     let book: String?
     let page: String?
     let holdSeconds: Double?
@@ -18,6 +19,7 @@ struct E2ECredentials {
             return E2ECredentials(
                 user: user,
                 password: password,
+                server: environment["YOMIYASU_SERVER_URL"],
                 book: environment["YOMIYASU_E2E_BOOK"],
                 page: environment["YOMIYASU_E2E_PAGE"],
                 holdSeconds: nil,
@@ -44,6 +46,7 @@ struct E2ECredentials {
         return E2ECredentials(
             user: user,
             password: password,
+            server: environment["YOMIYASU_SERVER_URL"] ?? json["server"],
             book: json["book"],
             page: json["page"],
             holdSeconds: json["hold"].flatMap(Double.init),
@@ -63,6 +66,11 @@ extension XCTestCase {
         noSave: Bool = true
     ) -> XCUIApplication {
         let app = XCUIApplication()
+
+        if let server = credentials.server {
+            app.launchEnvironment["YOMIYASU_SERVER_URL"] = server
+        }
+
         app.launchEnvironment["YOMIYASU_E2E_USER"] = credentials.user
         app.launchEnvironment["YOMIYASU_E2E_PASSWORD"] = credentials.password
 

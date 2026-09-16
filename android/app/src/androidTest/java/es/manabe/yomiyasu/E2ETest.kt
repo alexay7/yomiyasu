@@ -24,10 +24,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Suite E2E contra un servidor real. Las credenciales y los ids se pasan como
- * argumentos de instrumentación, igual que las variables de entorno del iOS:
+ * Suite E2E contra un servidor real. Las credenciales, la URL del servidor y
+ * los ids se pasan como argumentos de instrumentación, igual que las variables
+ * de entorno del iOS:
  *
  * adb shell am instrument -w \
+ *   -e YOMIYASU_SERVER_URL http://192.168.1.136:3001 \
  *   -e YOMIYASU_E2E_USER usuario -e YOMIYASU_E2E_PASSWORD contraseña \
  *   -e YOMIYASU_E2E_BOOK <id> -e YOMIYASU_E2E_NOVEL <id> -e YOMIYASU_E2E_SERIE <id> \
  *   es.manabe.yomiyasu.test/androidx.test.runner.AndroidJUnitRunner
@@ -44,6 +46,8 @@ class E2ETest {
 
     private val args = InstrumentationRegistry.getArguments()
 
+    private val serverUrl: String? = args.getString("YOMIYASU_SERVER_URL")
+        ?: args.getString("server")
     private val user: String? = args.getString("YOMIYASU_E2E_USER")
         ?: args.getString("user")
     private val password: String? = args.getString("YOMIYASU_E2E_PASSWORD")
@@ -70,6 +74,7 @@ class E2ETest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            serverUrl?.let { putExtra("YOMIYASU_SERVER_URL", it) }
             putExtra("YOMIYASU_E2E_USER", user)
             putExtra("YOMIYASU_E2E_PASSWORD", password)
             putExtra("YOMIYASU_E2E_NO_SAVE", "1")

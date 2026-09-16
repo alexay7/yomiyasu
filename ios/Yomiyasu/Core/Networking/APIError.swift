@@ -34,6 +34,7 @@ struct ErrorEnvelope: Decodable, Sendable {
 
 enum APIError: LocalizedError {
     case invalidURL
+    case serverNotConfigured
     case transport(any Error)
     case unexpectedResponse
     case decoding(any Error)
@@ -44,6 +45,8 @@ enum APIError: LocalizedError {
         switch self {
         case .invalidURL:
             "La dirección del servidor no es válida."
+        case .serverNotConfigured:
+            "No hay ningún servidor configurado."
         case .transport:
             "No se ha podido conectar con el servidor."
         case .unexpectedResponse:

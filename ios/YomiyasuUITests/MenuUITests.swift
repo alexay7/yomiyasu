@@ -25,6 +25,11 @@ final class MenuUITests: XCTestCase {
         }
 
         let app = XCUIApplication()
+
+        if let server = credentials.server {
+            app.launchEnvironment["YOMIYASU_SERVER_URL"] = server
+        }
+
         app.launchEnvironment["YOMIYASU_E2E_USER"] = credentials.user
         app.launchEnvironment["YOMIYASU_E2E_PASSWORD"] = credentials.password
         app.launchEnvironment["YOMIYASU_E2E_NO_SAVE"] = "1"

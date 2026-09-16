@@ -1,7 +1,7 @@
 package es.manabe.yomiyasu.core.services
 
 import android.util.Log
-import es.manabe.yomiyasu.app.DebugConfig
+import es.manabe.yomiyasu.app.ServerConfig
 import io.socket.client.IO
 import io.socket.client.Manager
 import io.socket.client.Socket
@@ -33,6 +33,12 @@ class SocketService @Inject constructor() {
         if (manager != null) return
 
         try {
+            val serverUrl = ServerConfig.serverUrl
+            if (serverUrl == null) {
+                Log.w(TAG, "Sin servidor configurado; websocket no iniciado")
+                return
+            }
+
             val options = IO.Options().apply {
                 path = "/socket.io/"
                 transports = arrayOf(WebSocket.NAME)
@@ -40,7 +46,7 @@ class SocketService @Inject constructor() {
                 reconnectionDelay = 2_000
             }
 
-            val uri = URI.create(DebugConfig.socketUrl)
+            val uri = URI.create(serverUrl.toString())
             val newManager = Manager(uri, options)
             manager = newManager
 
@@ -62,7 +68,7 @@ class SocketService @Inject constructor() {
             }
 
             newSocket.connect()
-            Log.i(TAG, "Conectando al websocket ${DebugConfig.socketUrl}")
+            Log.i(TAG, "Conectando al websocket $serverUrl")
         } catch (error: Exception) {
             Log.e(TAG, "No se ha podido iniciar el websocket", error)
         }

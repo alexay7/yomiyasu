@@ -1,5 +1,6 @@
 package es.manabe.yomiyasu.features.settings
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -22,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -40,16 +44,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import es.manabe.yomiyasu.BuildConfig
-import es.manabe.yomiyasu.app.DebugConfig
+import es.manabe.yomiyasu.app.ServerConfig
 import es.manabe.yomiyasu.app.ui.theme.ThemeMode
 import es.manabe.yomiyasu.core.models.MainView
+import es.manabe.yomiyasu.core.session.SessionStore
 import es.manabe.yomiyasu.core.settings.AppSettings
 import es.manabe.yomiyasu.core.settings.AppSettingsData
 import es.manabe.yomiyasu.core.settings.BoardFlag
@@ -61,9 +69,34 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settings: AppSettings,
+    private val session: SessionStore,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     val data: StateFlow<AppSettingsData> = settings.flow
+
+    val serverUrl: String
+        get() = ServerConfig.serverUrl?.toString() ?: ""
+
+    /**
+     * Valida y persiste la nueva URL y cierra la sesión local. Devuelve el
+     * mensaje de error o `null` si el cambio se aplicó (o no había cambio).
+     */
+    fun changeServer(raw: String): String? {
+        val trimmed = raw.trim()
+        val url = ServerConfig.parse(trimmed)
+            ?: return if (trimmed.isEmpty()) {
+                "Introduce la URL del servidor."
+            } else {
+                "La dirección del servidor no es válida."
+            }
+
+        if (url != ServerConfig.serverUrl) {
+            ServerConfig.setServerUrl(trimmed, context)
+            session.clearLocalSession("Has cambiado de servidor. Vuelve a iniciar sesión.")
+        }
+        return null
+    }
 
     fun setAppearance(value: ThemeMode) {
         viewModelScope.launch { settings.setAppearance(value) }
@@ -109,6 +142,7 @@ fun SettingsRoute(
 
     SettingsScreen(
         settings = settings,
+        currentServerUrl = viewModel.serverUrl,
         isSocketConnected = isSocketConnected,
         onAppearanceChange = viewModel::setAppearance,
         onMainViewChange = viewModel::setMainView,
@@ -118,6 +152,7 @@ fun SettingsRoute(
         onShowCronoChange = viewModel::setShowCrono,
         onBoardChange = viewModel::setBoard,
         onIdleTimeoutChange = viewModel::setIdleTimeout,
+        onChangeServer = viewModel::changeServer,
         onOpenAccount = onOpenAccount,
         onLogout = onLogout,
     )
@@ -127,6 +162,7 @@ fun SettingsRoute(
 @Composable
 private fun SettingsScreen(
     settings: AppSettingsData,
+    currentServerUrl: String,
     isSocketConnected: Boolean,
     onAppearanceChange: (ThemeMode) -> Unit,
     onMainViewChange: (MainView) -> Unit,
@@ -136,10 +172,14 @@ private fun SettingsScreen(
     onShowCronoChange: (Boolean) -> Unit,
     onBoardChange: (BoardFlag, Boolean) -> Unit,
     onIdleTimeoutChange: (Int) -> Unit,
+    onChangeServer: (String) -> String?,
     onOpenAccount: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showServerDialog by remember { mutableStateOf(false) }
+    var serverInput by remember { mutableStateOf("") }
+    var serverError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Ajustes") }) },
@@ -293,6 +333,36 @@ private fun SettingsScreen(
                 )
             }
 
+            item {
+                SectionHeader(
+                    title = "Servidor",
+                    footer = "Cambiar de servidor cerrará tu sesión y apuntará la app a la nueva dirección.",
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text("Dirección") },
+                    supportingContent = {
+                        Text(
+                            text = currentServerUrl.ifEmpty { "Sin configurar" },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                )
+            }
+            item {
+                SettingsEntry(
+                    title = "Cambiar servidor",
+                    icon = Icons.Filled.Dns,
+                    onClick = {
+                        serverInput = currentServerUrl
+                        serverError = null
+                        showServerDialog = true
+                    },
+                )
+            }
+
             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
             item {
                 SettingsEntry(
@@ -312,16 +382,73 @@ private fun SettingsScreen(
 
             if (BuildConfig.DEBUG) {
                 item { SectionHeader("Diagnóstico") }
-                item { DebugRow("Servidor", DebugConfig.serverUrl) }
-                item { DebugRow("Websocket", DebugConfig.socketUrl) }
                 item {
                     DebugRow(
-                        "Conexión",
+                        "Websocket",
                         if (isSocketConnected) "Conectado" else "Desconectado",
                     )
                 }
             }
         }
+    }
+
+    if (showServerDialog) {
+        AlertDialog(
+            onDismissRequest = { showServerDialog = false },
+            title = { Text("Cambiar de servidor") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = serverInput,
+                        onValueChange = {
+                            serverInput = it
+                            serverError = null
+                        },
+                        label = { Text("Dirección del servidor") },
+                        placeholder = { Text("https://…") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("serverUrlInput"),
+                    )
+
+                    serverError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+
+                    Text(
+                        text = "Se cerrará tu sesión y la app se conectará a la nueva dirección.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val error = onChangeServer(serverInput)
+                        if (error == null) {
+                            showServerDialog = false
+                        } else {
+                            serverError = error
+                        }
+                    },
+                ) {
+                    Text("Cambiar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showServerDialog = false }) { Text("Cancelar") }
+            },
+        )
     }
 
     if (showLogoutDialog) {

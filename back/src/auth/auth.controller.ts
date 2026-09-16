@@ -161,7 +161,7 @@ export class AuthController {
     @ApiOkResponse({status:HttpStatus.OK})
     @UseGuards(JwtAuthGuard)
     async checkAuth(
-    @Req()req:Request,
+        @Req()req:Request,
         @Res()res:Response
     ) {
         const {userId} = req.user as {userId: Types.ObjectId};
@@ -178,5 +178,13 @@ export class AuthController {
             email:foundUser.email,
             admin:foundUser.admin
         });
+    }
+
+    @ApiOkResponse({status:HttpStatus.OK})
+    @Get("setup")
+    async firstSetup() {
+        const userCount = await this.usersService.countUsers();
+
+        return {firstUser: userCount === 0};
     }
 }

@@ -8,29 +8,28 @@ protocol AuthTokenProvider: AnyObject {
 
 @MainActor
 final class APIClient {
-    nonisolated static var defaultBaseURL: URL {
-        #if DEBUG
-        if let raw = ProcessInfo.processInfo.environment["YOMIYASU_SERVER_URL"],
-           let url = URL(string: raw) {
-            return url
-        }
-        #endif
-        return URL(string: "https://manga.manabe.es")!
-    }
+    /// Centinela mientras no hay servidor configurado. No se usa para red: las
+    /// peticiones fallan con ``APIError/serverNotConfigured`` hasta que
+    /// ``AppEnvironment/applyServer(_:)`` fija una URL real.
+    nonisolated static let unconfiguredBaseURL = URL(string: "yomiyasu://unconfigured")!
 
-    let baseURL: URL
+    private(set) var baseURL: URL
     weak var authProvider: (any AuthTokenProvider)?
 
     private let session: URLSession
     private let decoder: JSONDecoder
 
     init(
-        baseURL: URL = APIClient.defaultBaseURL,
+        baseURL: URL = APIClient.unconfiguredBaseURL,
         session: URLSession = .shared
     ) {
         self.baseURL = baseURL
         self.session = session
         decoder = .yomiyasu()
+    }
+
+    func setBaseURL(_ url: URL) {
+        baseURL = url
     }
 
     func send<T: Decodable>(
@@ -111,6 +110,10 @@ final class APIClient {
     }
 
     private func makeRequest(_ endpoint: Endpoint, authorized: Bool) throws -> URLRequest {
+        guard baseURL != APIClient.unconfiguredBaseURL else {
+            throw APIError.serverNotConfigured
+        }
+
         guard var components = URLComponents(
             url: baseURL.appending(path: endpoint.path),
             resolvingAgainstBaseURL: false

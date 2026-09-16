@@ -4,6 +4,9 @@ struct SettingsView: View {
     @Environment(AppEnvironment.self) private var environment
 
     @State private var showingLogout = false
+    @State private var newServerURL = ""
+    @State private var showingServerChange = false
+    @State private var serverError: String?
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -75,6 +78,33 @@ struct SettingsView: View {
             }
 
             Section {
+                LabeledContent(
+                    "Dirección",
+                    value: environment.server.baseURL?.absoluteString ?? "Sin configurar"
+                )
+
+                TextField("Nueva dirección", text: $newServerURL)
+                    .textContentType(.URL)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+
+                Button("Cambiar servidor") {
+                    showingServerChange = true
+                }
+                .disabled(newServerURL.trimmingCharacters(in: .whitespaces).isEmpty)
+
+                if let serverError {
+                    Text(serverError)
+                        .foregroundStyle(.red)
+                }
+            } header: {
+                Text("Servidor")
+            } footer: {
+                Text("Cambiar de servidor cerrará tu sesión y apuntará la app a la nueva dirección.")
+            }
+
+            Section {
                 NavigationLink {
                     AccountSettingsView()
                 } label: {
@@ -88,7 +118,6 @@ struct SettingsView: View {
 
             #if DEBUG
             Section("Diagnóstico") {
-                LabeledContent("Servidor", value: environment.api.baseURL.absoluteString)
                 LabeledContent(
                     "Websocket",
                     value: environment.socket.isConnected ? "Conectado" : "Desconectado"
@@ -103,6 +132,11 @@ struct SettingsView: View {
             #endif
         }
         .navigationTitle("Ajustes")
+        .task {
+            if newServerURL.isEmpty {
+                newServerURL = environment.server.baseURL?.absoluteString ?? ""
+            }
+        }
         .confirmationDialog(
             "¿Cerrar sesión?",
             isPresented: $showingLogout,
@@ -112,5 +146,25 @@ struct SettingsView: View {
                 Task { await environment.session.logout() }
             }
         }
+        .confirmationDialog(
+            "¿Cambiar de servidor?",
+            isPresented: $showingServerChange,
+            titleVisibility: .visible
+        ) {
+            Button("Cambiar servidor", role: .destructive) {
+                changeServer()
+            }
+        } message: {
+            Text("Se cerrará tu sesión y la app se conectará a \(newServerURL).")
+        }
+    }
+
+    private func changeServer() {
+        guard environment.applyServer(newServerURL) != nil else {
+            serverError = "La dirección del servidor no es válida."
+            return
+        }
+
+        serverError = nil
     }
 }

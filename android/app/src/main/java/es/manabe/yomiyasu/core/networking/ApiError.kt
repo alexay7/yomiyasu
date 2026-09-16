@@ -76,6 +76,11 @@ sealed class ApiException(
         userMessage = "La dirección del servidor no es válida.",
     )
 
+    class ServerNotConfigured : ApiException(
+        message = "server-not-configured",
+        userMessage = "No hay ningún servidor configurado.",
+    )
+
     class Transport(cause: Throwable) : ApiException(
         message = cause.message,
         userMessage = "No se ha podido conectar con el servidor.",

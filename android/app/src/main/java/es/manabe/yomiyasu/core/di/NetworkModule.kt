@@ -5,12 +5,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import es.manabe.yomiyasu.BuildConfig
-import es.manabe.yomiyasu.app.DebugConfig
 import es.manabe.yomiyasu.core.networking.ApiClient
 import es.manabe.yomiyasu.core.networking.YomiyasuJson
 import kotlinx.serialization.json.Json
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.util.concurrent.TimeUnit
@@ -19,12 +16,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    @Provides
-    @Singleton
-    fun provideBaseUrl(): HttpUrl =
-        DebugConfig.serverUrl.toHttpUrlOrNull()
-            ?: "https://manga.manabe.es".toHttpUrlOrNull()!!
 
     @Provides
     @Singleton
@@ -48,8 +39,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideApiClient(
-        baseUrl: HttpUrl,
         client: OkHttpClient,
         json: Json,
-    ): ApiClient = ApiClient(baseUrl = baseUrl, client = client, json = json)
+    ): ApiClient = ApiClient(client = client, json = json)
 }

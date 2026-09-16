@@ -1,3 +1,7 @@
+# Ejemplo de despliegue de Yomiyasu.
+# Copia este archivo como docker-compose.yml y ajusta los valores marcados
+# con comentarios. El resto (nombres de servicios, targets, etc.) funciona
+# tal cual en cualquier máquina con Docker.
 version: "3.3"
 services:
   api:
@@ -8,14 +12,18 @@ services:
       - "mongodb"
       - "cache"
     environment:
+      # Genera cada secreto con: openssl rand -hex 32
       - ACCESS_SECRET=valor_del_access_secret
       - REFRESH_SECRET=valor_del_refresh_secret
+      # No los cambies: apuntan a los servicios de este mismo compose
       - REDIS_HOST=cache
       - MONGOURL=mongodb://mongodb:27017/yomiyasu
     volumes:
+      # Ruta ABSOLUTA de tu biblioteca (con mangas/ y novelas/ dentro)
       - type: bind
         source: /folder/with/book/library
         target: /usr/src/exterior
+      # Ruta ABSOLUTA de tu carpeta de diccionarios (opcional: puede estar vacía)
       - type: bind
         source: /config/folder/dicts
         target: /usr/src/dicts
@@ -25,6 +33,8 @@ services:
     networks:
       - server-network
     ports:
+      # Solo necesario para inspeccionar Redis desde fuera; en un servidor
+      # público elimina este mapeo o protégelo con firewall
       - "6379:6379"
     sysctls:
       - net.core.somaxconn=4096
@@ -34,29 +44,41 @@ services:
   client:
     depends_on:
       - "api"
+      - "ebook"
     networks:
       - server-network
     image: alexay7/yomiyasu-front
     ports:
+      # Puerto público de la web (ejemplo: "8080:80"). El 80 de la derecha
+      # es el puerto interno del contenedor: no lo toques
       - "PORT:80"
+  ebook:
+    image: alexay7/ttu-yomiyasu
+    networks:
+      - server-network
+    restart: always
   mongodb:
-    image: mongo:4.4.22
+    image: mongo:8.0
     networks:
       - server-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 30s
       timeout: 10s
       retries: 3
     ports:
+      # Solo necesario para inspeccionar la base de datos desde fuera; en un
+      # servidor público elimina este mapeo o protégelo con firewall
       - "27018:27017"
     volumes:
-      - type: bind
-        source: /config/folder/db
-        target: /data/db
+      # Volumen gestionado por Docker: no hay que preparar ninguna carpeta
+      # en el host, los datos persisten entre reinicios y recreaciones
+      - mongo:/data/db
     restart: unless-stopped
 networks:
   server-network:
 volumes:
   cache:
+    driver: local
+  mongo:
     driver: local

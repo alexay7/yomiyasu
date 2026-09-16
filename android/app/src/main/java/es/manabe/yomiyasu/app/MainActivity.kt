@@ -17,7 +17,7 @@ class MainActivity : FragmentActivity() {
     lateinit var session: SessionStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        DebugConfig.applyIntentExtras(intent)
+        ServerConfig.applyIntentExtras(intent)
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

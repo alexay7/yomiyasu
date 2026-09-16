@@ -1,5 +1,6 @@
 package es.manabe.yomiyasu.core.networking
 
+import es.manabe.yomiyasu.app.ServerConfig
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,12 +13,20 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 
+/**
+ * Cliente HTTP. Con `baseUrl` explícita (tests) usa siempre esa; sin ella
+ * resuelve la URL configurada por el usuario en cada petición, de modo que un
+ * cambio de servidor surte efecto sin reconstruir la app.
+ */
 class ApiClient(
-    val baseUrl: HttpUrl,
+    private val baseUrl: HttpUrl? = null,
     private val client: OkHttpClient,
     val json: Json = YomiyasuJson,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
+    val activeBaseUrl: HttpUrl?
+        get() = baseUrl ?: ServerConfig.serverUrl
+
     interface AuthTokenProvider {
         val accessToken: String?
         suspend fun refreshTokens()
@@ -82,7 +91,8 @@ class ApiClient(
     }
 
     private suspend fun execute(endpoint: Endpoint, authorized: Boolean): Response {
-        val url = ServerUrls.buildUrl(baseUrl, endpoint.path, endpoint.query)
+        val currentBaseUrl = activeBaseUrl ?: throw ApiException.ServerNotConfigured()
+        val url = ServerUrls.buildUrl(currentBaseUrl, endpoint.path, endpoint.query)
 
         val requestBuilder = Request.Builder()
             .url(url)

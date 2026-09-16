@@ -43,17 +43,21 @@ $ANDROID_HOME/emulator/emulator -avd yomiyasu -no-snapshot -no-audio -gpu host
 
 ## Servidor
 
-Las builds de Release apuntan a `https://manga.manabe.es`. En **Debug** se puede sobreescribir:
+La app no trae servidor por defecto: la primera vez pide la URL en la pantalla de login
+(también editable después en Ajustes → Servidor). Al cambiar de servidor se cierra la sesión
+y la app apunta a la nueva dirección; el websocket usa siempre la misma URL que la API. Se
+permiten direcciones `http://` (cleartext) para servidores caseros.
 
-- Con propiedades de Gradle (se hornean en `BuildConfig`):
-  `./gradlew :app:assembleDebug -Pyomiyasu.serverUrl=http://10.0.2.2:3001 -Pyomiyasu.socketUrl=http://10.0.2.2:3002`
+En **Debug** la URL se puede sobreescribir (con prioridad sobre la configurada en la app):
+
+- Con propiedades de Gradle (se hornea en `BuildConfig.SERVER_URL`):
+  `./gradlew :app:assembleDebug -Pyomiyasu.serverUrl=http://10.0.2.2:3001`
 - Con extras del Intent al arrancar (`adb shell am start`), equivalente a las variables de
   entorno del iOS:
 
 ```sh
 adb shell am start -n es.manabe.yomiyasu/.app.MainActivity \
   --es YOMIYASU_SERVER_URL http://10.0.2.2:3001 \
-  --es YOMIYASU_SOCKET_URL http://10.0.2.2:3002 \
   --es YOMIYASU_E2E_USER usuario \
   --es YOMIYASU_E2E_PASSWORD contraseña \
   --es YOMIYASU_E2E_BOOK <id> \
@@ -61,18 +65,19 @@ adb shell am start -n es.manabe.yomiyasu/.app.MainActivity \
   --es YOMIYASU_E2E_NO_SAVE 1
 ```
 
-Variables E2E soportadas (solo Debug): `YOMIYASU_SERVER_URL`, `YOMIYASU_SOCKET_URL`,
-`YOMIYASU_E2E_USER`, `YOMIYASU_E2E_PASSWORD`, `YOMIYASU_E2E_BOOK`, `YOMIYASU_E2E_SERIE`,
-`YOMIYASU_E2E_PAGE`, `YOMIYASU_E2E_CHARACTERS`, `YOMIYASU_E2E_NO_SAVE`, `YOMIYASU_E2E_SECTION`
-(`inicio`, `biblioteca`, `lista`, `palabras`, `mas`).
+Extras E2E soportados (solo Debug): `YOMIYASU_SERVER_URL`, `YOMIYASU_E2E_USER`,
+`YOMIYASU_E2E_PASSWORD`, `YOMIYASU_E2E_BOOK`, `YOMIYASU_E2E_SERIE`, `YOMIYASU_E2E_PAGE`,
+`YOMIYASU_E2E_CHARACTERS`, `YOMIYASU_E2E_NO_SAVE`, `YOMIYASU_E2E_SECTION` (`inicio`,
+`biblioteca`, `lista`, `palabras`, `mas`).
 
 ### Tests E2E
 
-Los tests leen las credenciales de argumentos de instrumentación; sin ellos se saltan. Se
-pueden tomar del mismo `ios/LocalFixtures/e2e.json`:
+Los tests leen la URL y las credenciales de argumentos de instrumentación; sin credenciales se
+saltan. Se pueden tomar del mismo `ios/LocalFixtures/e2e.json`:
 
 ```sh
 ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.YOMIYASU_SERVER_URL=https://manga.manabe.es \
   -Pandroid.testInstrumentationRunnerArguments.YOMIYASU_E2E_USER=usuario \
   -Pandroid.testInstrumentationRunnerArguments.YOMIYASU_E2E_PASSWORD=contraseña \
   -Pandroid.testInstrumentationRunnerArguments.YOMIYASU_E2E_BOOK=<id> \
@@ -133,7 +138,7 @@ clave de debug (no permitirá actualizar sobre una instalación firmada con tu k
 ```
 app/src/main/java/es/manabe/yomiyasu/
   app/          MainActivity (FragmentActivity), shell adaptativo (barra inferior/sidebar),
-                tema Material 3, rutas, DebugConfig
+                tema Material 3, rutas, ServerConfig
   components/   BookCard, SerieCard, RemoteImage, PitchAccentView, RatingViews, estado…
   core/
     models/     DTOs kotlinx.serialization (tolerantes: readlist bool/objeto, CurrentBook…)

@@ -56,9 +56,9 @@ fun MainShell(
 
     val startRoute = remember {
         when {
-            DebugConfig.e2eBook != null -> Routes.book(DebugConfig.e2eBook!!)
-            DebugConfig.e2eSerie != null -> Routes.serie(DebugConfig.e2eSerie!!)
-            else -> when (DebugConfig.e2eSection?.lowercase()) {
+            ServerConfig.e2eBook != null -> Routes.book(ServerConfig.e2eBook!!)
+            ServerConfig.e2eSerie != null -> Routes.serie(ServerConfig.e2eSerie!!)
+            else -> when (ServerConfig.e2eSection?.lowercase()) {
                 "biblioteca", "library" -> Routes.Library
                 "lista", "readlist" -> Routes.Readlist
                 "palabras", "words" -> Routes.Words

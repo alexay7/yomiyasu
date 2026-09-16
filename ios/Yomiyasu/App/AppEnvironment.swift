@@ -4,6 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class AppEnvironment {
+    let server: ServerConfig
     let api: APIClient
     let session: SessionStore
     let socket: SocketService
@@ -16,13 +17,15 @@ final class AppEnvironment {
     let downloads: DownloadManager
     let network: NetworkMonitor
 
-    init() {
-        let api = APIClient()
+    init(server: ServerConfig = ServerConfig()) {
+        let baseURL = server.baseURL ?? APIClient.unconfiguredBaseURL
+        let api = APIClient(baseURL: baseURL)
         let session = SessionStore(api: api)
-        let socket = SocketService()
+        let socket = SocketService(url: baseURL)
         let settings = AppSettings()
         let readerSettings = ReaderSettingsStore()
 
+        self.server = server
         self.api = api
         self.session = session
         self.socket = socket
@@ -41,5 +44,33 @@ final class AppEnvironment {
                 socket.stop()
             }
         }
+    }
+
+    func bootstrap() async {
+        guard server.isConfigured else {
+            session.clearLocalSession()
+            return
+        }
+
+        await session.bootstrap()
+    }
+
+    /// Aplica una nueva URL de servidor: persiste, cierra la sesión local,
+    /// detiene el websocket y reapunta los clientes al nuevo servidor.
+    /// Devuelve `nil` si la URL no es válida.
+    @discardableResult
+    func applyServer(_ raw: String) -> URL? {
+        guard let url = server.setServer(raw) else { return nil }
+
+        let changed = url != api.baseURL
+        guard changed else { return url }
+
+        if case .loggedIn = session.state {
+            session.clearLocalSession(notice: "Has cambiado de servidor. Vuelve a iniciar sesión.")
+        }
+        socket.stop()
+        api.setBaseURL(url)
+        socket.setURL(url)
+        return url
     }
 }

@@ -127,6 +127,12 @@ final class SessionStore: AuthTokenProvider {
         clearSession(notice: notice)
     }
 
+    /// Cierra la sesión solo en el dispositivo, sin llamar al servidor. Se usa
+    /// al cambiar de servidor, cuando los tokens pertenecen al anterior.
+    func clearLocalSession(notice: String? = nil) {
+        clearSession(notice: notice)
+    }
+
     func updateUsername(_ username: String) {
         guard case .loggedIn(let user) = state else { return }
 

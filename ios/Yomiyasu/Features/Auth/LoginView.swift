@@ -3,10 +3,12 @@ import SwiftUI
 struct LoginView: View {
     @Environment(AppEnvironment.self) private var environment
 
+    @State private var serverURL = ""
     @State private var usernameOrEmail = ""
     @State private var password = ""
     @State private var isLoggingIn = false
     @State private var errorMessage: String?
+    @State private var showingRedeem = false
 
     var body: some View {
         NavigationStack {
@@ -27,6 +29,12 @@ struct LoginView: View {
                 }
 
                 VStack(spacing: 16) {
+                    TextField("Servidor (https://…)", text: $serverURL)
+                        .textContentType(.URL)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+
                     TextField("Usuario o correo", text: $usernameOrEmail)
                         .textContentType(.username)
                         .textInputAutocapitalization(.never)
@@ -60,10 +68,11 @@ struct LoginView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .frame(maxWidth: 400)
-                .disabled(isLoggingIn || usernameOrEmail.isEmpty || password.isEmpty)
+                .disabled(isLoggingIn || serverURL.isEmpty || usernameOrEmail.isEmpty || password.isEmpty)
 
-                NavigationLink("¿Tienes un código de invitación?") {
-                    RedeemView()
+                Button("¿Tienes un código de invitación?") {
+                    guard applyServerIfNeeded() else { return }
+                    showingRedeem = true
                 }
                 .font(.footnote)
             }
@@ -71,7 +80,13 @@ struct LoginView: View {
             .onSubmit {
                 Task { await login() }
             }
+            .navigationDestination(isPresented: $showingRedeem) {
+                RedeemView()
+            }
             .task {
+                if serverURL.isEmpty {
+                    serverURL = environment.server.baseURL?.absoluteString ?? ""
+                }
                 await autoLoginIfRequested()
             }
         }
@@ -84,6 +99,8 @@ struct LoginView: View {
         errorMessage = nil
         defer { isLoggingIn = false }
 
+        guard applyServerIfNeeded() else { return }
+
         do {
             try await environment.session.login(
                 usernameOrEmail: usernameOrEmail,
@@ -92,6 +109,27 @@ struct LoginView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Valida y persiste el servidor escrito, si ha cambiado. Devuelve `false`
+    /// y muestra el error cuando la URL no es válida.
+    private func applyServerIfNeeded() -> Bool {
+        let trimmed = serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if let current = environment.server.baseURL,
+           current.absoluteString == ServerConfig.parse(trimmed)?.absoluteString {
+            return true
+        }
+
+        guard environment.applyServer(trimmed) != nil else {
+            errorMessage = trimmed.isEmpty
+                ? "Introduce la URL del servidor."
+                : "La dirección del servidor no es válida."
+            return false
+        }
+
+        serverURL = environment.server.baseURL?.absoluteString ?? trimmed
+        return true
     }
 
     private func autoLoginIfRequested() async {

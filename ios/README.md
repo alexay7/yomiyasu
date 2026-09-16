@@ -38,26 +38,30 @@ Los tests unitarios están en `YomiyasuTests/` y los de interfaz (XCUITest) en
 
 ## Servidor
 
-Las builds de Release apuntan a `https://manga.manabe.es`. En **DEBUG** se pueden
-sobreescribir con variables de entorno (variables de esquema en Xcode o
-`SIMCTL_CHILD_*` con `simctl launch`):
+La app no trae servidor por defecto: la primera vez pide la URL en la pantalla de
+login (también editable después en Ajustes → Servidor). Al cambiar de servidor se
+cierra la sesión y el websocket se reconecta a la nueva dirección; el websocket usa
+siempre la misma URL que la API. Se permiten direcciones `http://` hacia la red local.
+
+En **DEBUG** se pueden sobreescribir con variables de entorno (variables de esquema
+en Xcode o `SIMCTL_CHILD_*` con `simctl launch`); el override de entorno tiene
+prioridad sobre la URL configurada en la app:
 
 | Variable | Uso |
 | --- | --- |
-| `YOMIYASU_SERVER_URL` | URL base de la API (p. ej. `http://localhost:3001`) |
-| `YOMIYASU_SOCKET_URL` | URL del websocket (p. ej. `http://localhost:3002`) |
+| `YOMIYASU_SERVER_URL` | URL base de la API y del websocket (p. ej. `http://localhost:3001`) |
 | `YOMIYASU_E2E_USER` / `YOMIYASU_E2E_PASSWORD` | Auto-login al arrancar (solo tests) |
 | `YOMIYASU_E2E_BOOK` / `YOMIYASU_E2E_SERIE` | Abre directamente un libro/serie |
 | `YOMIYASU_E2E_PAGE` / `YOMIYASU_E2E_CHARACTERS` | Página/caracteres iniciales |
 | `YOMIYASU_E2E_NO_SAVE` | No escribe progreso de lectura (para pruebas) |
 | `YOMIYASU_E2E_SECTION` | Sección inicial (biblioteca, lista, palabras…) |
 
-Ejemplo contra un backend local:
+Ejemplo contra un backend local (API y websocket en el mismo origen, p. ej. con el
+nginx de referencia de `front/deployment/nginx.dev.conf`):
 
 ```sh
 xcrun simctl launch booted es.manabe.yomiyasu \
   SIMCTL_CHILD_YOMIYASU_SERVER_URL=http://localhost:3001 \
-  SIMCTL_CHILD_YOMIYASU_SOCKET_URL=http://localhost:3002 \
   SIMCTL_CHILD_YOMIYASU_E2E_USER=usuario \
   SIMCTL_CHILD_YOMIYASU_E2E_PASSWORD=contraseña
 ```
@@ -65,7 +69,8 @@ xcrun simctl launch booted es.manabe.yomiyasu \
 ### Fixtures locales (gitignored)
 
 - `LocalFixtures/e2e.json` — credenciales y datos para los UI tests:
-  `{ "user": "...", "password": "...", "book": "id", "novelBook": "id", "serie": "id" }`.
+  `{ "server": "https://…", "user": "...", "password": "...", "book": "id", "novelBook": "id", "serie": "id" }`.
+  Los UI tests pasan `server` a la app como `YOMIYASU_SERVER_URL`.
 - `LocalFixtures/sample_manga.html` — muestra de mokuro real para el test del parser
   (`testRealProductionFixture`, se salta si no existe).
 
@@ -107,8 +112,8 @@ zip -r Yomiyasu.ipa Payload && rm -rf Payload
 ```
 
 Pasa el `.ipa` al iPhone (AirDrop, Archivos…) y en **SideStore** toca **+** y selecciónalo.
-Con LocalDevVPN conectado, la app se firma e instala al momento. Los builds de Release ya
-apuntan a `https://manga.manabe.es`.
+Con LocalDevVPN conectado, la app se firma e instala al momento. La primera vez que
+abras la app tendrás que indicar la URL del servidor en la pantalla de login.
 
 ### 4. Renovación automática con un Atajo
 
@@ -143,7 +148,7 @@ Yomiyasu/
     Networking/APIClient con Bearer, refresh automático y errores tipados
     Readers/   Parser mokuro, pager de manga, Readium (EPUB), diccionario, descargas
     Services/  API de biblioteca/diccionario/progreso, sockets, monitor de red
-    Settings/  Ajustes persistidos (tema, lectura, biblioteca)
+    Settings/  Ajustes persistidos (tema, lectura, biblioteca, servidor)
   Features/    Pantallas por área (Auth, Home, Library, Serie, Reader, Novel, …)
   Resources/   Info.plist generado, Assets (icono de la web), fuentes OCR
 ```

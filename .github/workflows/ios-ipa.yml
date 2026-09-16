@@ -96,7 +96,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: latest
-          TITLE: "Últimas compilaciones"
+          TITLE: "Apps móviles"
         run: |
           gh release view "$TAG" > /dev/null 2>&1 \
             || gh release create "$TAG" --title "$TITLE" --latest \

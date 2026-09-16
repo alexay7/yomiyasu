@@ -15,8 +15,9 @@ val keystoreProperties = Properties().apply {
     }
 }
 
-val debugServerUrl = providers.gradleProperty("yomiyasu.serverUrl").getOrElse("https://manga.manabe.es")
-val debugSocketUrl = providers.gradleProperty("yomiyasu.socketUrl").getOrElse("https://manga.manabe.es")
+// URL de servidor opcional horneada en Debug para pruebas (sin default: la app
+// no apunta a ningún servidor hasta que el usuario lo configura).
+val debugServerUrl = providers.gradleProperty("yomiyasu.serverUrl").getOrElse("")
 
 // Permite que la CI fije versión sin tocar el fichero (-Pyomiyasu.versionCode / -Pyomiyasu.versionName)
 val appVersionCode = providers.gradleProperty("yomiyasu.versionCode").getOrElse("1").toInt()
@@ -49,14 +50,12 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "SERVER_URL", "\"$debugServerUrl\"")
-            buildConfigField("String", "SOCKET_URL", "\"$debugSocketUrl\"")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "SERVER_URL", "\"https://manga.manabe.es\"")
-            buildConfigField("String", "SOCKET_URL", "\"https://manga.manabe.es\"")
+            buildConfigField("String", "SERVER_URL", "\"\"")
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {

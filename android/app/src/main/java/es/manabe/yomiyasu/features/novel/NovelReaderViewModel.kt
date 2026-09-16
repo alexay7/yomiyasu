@@ -1,6 +1,6 @@
 package es.manabe.yomiyasu.features.novel
 
-import es.manabe.yomiyasu.app.DebugConfig
+import es.manabe.yomiyasu.app.ServerConfig
 import es.manabe.yomiyasu.core.di.ApplicationScope
 import es.manabe.yomiyasu.core.models.Book
 import es.manabe.yomiyasu.core.networking.ApiClient
@@ -97,7 +97,7 @@ class NovelReaderViewModel @Inject constructor(
                     ?: mirror.novelCharacters(bookId)
                 val startTime = progressRecord?.time ?: mirror.novelTime(bookId)
 
-                val overrideCharacters = DebugConfig.e2eCharacters
+                val overrideCharacters = ServerConfig.e2eCharacters
 
                 _state.value = NovelLoadState(
                     book = book,
@@ -122,7 +122,7 @@ class NovelReaderViewModel @Inject constructor(
     }
 
     fun saveProgress(book: Book, characters: Int, timeSeconds: Int, totalCharacters: Int) {
-        if (DebugConfig.e2eNoSave) return
+        if (ServerConfig.e2eNoSave) return
         if (characters <= 0 && timeSeconds <= 0) return
 
         mirror.setNovelCharacters(book.id, characters)

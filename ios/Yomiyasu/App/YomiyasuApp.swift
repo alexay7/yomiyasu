@@ -9,7 +9,7 @@ struct YomiyasuApp: App {
             RootView()
                 .environment(environment)
                 .task {
-                    await environment.session.bootstrap()
+                    await environment.bootstrap()
                 }
         }
     }

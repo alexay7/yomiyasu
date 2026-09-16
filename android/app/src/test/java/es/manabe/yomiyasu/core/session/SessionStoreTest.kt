@@ -1,5 +1,6 @@
 package es.manabe.yomiyasu.core.session
 
+import es.manabe.yomiyasu.app.ServerConfig
 import es.manabe.yomiyasu.core.networking.ApiClient
 import es.manabe.yomiyasu.core.networking.ApiException
 import es.manabe.yomiyasu.core.services.SocketService
@@ -37,6 +38,8 @@ class SessionStoreTest {
 
     @Before
     fun setUp() {
+        ServerConfig.reset()
+
         server = MockWebServer()
         server.start()
 

@@ -1,5 +1,6 @@
 package es.manabe.yomiyasu.features.auth
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import es.manabe.yomiyasu.app.ServerConfig
 import es.manabe.yomiyasu.core.networking.ApiException
 import es.manabe.yomiyasu.core.session.SessionStore
 import kotlinx.coroutines.launch
@@ -40,6 +44,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val session: SessionStore,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     var username by mutableStateOf("")
@@ -47,12 +52,34 @@ class LoginViewModel @Inject constructor(
     var isLoggingIn by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
 
-    fun login() {
+    /**
+     * Valida y persiste el servidor escrito. Devuelve `false` y fija el error
+     * cuando la URL no es válida.
+     */
+    fun applyServer(raw: String): Boolean {
+        val trimmed = raw.trim()
+        val url = ServerConfig.setServerUrl(trimmed, context)
+
+        if (url == null) {
+            errorMessage = if (trimmed.isEmpty()) {
+                "Introduce la URL del servidor."
+            } else {
+                "La dirección del servidor no es válida."
+            }
+            return false
+        }
+
+        return true
+    }
+
+    fun login(serverUrl: String) {
         if (isLoggingIn) return
+
+        errorMessage = null
+        if (!applyServer(serverUrl)) return
 
         viewModelScope.launch {
             isLoggingIn = true
-            errorMessage = null
             try {
                 session.login(username.trim(), password)
             } catch (error: ApiException) {
@@ -72,6 +99,9 @@ fun LoginView(
     onOpenRedeem: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
+    // En estado local (no en el ViewModel, que sobrevive al logout) para que
+    // refleje siempre la URL configurada en Ajustes o en el arranque.
+    var serverUrl by rememberSaveable { mutableStateOf(ServerConfig.serverUrl?.toString().orEmpty()) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -117,6 +147,21 @@ fun LoginView(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             OutlinedTextField(
+                value = serverUrl,
+                onValueChange = { serverUrl = it },
+                label = { Text("Servidor") },
+                placeholder = { Text("https://…") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("loginServer"),
+            )
+
+            OutlinedTextField(
                 value = viewModel.username,
                 onValueChange = { viewModel.username = it },
                 label = { Text("Usuario o correo") },
@@ -156,8 +201,9 @@ fun LoginView(
         }
 
         Button(
-            onClick = { viewModel.login() },
+            onClick = { viewModel.login(serverUrl) },
             enabled = !viewModel.isLoggingIn &&
+                serverUrl.isNotBlank() &&
                 viewModel.username.isNotBlank() &&
                 viewModel.password.isNotEmpty(),
             modifier = Modifier
@@ -172,7 +218,7 @@ fun LoginView(
             }
         }
 
-        TextButton(onClick = onOpenRedeem) {
+        TextButton(onClick = { if (viewModel.applyServer(serverUrl)) onOpenRedeem() }) {
             Text("¿Tienes un código de invitación?")
         }
     }

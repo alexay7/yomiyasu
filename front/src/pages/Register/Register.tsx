@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import {toast} from "react-toastify";
 import {api} from "../../api/api";
@@ -14,15 +14,32 @@ function Register():React.ReactElement {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [invitation, setInvitation] = useState("");
+    const [firstUser, setFirstUser] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
 
     useTitle("Crear cuenta");
 
+    // En el primer arranque no hay usuarios: el registro crea la cuenta de
+    // administrador y no hace falta código de invitación
+    useEffect(() => {
+        let cancelled = false;
+
+        api.get<{firstUser:boolean}>("auth/setup")
+            .then((res) => {
+                if (!cancelled && res) setFirstUser(res.firstUser);
+            })
+            .catch(() => undefined);
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     async function handleSubmit(e:React.FormEvent<HTMLFormElement>):Promise<void> {
         e.preventDefault();
 
-        if (!user || !email || !password || !invitation) return;
+        if (!user || !email || !password || (!firstUser && !invitation)) return;
 
         setSubmitting(true);
 
@@ -57,7 +74,7 @@ function Register():React.ReactElement {
     return (
         <AuthCard
             title="Bienvenido a YomiYasu"
-            subtitle="Crea tu cuenta con un código de invitación"
+            subtitle={firstUser ? "Crea la cuenta de administrador del servidor" : "Crea tu cuenta con un código de invitación"}
             footer={
                 <p className="text-center text-xs text-fg-muted">
                     ¿Ya tienes cuenta?{" "}
@@ -81,9 +98,11 @@ function Register():React.ReactElement {
                 <Field label="Contraseña" htmlFor="register-password">
                     <Input id="register-password" required type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} />
                 </Field>
-                <Field label="Código de invitación" htmlFor="register-code">
-                    <Input id="register-code" required value={invitation} onChange={(e)=>setInvitation(e.target.value)} />
-                </Field>
+                {!firstUser && (
+                    <Field label="Código de invitación" htmlFor="register-code">
+                        <Input id="register-code" required value={invitation} onChange={(e)=>setInvitation(e.target.value)} />
+                    </Field>
+                )}
                 <Button type="submit" fullWidth loading={submitting} className="mt-2">
                     Crear cuenta
                 </Button>

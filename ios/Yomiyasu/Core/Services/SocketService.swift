@@ -6,31 +6,25 @@ import os
 @MainActor
 @Observable
 final class SocketService {
-    nonisolated static var defaultURL: URL {
-        #if DEBUG
-        if let raw = ProcessInfo.processInfo.environment["YOMIYASU_SOCKET_URL"],
-           let url = URL(string: raw) {
-            return url
-        }
-        #endif
-        return APIClient.defaultBaseURL
-    }
-
     private(set) var isConnected = false
     private(set) var libraryUpdatedAt: Date?
 
-    private let url: URL
+    private var url: URL
     private let logger = Logger(subsystem: "es.manabe.yomiyasu", category: "SocketService")
 
     private var manager: SocketManager?
     private var socket: SocketIOClient?
 
-    init(url: URL = SocketService.defaultURL) {
+    init(url: URL = APIClient.unconfiguredBaseURL) {
+        self.url = url
+    }
+
+    func setURL(_ url: URL) {
         self.url = url
     }
 
     func start() {
-        guard manager == nil else { return }
+        guard manager == nil, url != APIClient.unconfiguredBaseURL else { return }
 
         logger.info("Conectando al websocket \(self.url.absoluteString, privacy: .public)")
 

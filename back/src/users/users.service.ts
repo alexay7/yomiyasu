@@ -11,8 +11,8 @@ import {checkPasswords, hashData} from "../auth/helpers/helper";
 export class UsersService {
     constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
-    async create(createUserDto: CreateUserDto): Promise<UserDocument> {
-        return this.userModel.create(createUserDto);
+    async create(createUserDto: CreateUserDto, admin = false): Promise<UserDocument> {
+        return this.userModel.create({...createUserDto, admin});
     }
 
     async isAdmin(id:Types.ObjectId):Promise<boolean> {
@@ -27,6 +27,10 @@ export class UsersService {
 
     async findById(id: Types.ObjectId): Promise<User | null> {
         return this.userModel.findById(id);
+    }
+
+    async countUsers(): Promise<number> {
+        return this.userModel.countDocuments();
     }
 
     async getUsers() {

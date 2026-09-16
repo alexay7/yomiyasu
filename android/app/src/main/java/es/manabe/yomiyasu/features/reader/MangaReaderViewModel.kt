@@ -1,6 +1,6 @@
 package es.manabe.yomiyasu.features.reader
 
-import es.manabe.yomiyasu.app.DebugConfig
+import es.manabe.yomiyasu.app.ServerConfig
 import es.manabe.yomiyasu.core.di.ApplicationScope
 import es.manabe.yomiyasu.core.mokuro.MokuroBook
 import es.manabe.yomiyasu.core.mokuro.MokuroParser
@@ -93,7 +93,7 @@ class MangaReaderViewModel @Inject constructor(
                 val startPage: Int
                 val startTime: Int
 
-                val overridePage = DebugConfig.e2ePage?.minus(1)
+                val overridePage = ServerConfig.e2ePage?.minus(1)
                 if (overridePage != null && overridePage > 0) {
                     startPage = overridePage
                     startTime = progressRecord?.time ?: mirrorTime
@@ -134,7 +134,7 @@ class MangaReaderViewModel @Inject constructor(
     }
 
     fun saveProgress(book: Book, page: Int, timeSeconds: Int) {
-        if (DebugConfig.e2eNoSave) return
+        if (ServerConfig.e2eNoSave) return
 
         mirror.setMangaPage(book.id, page)
         mirror.setMangaTime(book.id, timeSeconds)

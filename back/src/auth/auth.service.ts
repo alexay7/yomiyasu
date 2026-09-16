@@ -108,7 +108,7 @@ export class AuthService {
     }
     // FIN FUNCIONES RELACIONADAS CON TOKENS
 
-    async signUp(createUserDto: CreateUserDto): Promise<User> {
+    async signUp(createUserDto: CreateUserDto, admin = false): Promise<User> {
     // Comprueba si el usuario ya existe
         const userExists = await this.usersService.findByUsernameOrEmail(
             createUserDto.username
@@ -124,7 +124,7 @@ export class AuthService {
         const newUser = await this.usersService.create({
             ...createUserDto,
             password: hash
-        });
+        }, admin);
 
         return newUser;
     }
