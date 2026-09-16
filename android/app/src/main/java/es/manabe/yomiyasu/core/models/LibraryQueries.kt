@@ -10,6 +10,9 @@ data class SeriesQuery(
     val firstLetter: String? = null,
     val minDifficulty: Int? = null,
     val maxDifficulty: Int? = null,
+    val minValoration: Int? = null,
+    val maxValoration: Int? = null,
+    val valorationCount: Int? = null,
     val readprogress: ProgressFilter? = null,
     val readlistOnly: Boolean = false,
     val page: Int = 1,
@@ -18,7 +21,8 @@ data class SeriesQuery(
     val isFiltering: Boolean
         get() = genre != null || author != null || status != null || minDifficulty != null ||
             maxDifficulty != null || (readprogress != null && readprogress != ProgressFilter.All) ||
-            readlistOnly || firstLetter != null
+            readlistOnly || firstLetter != null ||
+            minValoration != null || maxValoration != null || valorationCount != null
 
     fun resetFilters(): SeriesQuery = copy(
         genre = null,
@@ -27,6 +31,9 @@ data class SeriesQuery(
         firstLetter = null,
         minDifficulty = null,
         maxDifficulty = null,
+        minValoration = null,
+        maxValoration = null,
+        valorationCount = null,
         readprogress = null,
         readlistOnly = false,
     )
@@ -41,6 +48,9 @@ data class SeriesQuery(
             firstLetter?.let { add("firstLetter" to it) }
             minDifficulty?.let { add("min" to it.toString()) }
             maxDifficulty?.let { add("max" to it.toString()) }
+            minValoration?.let { add("valorationMin" to it.toString()) }
+            maxValoration?.let { add("valorationMax" to it.toString()) }
+            valorationCount?.let { add("valorationCount" to it.toString()) }
             readprogress?.takeIf { it != ProgressFilter.All && it.rawValue != null }
                 ?.let { add("readprogress" to it.rawValue!!) }
             if (readlistOnly) add("readlist" to "true")
@@ -55,15 +65,22 @@ data class SeriesQuery(
             status?.let { add("status" to it.rawValue) }
             minDifficulty?.let { add("min" to it.toString()) }
             maxDifficulty?.let { add("max" to it.toString()) }
+            minValoration?.let { add("valorationMin" to it.toString()) }
+            maxValoration?.let { add("valorationMax" to it.toString()) }
+            valorationCount?.let { add("valorationCount" to it.toString()) }
         }
 
     val randomQueryItems: List<Pair<String, String>>
         get() = buildList {
-            addAll(alphabetQueryItems)
+            addAll(alphabetQueryItems.filterNot { it.first in valorationParamNames })
             readprogress?.takeIf { it != ProgressFilter.All && it.rawValue != null }
                 ?.let { add("readprogress" to it.rawValue!!) }
             if (readlistOnly) add("readlist" to "true")
         }
+
+    private companion object {
+        val valorationParamNames = setOf("valorationMin", "valorationMax", "valorationCount")
+    }
 }
 
 data class BooksQuery(

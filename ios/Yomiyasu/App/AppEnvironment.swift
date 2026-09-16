@@ -9,6 +9,7 @@ final class AppEnvironment {
     let socket: SocketService
     let settings: AppSettings
     let readerSettings: ReaderSettingsStore
+    let randomCriteria = RandomCriteriaStore()
     let library: LibraryAPI
     let dictionary: DictionaryAPI
     let progress: ProgressAPI

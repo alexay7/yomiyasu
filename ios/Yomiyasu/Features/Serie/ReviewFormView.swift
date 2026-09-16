@@ -5,14 +5,25 @@ struct ReviewFormView: View {
     @Environment(\.dismiss) private var dismiss
 
     let serieId: String
+    let existing: Review?
     let onSubmitted: () -> Void
 
-    @State private var level: ReviewLevel = .n3
-    @State private var difficulty = 3
-    @State private var valoration = 0
-    @State private var comment = ""
+    @State private var level: ReviewLevel
+    @State private var difficulty: Int
+    @State private var valoration: Int
+    @State private var comment: String
     @State private var isSaving = false
     @State private var errorMessage: String?
+
+    init(serieId: String, existing: Review? = nil, onSubmitted: @escaping () -> Void) {
+        self.serieId = serieId
+        self.existing = existing
+        self.onSubmitted = onSubmitted
+        _level = State(initialValue: ReviewLevel(rawValue: existing?.userLevel ?? "") ?? .n3)
+        _difficulty = State(initialValue: existing?.difficulty ?? 3)
+        _valoration = State(initialValue: existing?.valoration ?? 0)
+        _comment = State(initialValue: existing?.comment ?? "")
+    }
 
     var body: some View {
         NavigationStack {
@@ -54,7 +65,7 @@ struct ReviewFormView: View {
                     }
                 }
             }
-            .navigationTitle("Escribir reseña")
+            .navigationTitle(existing == nil ? "Escribir reseña" : "Editar reseña")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -70,7 +81,7 @@ struct ReviewFormView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("Publicar")
+                            Text(existing == nil ? "Publicar" : "Guardar")
                         }
                     }
                     .disabled(isSaving)
@@ -85,15 +96,19 @@ struct ReviewFormView: View {
         defer { isSaving = false }
 
         do {
-            _ = try await environment.library.createReview(
-                CreateReviewRequest(
-                    serie: serieId,
-                    userLevel: level.rawValue,
-                    difficulty: difficulty,
-                    valoration: valoration,
-                    comment: comment
-                )
+            let request = CreateReviewRequest(
+                serie: serieId,
+                userLevel: level.rawValue,
+                difficulty: difficulty,
+                valoration: valoration,
+                comment: comment
             )
+
+            if let existing {
+                _ = try await environment.library.editReview(id: existing.id, request: request)
+            } else {
+                _ = try await environment.library.createReview(request)
+            }
             onSubmitted()
             dismiss()
         } catch {

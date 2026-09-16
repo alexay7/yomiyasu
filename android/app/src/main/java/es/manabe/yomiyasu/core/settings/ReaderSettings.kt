@@ -47,6 +47,7 @@ enum class DictionaryLookupMode(val rawValue: String) {
 enum class ReaderFont(val rawValue: String, val fontAsset: String?) {
     Ipa("ipa", "ipaexg.ttf"),
     ZenAntique("zenAntique", "ZenAntique.ttf"),
+    NotoSansJP("notoSansJP", "NotoSansJP-Regular.otf"),
     System("system", null),
     ;
 
@@ -54,6 +55,7 @@ enum class ReaderFont(val rawValue: String, val fontAsset: String?) {
         get() = when (this) {
             Ipa -> "IPAex Gothic"
             ZenAntique -> "Zen Antique"
+            NotoSansJP -> "Noto Sans JP"
             System -> "Sistema"
         }
 }

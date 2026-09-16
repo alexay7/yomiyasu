@@ -56,6 +56,10 @@ struct LibraryAPI {
         try await client.send(.get("api/series/\(variant.rawValue)/readlist"))
     }
 
+    func pausedSeries(variant: LibraryVariant) async throws -> [Serie] {
+        try await client.send(.get("api/series/\(variant.rawValue)/paused"))
+    }
+
     func addToReadlist(serieId: String) async throws {
         let endpoint = try Endpoint.post("api/readlists", json: ReadlistRequest(serie: serieId))
         let _: ReadlistEntry = try await client.send(endpoint)
@@ -77,6 +81,10 @@ struct LibraryAPI {
 
     func createReview(_ request: CreateReviewRequest) async throws -> Review {
         try await client.send(try Endpoint.post("api/reviews", json: request))
+    }
+
+    func editReview(id: String, request: CreateReviewRequest) async throws -> Review {
+        try await client.send(try Endpoint.patch("api/reviews/\(id)", json: request))
     }
 
     func deleteReview(id: String) async throws {

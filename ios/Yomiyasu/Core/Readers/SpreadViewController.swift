@@ -77,7 +77,16 @@ final class SpreadViewController: UIViewController, UIScrollViewDelegate {
         guard isViewLoaded else { return }
         spreadView.r2l = settings?.r2l ?? true
         applyZoomModeIfNeeded()
+        applyPanAndZoom()
         updateSelection()
+    }
+
+    private func applyPanAndZoom() {
+        let enabled = settings?.panAndZoom ?? true
+
+        zoomScrollView.pinchGestureRecognizer?.isEnabled = enabled
+        zoomScrollView.panGestureRecognizer.isEnabled = enabled
+        zoomScrollView.isScrollEnabled = enabled
     }
 
     func applyZoomMode(_ mode: ZoomMode) {

@@ -85,6 +85,12 @@ struct ReaderView: View {
         .task {
             await progressLoop()
         }
+        .onAppear {
+            timer.idleTimeoutMinutes = environment.settings.idleTimeout
+        }
+        .onChange(of: environment.settings.idleTimeout) {
+            timer.idleTimeoutMinutes = environment.settings.idleTimeout
+        }
         .onDisappear {
             Task { await saveProgress() }
         }
@@ -133,6 +139,7 @@ struct ReaderView: View {
             navigateTo: navigateTo,
             onSpreadChanged: { index in
                 currentSpreadIndex = index
+                timer.notifyActivity()
             },
             onToggleBars: {
                 withAnimation(.easeInOut(duration: 0.2)) {

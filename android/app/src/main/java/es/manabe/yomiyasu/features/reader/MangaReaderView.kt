@@ -176,6 +176,14 @@ fun MangaReaderView(
         }
     }
 
+    LaunchedEffect(appSettings.idleTimeout) {
+        timer.idleTimeoutMinutes = appSettings.idleTimeout
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        timer.notifyActivity()
+    }
+
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
         timer.pause()
         book?.let { viewModel.saveProgress(it, currentPageNumber, timerSeconds) }
@@ -397,6 +405,7 @@ private fun ReaderPager(
     HorizontalPager(
         state = pagerState,
         reverseLayout = settings.r2l,
+        userScrollEnabled = settings.scrollChange,
         modifier = Modifier
             .fillMaxSize()
             .onSizeChanged { containerSize = it }
@@ -453,6 +462,7 @@ private fun ReaderPager(
                             textBoxBorders = settings.textBoxBorders,
                             selectedBoxId = selectedBoxId.takeIf { it >= 0 },
                             font = settings.font,
+                            boxTapsEnabled = settings.toggleOCRTextBoxes,
                             onBoxTap = { box, hit, _ -> onBoxTap(box, hit) },
                             onPageTap = { position ->
                                 if (zoom <= 1.001f && containerSize.width > 0) {

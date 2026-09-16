@@ -33,6 +33,7 @@
 	<array>
 		<string>ZenAntique.ttf</string>
 		<string>ipaexg.ttf</string>
+		<string>NotoSansJP-Regular.otf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

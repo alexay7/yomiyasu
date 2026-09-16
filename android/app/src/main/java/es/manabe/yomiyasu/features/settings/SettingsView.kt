@@ -52,6 +52,7 @@ import es.manabe.yomiyasu.app.ui.theme.ThemeMode
 import es.manabe.yomiyasu.core.models.MainView
 import es.manabe.yomiyasu.core.settings.AppSettings
 import es.manabe.yomiyasu.core.settings.AppSettingsData
+import es.manabe.yomiyasu.core.settings.BoardFlag
 import es.manabe.yomiyasu.core.settings.BookViewMode
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -87,6 +88,14 @@ class SettingsViewModel @Inject constructor(
     fun setShowCrono(value: Boolean) {
         viewModelScope.launch { settings.setShowCrono(value) }
     }
+
+    fun setBoard(flag: BoardFlag, value: Boolean) {
+        viewModelScope.launch { settings.setBoard(flag, value) }
+    }
+
+    fun setIdleTimeout(value: Int) {
+        viewModelScope.launch { settings.setIdleTimeout(value) }
+    }
 }
 
 @Composable
@@ -107,6 +116,8 @@ fun SettingsRoute(
         onBookViewChange = viewModel::setBookView,
         onAutoCronoChange = viewModel::setAutoCrono,
         onShowCronoChange = viewModel::setShowCrono,
+        onBoardChange = viewModel::setBoard,
+        onIdleTimeoutChange = viewModel::setIdleTimeout,
         onOpenAccount = onOpenAccount,
         onLogout = onLogout,
     )
@@ -123,6 +134,8 @@ private fun SettingsScreen(
     onBookViewChange: (BookViewMode) -> Unit,
     onAutoCronoChange: (Boolean) -> Unit,
     onShowCronoChange: (Boolean) -> Unit,
+    onBoardChange: (BoardFlag, Boolean) -> Unit,
+    onIdleTimeoutChange: (Int) -> Unit,
     onOpenAccount: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -187,6 +200,62 @@ private fun SettingsScreen(
                 )
             }
 
+            item {
+                SectionHeader(
+                    title = "Tableros del inicio",
+                    footer = "Elige qué secciones quieres ver en el inicio.",
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "En progreso",
+                    checked = settings.boards.progress,
+                    onCheckedChange = { onBoardChange(BoardFlag.Progress, it) },
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Tu tablero",
+                    checked = settings.boards.tablero,
+                    onCheckedChange = { onBoardChange(BoardFlag.Tablero, it) },
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Leer más tarde",
+                    checked = settings.boards.readLater,
+                    onCheckedChange = { onBoardChange(BoardFlag.ReadLater, it) },
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Pausadas",
+                    checked = settings.boards.paused,
+                    onCheckedChange = { onBoardChange(BoardFlag.Paused, it) },
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Libros nuevos",
+                    checked = settings.boards.newBooks,
+                    onCheckedChange = { onBoardChange(BoardFlag.NewBooks, it) },
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Series nuevas",
+                    checked = settings.boards.newSeries,
+                    onCheckedChange = { onBoardChange(BoardFlag.NewSeries, it) },
+                )
+            }
+            item {
+                SwitchRow(
+                    title = "Series con volúmenes nuevos",
+                    checked = settings.boards.recentSeries,
+                    onCheckedChange = { onBoardChange(BoardFlag.RecentSeries, it) },
+                )
+            }
+
             item { SectionHeader("Lectura") }
             item {
                 SwitchRow(
@@ -200,6 +269,27 @@ private fun SettingsScreen(
                     title = "Iniciar cronómetro al abrir un libro",
                     checked = settings.autoCrono,
                     onCheckedChange = onAutoCronoChange,
+                )
+            }
+
+            item {
+                SectionHeader(
+                    title = "Pausar cronómetro tras inactividad",
+                    footer = "Se reanuda al cambiar de página.",
+                )
+            }
+            item {
+                ChoiceChips(
+                    options = listOf(0, 1, 3, 5, 10, 15),
+                    selected = settings.idleTimeout,
+                    label = { minutes ->
+                        when (minutes) {
+                            0 -> "Nunca"
+                            1 -> "1 minuto"
+                            else -> "$minutes minutos"
+                        }
+                    },
+                    onSelect = onIdleTimeoutChange,
                 )
             }
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import es.manabe.yomiyasu.core.models.ProgressFilter
 import es.manabe.yomiyasu.core.models.SerieStatus
@@ -46,6 +48,7 @@ private val sortOptions = listOf(
     SortOption("Menos volúmenes", SortValue("bookCount", false)),
     SortOption("Dificultad (menor a mayor)", SortValue("difficulty", false)),
     SortOption("Dificultad (mayor a menor)", SortValue("difficulty", true)),
+    SortOption("Mejor valoradas", SortValue("valoration", true)),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +63,11 @@ fun LibraryFiltersContent(
     var draft by remember { mutableStateOf(query) }
     var minDifficulty by rememberSaveable { mutableFloatStateOf((query.minDifficulty ?: 0).toFloat()) }
     var maxDifficulty by rememberSaveable { mutableFloatStateOf((query.maxDifficulty ?: 10).toFloat()) }
+    var minValoration by rememberSaveable { mutableFloatStateOf((query.minValoration ?: 0).toFloat()) }
+    var maxValoration by rememberSaveable { mutableFloatStateOf((query.maxValoration ?: 10).toFloat()) }
+    var valorationCountText by rememberSaveable {
+        mutableStateOf((query.valorationCount ?: 0).takeIf { it > 0 }?.toString() ?: "")
+    }
 
     Column(
         modifier = Modifier
@@ -104,6 +112,30 @@ fun LibraryFiltersContent(
             },
             valueRange = 0f..10f,
             steps = 9,
+        )
+
+        Text(
+            "Valoración: ${minValoration.toInt()} – ${maxValoration.toInt()}",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        RangeSlider(
+            value = minValoration..maxValoration,
+            onValueChange = { range ->
+                minValoration = range.start
+                maxValoration = range.endInclusive
+            },
+            valueRange = 0f..10f,
+            steps = 9,
+        )
+
+        OutlinedTextField(
+            value = valorationCountText,
+            onValueChange = { text -> valorationCountText = text.filter { it.isDigit() } },
+            label = { Text("Nº mínimo de valoraciones") },
+            placeholder = { Text("Cualquiera") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         DropdownField(
@@ -158,6 +190,9 @@ fun LibraryFiltersContent(
                     draft = draft.resetFilters()
                     minDifficulty = 0f
                     maxDifficulty = 10f
+                    minValoration = 0f
+                    maxValoration = 10f
+                    valorationCountText = ""
                 },
             ) {
                 Text("Restablecer filtros", color = MaterialTheme.colorScheme.error)
@@ -169,10 +204,15 @@ fun LibraryFiltersContent(
                     onClick = {
                         val min = minDifficulty.toInt()
                         val max = maxDifficulty.toInt().coerceAtLeast(min)
+                        val minVal = minValoration.toInt()
+                        val maxVal = maxValoration.toInt().coerceAtLeast(minVal)
                         onApply(
                             draft.copy(
                                 minDifficulty = if (min > 0) min else null,
                                 maxDifficulty = if (max < 10) max else null,
+                                minValoration = if (minVal > 0) minVal else null,
+                                maxValoration = if (maxVal < 10) maxVal else null,
+                                valorationCount = valorationCountText.toIntOrNull()?.takeIf { it > 0 },
                             ),
                         )
                     },

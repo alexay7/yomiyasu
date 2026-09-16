@@ -13,9 +13,11 @@ object Routes {
     const val Settings = "settings"
     const val Account = "account"
 
-    const val SeriePattern = "serie/{serieId}"
+    const val SeriePattern = "serie/{serieId}?randomVariant={randomVariant}"
     const val BookPattern = "book/{bookId}"
 
-    fun serie(id: String) = "serie/$id"
+    fun serie(id: String, randomVariant: String? = null): String =
+        if (randomVariant == null) "serie/$id" else "serie/$id?randomVariant=$randomVariant"
+
     fun book(id: String) = "book/$id"
 }

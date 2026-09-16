@@ -48,6 +48,16 @@ enum BookViewMode: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+struct BoardVisibility: Equatable, Sendable {
+    var progress = true
+    var tablero = true
+    var readLater = true
+    var paused = false
+    var newBooks = true
+    var newSeries = true
+    var recentSeries = true
+}
+
 @MainActor
 @Observable
 final class AppSettings {
@@ -59,6 +69,14 @@ final class AppSettings {
         static let showCrono = "showCrono"
         static let bookView = "bookView"
         static let meanSpeed = "meanSpeed"
+        static let idleTimeout = "idleTimeout"
+        static let boardProgress = "boardProgress"
+        static let boardTablero = "boardTablero"
+        static let boardReadLater = "boardReadLater"
+        static let boardPaused = "boardPaused"
+        static let boardNewBooks = "boardNewBooks"
+        static let boardNewSeries = "boardNewSeries"
+        static let boardRecentSeries = "boardRecentSeries"
     }
 
     private let defaults: UserDefaults
@@ -97,6 +115,25 @@ final class AppSettings {
         }
     }
 
+    var boards: BoardVisibility {
+        didSet { persistBoards() }
+    }
+
+    /// Minutos sin actividad de lectura tras los que se pausa el cronómetro. 0 lo desactiva.
+    var idleTimeout: Int {
+        didSet { defaults.set(idleTimeout, forKey: Key.idleTimeout) }
+    }
+
+    private func persistBoards() {
+        defaults.set(boards.progress, forKey: Key.boardProgress)
+        defaults.set(boards.tablero, forKey: Key.boardTablero)
+        defaults.set(boards.readLater, forKey: Key.boardReadLater)
+        defaults.set(boards.paused, forKey: Key.boardPaused)
+        defaults.set(boards.newBooks, forKey: Key.boardNewBooks)
+        defaults.set(boards.newSeries, forKey: Key.boardNewSeries)
+        defaults.set(boards.recentSeries, forKey: Key.boardRecentSeries)
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         mainView = MainView(rawValue: defaults.string(forKey: Key.mainView) ?? "") ?? .both
@@ -110,5 +147,15 @@ final class AppSettings {
             rawValue: defaults.string(forKey: Key.bookView) ?? ""
         ) ?? .characters
         meanCharactersPerHour = defaults.object(forKey: Key.meanSpeed) as? Double
+        idleTimeout = defaults.object(forKey: Key.idleTimeout) as? Int ?? 0
+        boards = BoardVisibility(
+            progress: defaults.object(forKey: Key.boardProgress) as? Bool ?? true,
+            tablero: defaults.object(forKey: Key.boardTablero) as? Bool ?? true,
+            readLater: defaults.object(forKey: Key.boardReadLater) as? Bool ?? true,
+            paused: defaults.object(forKey: Key.boardPaused) as? Bool ?? false,
+            newBooks: defaults.object(forKey: Key.boardNewBooks) as? Bool ?? true,
+            newSeries: defaults.object(forKey: Key.boardNewSeries) as? Bool ?? true,
+            recentSeries: defaults.object(forKey: Key.boardRecentSeries) as? Bool ?? true
+        )
     }
 }

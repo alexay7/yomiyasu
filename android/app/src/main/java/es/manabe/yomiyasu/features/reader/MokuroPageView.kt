@@ -54,6 +54,7 @@ fun MokuroPageView(
     textBoxBorders: Boolean,
     selectedBoxId: Int?,
     font: ReaderFont,
+    boxTapsEnabled: Boolean = true,
     onBoxTap: (MokuroTextBox, MokuroTextHit, Offset) -> Unit,
     onPageTap: (Offset) -> Unit,
     modifier: Modifier = Modifier,
@@ -85,16 +86,20 @@ fun MokuroPageView(
                     width = with(density) { (pageWidth * fitScale).toDp() },
                     height = with(density) { (pageHeight * fitScale).toDp() },
                 )
-                .pointerInput(page.id, fitScale, fontSizeOverride, displayOCR, selectedBoxId) {
+                .pointerInput(page.id, fitScale, fontSizeOverride, displayOCR, selectedBoxId, boxTapsEnabled) {
                     detectTapGestures { position ->
-                        handlePageTap(
-                            position = position,
-                            fitScale = fitScale,
-                            page = page,
-                            fontSizeOverride = fontSizeOverride,
-                            onBoxTap = onBoxTap,
-                            onPageTap = onPageTap,
-                        )
+                        if (boxTapsEnabled) {
+                            handlePageTap(
+                                position = position,
+                                fitScale = fitScale,
+                                page = page,
+                                fontSizeOverride = fontSizeOverride,
+                                onBoxTap = onBoxTap,
+                                onPageTap = onPageTap,
+                            )
+                        } else {
+                            onPageTap(position)
+                        }
                     }
                 },
         ) {

@@ -10,6 +10,9 @@ struct SeriesQuery: Sendable, Equatable {
     var firstLetter: String?
     var minDifficulty: Int?
     var maxDifficulty: Int?
+    var minValoration: Int?
+    var maxValoration: Int?
+    var valorationCount: Int?
     var readprogress: ProgressFilter?
     var readlistOnly: Bool = false
     var page: Int = 1
@@ -19,6 +22,7 @@ struct SeriesQuery: Sendable, Equatable {
         genre != nil || author != nil || status != nil || minDifficulty != nil
             || maxDifficulty != nil || (readprogress != nil && readprogress != .all)
             || readlistOnly || firstLetter != nil
+            || minValoration != nil || maxValoration != nil || valorationCount != nil
     }
 
     static func resetFilters(_ query: SeriesQuery) -> SeriesQuery {
@@ -29,6 +33,9 @@ struct SeriesQuery: Sendable, Equatable {
         result.firstLetter = nil
         result.minDifficulty = nil
         result.maxDifficulty = nil
+        result.minValoration = nil
+        result.maxValoration = nil
+        result.valorationCount = nil
         result.readprogress = nil
         result.readlistOnly = false
         return result
@@ -58,6 +65,15 @@ struct SeriesQuery: Sendable, Equatable {
         }
         if let maxDifficulty {
             items.append(URLQueryItem(name: "max", value: String(maxDifficulty)))
+        }
+        if let minValoration {
+            items.append(URLQueryItem(name: "valorationMin", value: String(minValoration)))
+        }
+        if let maxValoration {
+            items.append(URLQueryItem(name: "valorationMax", value: String(maxValoration)))
+        }
+        if let valorationCount {
+            items.append(URLQueryItem(name: "valorationCount", value: String(valorationCount)))
         }
         if let readprogress, readprogress != .all {
             items.append(URLQueryItem(name: "readprogress", value: readprogress.rawValue))
@@ -90,12 +106,21 @@ struct SeriesQuery: Sendable, Equatable {
         if let maxDifficulty {
             items.append(URLQueryItem(name: "max", value: String(maxDifficulty)))
         }
+        if let minValoration {
+            items.append(URLQueryItem(name: "valorationMin", value: String(minValoration)))
+        }
+        if let maxValoration {
+            items.append(URLQueryItem(name: "valorationMax", value: String(maxValoration)))
+        }
+        if let valorationCount {
+            items.append(URLQueryItem(name: "valorationCount", value: String(valorationCount)))
+        }
 
         return items
     }
 
     var randomQueryItems: [URLQueryItem] {
-        var items = alphabetQueryItems
+        var items = alphabetQueryItems.filter { !Self.valorationParamNames.contains($0.name) }
 
         if let readprogress, readprogress != .all {
             items.append(URLQueryItem(name: "readprogress", value: readprogress.rawValue))
@@ -106,6 +131,10 @@ struct SeriesQuery: Sendable, Equatable {
 
         return items
     }
+
+    private static let valorationParamNames: Set<String> = [
+        "valorationMin", "valorationMax", "valorationCount",
+    ]
 }
 
 struct BooksQuery: Sendable, Equatable {

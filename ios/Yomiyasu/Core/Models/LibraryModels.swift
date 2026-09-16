@@ -79,7 +79,7 @@ enum ProgressStatus: String, Codable, Sendable {
     }
 }
 
-enum ProgressFilter: String, Sendable, CaseIterable, Identifiable {
+enum ProgressFilter: String, Codable, Sendable, CaseIterable, Identifiable {
     case all
     case unread
     case reading
@@ -108,6 +108,7 @@ struct SortValue: Sendable, Equatable, Hashable {
     static let seriesDefault = SortValue(key: "sortName", descending: false)
     static let seriesNewest = SortValue(key: "_id", descending: true)
     static let seriesRecent = SortValue(key: "lastModifiedDate", descending: true)
+    static let seriesValoration = SortValue(key: "valoration", descending: true)
     static let booksDefault = SortValue(key: "sortName", descending: false)
     static let booksNewest = SortValue(key: "_id", descending: true)
 }

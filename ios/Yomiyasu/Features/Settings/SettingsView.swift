@@ -42,9 +42,36 @@ struct SettingsView: View {
                 Text("Biblioteca")
             }
 
-            Section("Lectura") {
+            Section {
+                Toggle("En progreso", isOn: $settings.boards.progress)
+                Toggle("Tu tablero", isOn: $settings.boards.tablero)
+                Toggle("Leer más tarde", isOn: $settings.boards.readLater)
+                Toggle("Pausadas", isOn: $settings.boards.paused)
+                Toggle("Libros nuevos", isOn: $settings.boards.newBooks)
+                Toggle("Series nuevas", isOn: $settings.boards.newSeries)
+                Toggle("Series con volúmenes nuevos", isOn: $settings.boards.recentSeries)
+            } header: {
+                Text("Tableros del inicio")
+            } footer: {
+                Text("Elige qué secciones quieres ver en el inicio.")
+            }
+
+            Section {
                 Toggle("Mostrar cronómetro en el lector", isOn: $settings.showCrono)
                 Toggle("Iniciar cronómetro al abrir un libro", isOn: $settings.autoCrono)
+
+                Picker("Pausar cronómetro tras inactividad", selection: $settings.idleTimeout) {
+                    Text("Nunca").tag(0)
+                    Text("1 minuto").tag(1)
+                    Text("3 minutos").tag(3)
+                    Text("5 minutos").tag(5)
+                    Text("10 minutos").tag(10)
+                    Text("15 minutos").tag(15)
+                }
+            } header: {
+                Text("Lectura")
+            } footer: {
+                Text("El cronómetro se reanuda al cambiar de página.")
             }
 
             Section {

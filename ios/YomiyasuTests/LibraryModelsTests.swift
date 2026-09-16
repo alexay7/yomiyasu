@@ -264,6 +264,9 @@ final class LibraryModelsTests: XCTestCase {
         query.firstLetter = "SPECIAL"
         query.minDifficulty = 3
         query.maxDifficulty = 8
+        query.minValoration = 4
+        query.maxValoration = 9
+        query.valorationCount = 3
         query.readlistOnly = true
         query.readprogress = .reading
         query.sort = SortValue(key: "difficulty", descending: true)
@@ -277,11 +280,104 @@ final class LibraryModelsTests: XCTestCase {
         XCTAssertEqual(items["firstLetter"], "SPECIAL")
         XCTAssertEqual(items["min"], "3")
         XCTAssertEqual(items["max"], "8")
+        XCTAssertEqual(items["valorationMin"], "4")
+        XCTAssertEqual(items["valorationMax"], "9")
+        XCTAssertEqual(items["valorationCount"], "3")
         XCTAssertEqual(items["readlist"], "true")
         XCTAssertEqual(items["readprogress"], "reading")
         XCTAssertEqual(items["sort"], "!difficulty")
         XCTAssertEqual(items["page"], "2")
         XCTAssertEqual(items["limit"], "50")
+    }
+
+    func testSeriesQueryValorationFilteringScope() {
+        var query = SeriesQuery(variant: .manga)
+        query.minValoration = 5
+        query.valorationCount = 2
+
+        XCTAssertTrue(query.isFiltering)
+
+        let queryNames = query.queryItems.map(\.name)
+        XCTAssertTrue(queryNames.contains("valorationMin"))
+        XCTAssertTrue(queryNames.contains("valorationCount"))
+        XCTAssertFalse(queryNames.contains("valorationMax"))
+
+        let alphabetNames = query.alphabetQueryItems.map(\.name)
+        XCTAssertTrue(alphabetNames.contains("valorationMin"))
+        XCTAssertTrue(alphabetNames.contains("valorationCount"))
+
+        let randomNames = query.randomQueryItems.map(\.name)
+        XCTAssertFalse(randomNames.contains("valorationMin"))
+        XCTAssertFalse(randomNames.contains("valorationCount"))
+        XCTAssertFalse(randomNames.contains("valorationMax"))
+
+        query.valorationCount = nil
+        query.minValoration = nil
+        XCTAssertFalse(query.isFiltering)
+    }
+
+    func testResetFiltersClearsValoration() {
+        var query = SeriesQuery()
+        query.minValoration = 3
+        query.maxValoration = 8
+        query.valorationCount = 1
+
+        let reset = SeriesQuery.resetFilters(query)
+
+        XCTAssertNil(reset.minValoration)
+        XCTAssertNil(reset.maxValoration)
+        XCTAssertNil(reset.valorationCount)
+        XCTAssertFalse(reset.isFiltering)
+    }
+
+    func testRandomCriteriaRoundTripAndApplication() throws {
+        var query = SeriesQuery(variant: .manga)
+        query.genre = "Acción"
+        query.author = "Autor"
+        query.status = .publishing
+        query.firstLetter = "A"
+        query.minDifficulty = 2
+        query.maxDifficulty = 7
+        query.readprogress = .reading
+        query.readlistOnly = true
+
+        let data = try JSONEncoder().encode(RandomCriteria(query: query))
+        let decoded = try JSONDecoder().decode(RandomCriteria.self, from: data)
+
+        let applied = decoded.applying(to: SeriesQuery(variant: .manga))
+
+        XCTAssertEqual(applied.genre, "Acción")
+        XCTAssertEqual(applied.author, "Autor")
+        XCTAssertEqual(applied.status, .publishing)
+        XCTAssertEqual(applied.firstLetter, "A")
+        XCTAssertEqual(applied.minDifficulty, 2)
+        XCTAssertEqual(applied.maxDifficulty, 7)
+        XCTAssertEqual(applied.readprogress, .reading)
+        XCTAssertTrue(applied.readlistOnly)
+
+        let randomNames = applied.randomQueryItems.map(\.name)
+        XCTAssertFalse(randomNames.contains("valorationMin"))
+        XCTAssertFalse(randomNames.contains("valorationCount"))
+    }
+
+    @MainActor
+    func testRandomCriteriaStoreRoundTrip() {
+        let suite = "random-criteria-tests"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+
+        let store = RandomCriteriaStore(defaults: defaults)
+
+        var query = SeriesQuery(variant: .novela)
+        query.genre = "Drama"
+        query.readlistOnly = true
+
+        store.save(RandomCriteria(query: query), variant: .novela)
+
+        let loaded = store.criteria(variant: .novela)
+        XCTAssertEqual(loaded?.genre, "Drama")
+        XCTAssertEqual(loaded?.readlistOnly, true)
+        XCTAssertNil(store.criteria(variant: .manga))
     }
 
     func testBooksQueryOmitsBooksDefaultsForSerieListing() {

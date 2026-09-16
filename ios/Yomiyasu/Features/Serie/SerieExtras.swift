@@ -9,6 +9,7 @@ struct SerieReviewsSection: View {
     let onChanged: () -> Void
 
     @State private var showingForm = false
+    @State private var editingReview: Review?
     @State private var pendingDelete: Review?
     @State private var errorMessage: String?
 
@@ -57,6 +58,12 @@ struct SerieReviewsSection: View {
             }
             .environment(environment)
         }
+        .sheet(item: $editingReview) { review in
+            ReviewFormView(serieId: serieId, existing: review) {
+                onChanged()
+            }
+            .environment(environment)
+        }
         .confirmationDialog(
             "¿Borrar tu reseña?",
             isPresented: Binding(
@@ -98,6 +105,16 @@ struct SerieReviewsSection: View {
                 }
 
                 if review.user == currentUserId {
+                    Button {
+                        editingReview = review
+                    } label: {
+                        Image(systemName: "pencil")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Editar reseña")
+
                     Button {
                         pendingDelete = review
                     } label: {

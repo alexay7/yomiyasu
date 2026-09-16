@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SerieRoute: Hashable {
     let id: String
+    var randomVariant: LibraryVariant?
 }
 
 struct BookRoute: Hashable {
@@ -217,7 +218,7 @@ private struct RegularShellView: View {
 extension View {
     func libraryNavigation() -> some View {
         navigationDestination(for: SerieRoute.self) { route in
-            SerieView(serieId: route.id)
+            SerieView(serieId: route.id, randomVariant: route.randomVariant)
         }
         .navigationDestination(for: BookRoute.self) { route in
             BookReaderView(bookId: route.id)

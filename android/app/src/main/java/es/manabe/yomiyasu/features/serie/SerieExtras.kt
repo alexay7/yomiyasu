@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.StarHalf
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -186,11 +187,12 @@ fun SerieReviewsSection(
     serieId: String,
     reviews: List<Review>,
     onWriteReview: () -> Unit,
-    onReviewDeleted: () -> Unit,
+    onReviewsChanged: () -> Unit,
     viewModel: SerieReviewsViewModel = hiltViewModel(),
 ) {
     val error by viewModel.error.collectAsStateWithLifecycle()
     var pendingDelete by remember { mutableStateOf<Review?>(null) }
+    var pendingEdit by remember { mutableStateOf<Review?>(null) }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -213,6 +215,7 @@ fun SerieReviewsSection(
                 ReviewCard(
                     review = review,
                     isOwn = review.user == viewModel.currentUserId,
+                    onEdit = { pendingEdit = review },
                     onDelete = { pendingDelete = review },
                 )
             }
@@ -223,6 +226,15 @@ fun SerieReviewsSection(
         }
     }
 
+    pendingEdit?.let { review ->
+        ReviewFormDialog(
+            serieId = serieId,
+            existing = review,
+            onDismiss = { pendingEdit = null },
+            onSubmitted = { onReviewsChanged() },
+        )
+    }
+
     pendingDelete?.let { review ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
@@ -231,7 +243,7 @@ fun SerieReviewsSection(
                 TextButton(
                     onClick = {
                         pendingDelete = null
-                        viewModel.deleteReview(review.id) { onReviewDeleted() }
+                        viewModel.deleteReview(review.id) { onReviewsChanged() }
                     },
                 ) { Text("Borrar") }
             },
@@ -246,6 +258,7 @@ fun SerieReviewsSection(
 private fun ReviewCard(
     review: Review,
     isOwn: Boolean,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Column(
@@ -289,6 +302,15 @@ private fun ReviewCard(
             }
 
             if (isOwn) {
+                IconButton(onClick = onEdit, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        Icons.Filled.Edit,
+                        contentDescription = "Editar reseña",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+
                 IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
                     Icon(
                         Icons.Filled.Delete,
@@ -310,20 +332,27 @@ private fun ReviewCard(
 @Composable
 fun ReviewFormDialog(
     serieId: String,
+    existing: Review? = null,
     onDismiss: () -> Unit,
     onSubmitted: () -> Unit,
     viewModel: ReviewFormViewModel = hiltViewModel(),
 ) {
-    var level by remember { mutableStateOf(ReviewLevel.N3) }
-    var difficulty by remember { mutableFloatStateOf(3f) }
-    var valoration by remember { mutableIntStateOf(0) }
-    var comment by remember { mutableStateOf("") }
+    var level by remember(existing) {
+        mutableStateOf(
+            existing?.userLevel
+                ?.let { stored -> ReviewLevel.entries.find { it.rawValue == stored } }
+                ?: ReviewLevel.N3
+        )
+    }
+    var difficulty by remember(existing) { mutableFloatStateOf((existing?.difficulty ?: 3).toFloat()) }
+    var valoration by remember(existing) { mutableIntStateOf(existing?.valoration ?: 0) }
+    var comment by remember(existing) { mutableStateOf(existing?.comment ?: "") }
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Escribir reseña") },
+        title = { Text(if (existing == null) "Escribir reseña" else "Editar reseña") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Tu nivel de japonés", style = MaterialTheme.typography.titleSmall)
@@ -382,6 +411,7 @@ fun ReviewFormDialog(
                             valoration = valoration,
                             comment = comment,
                         ),
+                        reviewId = existing?.id,
                         onSubmitted = {
                             onSubmitted()
                             onDismiss()
@@ -393,7 +423,7 @@ fun ReviewFormDialog(
                 if (isSaving) {
                     CircularProgressIndicator(modifier = Modifier.size(18.dp))
                 } else {
-                    Text("Publicar")
+                    Text(if (existing == null) "Publicar" else "Guardar")
                 }
             }
         },
@@ -414,12 +444,16 @@ class ReviewFormViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    fun submit(request: CreateReviewRequest, onSubmitted: () -> Unit) {
+    fun submit(request: CreateReviewRequest, reviewId: String? = null, onSubmitted: () -> Unit) {
         viewModelScope.launch {
             _isSaving.value = true
             _error.value = null
             try {
-                library.createReview(request)
+                if (reviewId == null) {
+                    library.createReview(request)
+                } else {
+                    library.editReview(reviewId, request)
+                }
                 onSubmitted()
             } catch (error: ApiException) {
                 _error.value = error.userMessage

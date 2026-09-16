@@ -99,6 +99,12 @@ struct NovelReaderView: View {
         .task {
             await progressLoop()
         }
+        .onAppear {
+            timer.idleTimeoutMinutes = environment.settings.idleTimeout
+        }
+        .onChange(of: environment.settings.idleTimeout) {
+            timer.idleTimeoutMinutes = environment.settings.idleTimeout
+        }
         .onDisappear {
             Task { await saveProgress() }
         }
@@ -312,6 +318,8 @@ struct NovelReaderView: View {
 
     private func handleLocatorChange(_ locator: Locator) {
         guard let map = progressMap else { return }
+
+        timer.notifyActivity()
 
         let characters = map.characters(
             href: locator.href.string,

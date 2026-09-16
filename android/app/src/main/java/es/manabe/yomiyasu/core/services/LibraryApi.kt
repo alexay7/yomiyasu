@@ -69,6 +69,11 @@ class LibraryApi @Inject constructor(
         kotlinx.serialization.builtins.ListSerializer(Serie.serializer()),
     )
 
+    suspend fun pausedSeries(variant: LibraryVariant): List<Serie> = api.send(
+        Endpoint.get("api/series/${variant.rawValue}/paused"),
+        kotlinx.serialization.builtins.ListSerializer(Serie.serializer()),
+    )
+
     suspend fun addToReadlist(serieId: String) {
         api.send(
             Endpoint.post("api/readlists", body = jsonBody(ReadlistRequest(serieId))),
@@ -92,6 +97,12 @@ class LibraryApi @Inject constructor(
     suspend fun createReview(request: CreateReviewRequest): Review =
         api.send(
             Endpoint.post("api/reviews", body = jsonBody(request)),
+            Review.serializer(),
+        )
+
+    suspend fun editReview(id: String, request: CreateReviewRequest): Review =
+        api.send(
+            Endpoint.patch("api/reviews/$id", body = jsonBody(request)),
             Review.serializer(),
         )
 

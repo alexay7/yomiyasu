@@ -49,6 +49,7 @@ targets:
         UIAppFonts:
           - ZenAntique.ttf
           - ipaexg.ttf
+          - NotoSansJP-Regular.otf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft

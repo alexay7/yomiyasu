@@ -154,7 +154,7 @@ struct LibraryView: View {
             SearchView()
         }
         .navigationDestination(item: $randomRoute) { route in
-            SerieView(serieId: route.id)
+            SerieView(serieId: route.id, randomVariant: route.randomVariant)
         }
         .sheet(isPresented: $showingFilters) {
             LibraryFiltersView(
@@ -239,8 +239,10 @@ struct LibraryView: View {
     }
 
     private func pickRandom() async {
+        environment.randomCriteria.save(RandomCriteria(query: model.query), variant: model.variant)
+
         guard let serie = await model.randomSerie(api: environment.library) else { return }
-        randomRoute = SerieRoute(id: serie.id)
+        randomRoute = SerieRoute(id: serie.id, randomVariant: model.variant)
     }
 }
 

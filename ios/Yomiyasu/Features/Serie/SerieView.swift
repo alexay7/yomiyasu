@@ -93,12 +93,22 @@ struct SerieView: View {
     @Environment(AppEnvironment.self) private var environment
 
     let serieId: String
+    let randomVariant: LibraryVariant?
 
     @State private var model = SerieViewModel()
+    @State private var currentSerieId: String
+    @State private var randomRollActive: Bool
     @State private var showingMarkRead = false
     @State private var summaryExpanded = false
 
     private let gridColumns = [GridItem(.adaptive(minimum: 100, maximum: 130), spacing: 14)]
+
+    init(serieId: String, randomVariant: LibraryVariant? = nil) {
+        self.serieId = serieId
+        self.randomVariant = randomVariant
+        _currentSerieId = State(initialValue: serieId)
+        _randomRollActive = State(initialValue: randomVariant != nil)
+    }
 
     var body: some View {
         ScrollView {
@@ -158,11 +168,16 @@ struct SerieView: View {
                 actionsMenu
             }
         }
-        .task {
-            await model.load(id: serieId, api: environment.library)
+        .task(id: currentSerieId) {
+            await model.load(id: currentSerieId, api: environment.library)
         }
         .onChange(of: environment.socket.libraryUpdatedAt) {
-            Task { await model.load(id: serieId, api: environment.library) }
+            Task { await model.load(id: currentSerieId, api: environment.library) }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if randomRollActive {
+                rerollControls
+            }
         }
         .confirmationDialog(
             "¿Marcar toda la serie como leída?",
@@ -263,6 +278,49 @@ struct SerieView: View {
             Button("Descargar", systemImage: "arrow.down.circle") {
                 environment.downloads.enqueue(book)
             }
+        }
+    }
+
+    private var rerollControls: some View {
+        HStack(spacing: 10) {
+            Button {
+                Task { await reroll() }
+            } label: {
+                Image(systemName: "dice")
+                    .font(.title3)
+                    .padding(12)
+                    .background(Circle().fill(.ultraThinMaterial))
+            }
+            .accessibilityLabel("Tirar el dado otra vez")
+
+            Button {
+                withAnimation {
+                    randomRollActive = false
+                }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.caption.bold())
+                    .padding(9)
+                    .background(Circle().fill(.ultraThinMaterial))
+            }
+            .accessibilityLabel("Cerrar dado")
+        }
+        .padding()
+    }
+
+    private func reroll() async {
+        guard let randomVariant,
+              let criteria = environment.randomCriteria.criteria(variant: randomVariant) else {
+            return
+        }
+
+        let query = criteria.applying(to: SeriesQuery(variant: randomVariant))
+
+        do {
+            let serie = try await environment.library.randomSerie(query)
+            currentSerieId = serie.id
+        } catch {
+            model.actionError = error.localizedDescription
         }
     }
 

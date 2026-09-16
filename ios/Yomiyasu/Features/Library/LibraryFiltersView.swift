@@ -9,6 +9,9 @@ struct LibraryFiltersView: View {
 
     @State private var minDifficulty: Int
     @State private var maxDifficulty: Int
+    @State private var minValoration: Int
+    @State private var maxValoration: Int
+    @State private var valorationCount: Int
 
     private static let sortOptions: [(label: String, value: SortValue)] = [
         ("Título (A-Z)", SortValue(key: "sortName", descending: false)),
@@ -20,6 +23,7 @@ struct LibraryFiltersView: View {
         ("Menos volúmenes", SortValue(key: "bookCount", descending: false)),
         ("Dificultad (menor a mayor)", SortValue(key: "difficulty", descending: false)),
         ("Dificultad (mayor a menor)", SortValue(key: "difficulty", descending: true)),
+        ("Mejor valoradas", SortValue(key: "valoration", descending: true)),
     ]
 
     init(query: Binding<SeriesQuery>, genres: [String], authors: [String]) {
@@ -28,6 +32,9 @@ struct LibraryFiltersView: View {
         self.authors = authors
         _minDifficulty = State(initialValue: query.wrappedValue.minDifficulty ?? 0)
         _maxDifficulty = State(initialValue: query.wrappedValue.maxDifficulty ?? 10)
+        _minValoration = State(initialValue: query.wrappedValue.minValoration ?? 0)
+        _maxValoration = State(initialValue: query.wrappedValue.maxValoration ?? 10)
+        _valorationCount = State(initialValue: query.wrappedValue.valorationCount ?? 0)
     }
 
     var body: some View {
@@ -54,6 +61,16 @@ struct LibraryFiltersView: View {
                 Section("Dificultad") {
                     Stepper("Mínima: \(minDifficulty)", value: $minDifficulty, in: 0...10)
                     Stepper("Máxima: \(maxDifficulty)", value: $maxDifficulty, in: 0...10)
+                }
+
+                Section("Valoración") {
+                    Stepper("Mínima: \(minValoration)", value: $minValoration, in: 0...10)
+                    Stepper("Máxima: \(maxValoration)", value: $maxValoration, in: 0...10)
+                    LabeledContent("Nº mínimo de valoraciones") {
+                        TextField("Cualquiera", value: $valorationCount, format: .number)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
 
                 Section("Género") {
@@ -116,15 +133,24 @@ struct LibraryFiltersView: View {
         query = SeriesQuery.resetFilters(query)
         minDifficulty = 0
         maxDifficulty = 10
+        minValoration = 0
+        maxValoration = 10
+        valorationCount = 0
     }
 
     private func apply() {
         if minDifficulty > maxDifficulty {
             maxDifficulty = minDifficulty
         }
+        if minValoration > maxValoration {
+            maxValoration = minValoration
+        }
 
         query.minDifficulty = minDifficulty > 0 ? minDifficulty : nil
         query.maxDifficulty = maxDifficulty < 10 ? maxDifficulty : nil
+        query.minValoration = minValoration > 0 ? minValoration : nil
+        query.maxValoration = maxValoration < 10 ? maxValoration : nil
+        query.valorationCount = valorationCount > 0 ? max(valorationCount, 1) : nil
         dismiss()
     }
 }

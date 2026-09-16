@@ -17,6 +17,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
@@ -31,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -67,6 +70,7 @@ import es.manabe.yomiyasu.core.models.BooksQuery
 import es.manabe.yomiyasu.core.models.LibraryVariant
 import es.manabe.yomiyasu.core.models.ProgressStatus
 import es.manabe.yomiyasu.core.models.Serie
+import es.manabe.yomiyasu.core.models.SeriesQuery
 import es.manabe.yomiyasu.core.models.SortValue
 import es.manabe.yomiyasu.core.networking.ApiException
 import es.manabe.yomiyasu.core.services.DownloadState
@@ -74,6 +78,7 @@ import es.manabe.yomiyasu.core.services.LibraryApi
 import es.manabe.yomiyasu.core.services.SocketService
 import es.manabe.yomiyasu.core.settings.AppSettings
 import es.manabe.yomiyasu.core.settings.AppSettingsData
+import es.manabe.yomiyasu.core.settings.RandomCriteriaStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,6 +89,7 @@ import javax.inject.Inject
 class SerieViewModel @Inject constructor(
     private val library: LibraryApi,
     private val socket: SocketService,
+    private val randomCriteria: RandomCriteriaStore,
     settings: AppSettings,
 ) : ViewModel() {
 
@@ -98,6 +104,32 @@ class SerieViewModel @Inject constructor(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _actionError = MutableStateFlow<String?>(null)
+    val actionError: StateFlow<String?> = _actionError.asStateFlow()
+
+    fun clearActionError() {
+        _actionError.value = null
+    }
+
+    fun reroll(randomVariant: LibraryVariant, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            val criteria = randomCriteria.criteria(randomVariant)
+
+            if (criteria == null) {
+                onResult(null)
+                return@launch
+            }
+
+            try {
+                val query = criteria.applyingTo(SeriesQuery(variant = randomVariant))
+                onResult(library.randomSerie(query).id)
+            } catch (error: ApiException) {
+                _actionError.value = error.userMessage
+                onResult(null)
+            }
+        }
+    }
 
     val settingsData: StateFlow<AppSettingsData> = settings.flow
 
@@ -204,6 +236,7 @@ class SerieViewModel @Inject constructor(
 @Composable
 fun SerieRoute(
     serieId: String,
+    randomVariant: LibraryVariant? = null,
     onOpenBook: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: SerieViewModel = hiltViewModel(),
@@ -213,6 +246,7 @@ fun SerieRoute(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val settings by viewModel.settingsData.collectAsStateWithLifecycle()
+    val actionError by viewModel.actionError.collectAsStateWithLifecycle()
 
     val snackbar = remember { SnackbarHostState() }
     val actions = rememberLibraryActions(snackbar)
@@ -223,8 +257,17 @@ fun SerieRoute(
     var summaryExpanded by remember { mutableStateOf(false) }
     var markReadDialog by remember { mutableStateOf(false) }
     var reviewFormOpen by remember { mutableStateOf(false) }
+    var activeSerieId by remember { mutableStateOf(serieId) }
+    var rerollActive by remember { mutableStateOf(randomVariant != null) }
 
-    LaunchedEffect(serieId) { viewModel.load(serieId) }
+    LaunchedEffect(activeSerieId) { viewModel.load(activeSerieId) }
+
+    LaunchedEffect(actionError) {
+        actionError?.let {
+            snackbar.showSnackbar(it)
+            viewModel.clearActionError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -332,13 +375,35 @@ fun SerieRoute(
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
+        floatingActionButton = {
+            val variant = randomVariant
+            if (rerollActive && variant != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SmallFloatingActionButton(
+                        onClick = {
+                            viewModel.reroll(variant) { newSerieId ->
+                                if (newSerieId != null) activeSerieId = newSerieId
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ) {
+                        Icon(Icons.Filled.Casino, contentDescription = "Tirar el dado otra vez")
+                    }
+                    SmallFloatingActionButton(
+                        onClick = { rerollActive = false },
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = "Cerrar dado")
+                    }
+                }
+            }
+        },
     ) { padding ->
         when {
             serie == null && isLoading -> LoadingBox(Modifier.padding(padding))
             serie == null && error != null -> ErrorBox(
                 message = error ?: "No se pudo cargar",
                 modifier = Modifier.padding(padding),
-                onRetry = { viewModel.load(serieId) },
+                onRetry = { viewModel.load(activeSerieId) },
             )
             serie != null -> LazyColumn(
                 modifier = Modifier
@@ -429,7 +494,7 @@ fun SerieRoute(
                         serieId = serie!!.id,
                         reviews = serie?.reviews ?: emptyList(),
                         onWriteReview = { reviewFormOpen = true },
-                        onReviewDeleted = { viewModel.load(serieId) },
+                        onReviewsChanged = { viewModel.load(serieId) },
                     )
                 }
             }

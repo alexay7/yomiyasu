@@ -134,6 +134,8 @@ fun NovelReaderView(
     LaunchedEffect(navigator) {
         val fragment = navigator ?: return@LaunchedEffect
         fragment.currentLocator.collect { locator ->
+            timer.notifyActivity()
+
             val map = progressMap ?: return@collect
             val characters = map.characters(
                 href = locator.href.toString(),
@@ -143,6 +145,10 @@ fun NovelReaderView(
                 currentCharacters = characters
             }
         }
+    }
+
+    LaunchedEffect(appSettings.idleTimeout) {
+        timer.idleTimeoutMinutes = appSettings.idleTimeout
     }
 
     val totalCharacters = book?.characters ?: progressMap?.totalCharacters ?: 0

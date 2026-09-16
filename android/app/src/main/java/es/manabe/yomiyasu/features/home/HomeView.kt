@@ -64,6 +64,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -72,6 +75,8 @@ data class HomeData(
     val tableroBooks: List<Book> = emptyList(),
     val readlaterManga: List<Serie> = emptyList(),
     val readlaterNovela: List<Serie> = emptyList(),
+    val pausedManga: List<Serie> = emptyList(),
+    val pausedNovela: List<Serie> = emptyList(),
     val newMangaBooks: List<Book> = emptyList(),
     val newNovelaBooks: List<Book> = emptyList(),
     val newMangaSeries: List<Serie> = emptyList(),
@@ -82,6 +87,7 @@ data class HomeData(
     val isEmpty: Boolean
         get() = readingBooks.isEmpty() && tableroBooks.isEmpty() &&
             readlaterManga.isEmpty() && readlaterNovela.isEmpty() &&
+            pausedManga.isEmpty() && pausedNovela.isEmpty() &&
             newMangaBooks.isEmpty() && newNovelaBooks.isEmpty() &&
             newMangaSeries.isEmpty() && newNovelaSeries.isEmpty() &&
             recentMangaSeries.isEmpty() && recentNovelaSeries.isEmpty()
@@ -109,6 +115,13 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             socket.libraryUpdatedAt.collect { load() }
         }
+        viewModelScope.launch {
+            settingsData
+                .map { it.boards }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { load() }
+        }
     }
 
     fun load() {
@@ -116,13 +129,42 @@ class HomeViewModel @Inject constructor(
             _isLoading.value = true
             _error.value = null
 
+            val boards = settingsData.value.boards
+
             try {
                 coroutineScope {
-                    val reading = async { library.reading() }
-                    val tablero = async { library.tablero() }
-                    val readlaterManga = async { library.readlist(es.manabe.yomiyasu.core.models.LibraryVariant.Manga) }
-                    val readlaterNovela = async { library.readlist(es.manabe.yomiyasu.core.models.LibraryVariant.Novela) }
+                    val reading = async { if (boards.progress) library.reading() else emptyList() }
+                    val tablero = async { if (boards.tablero) library.tablero() else emptyList() }
+                    val readlaterManga = async {
+                        if (boards.readLater) {
+                            library.readlist(es.manabe.yomiyasu.core.models.LibraryVariant.Manga)
+                        } else {
+                            emptyList()
+                        }
+                    }
+                    val readlaterNovela = async {
+                        if (boards.readLater) {
+                            library.readlist(es.manabe.yomiyasu.core.models.LibraryVariant.Novela)
+                        } else {
+                            emptyList()
+                        }
+                    }
+                    val pausedManga = async {
+                        if (boards.paused) {
+                            library.pausedSeries(es.manabe.yomiyasu.core.models.LibraryVariant.Manga)
+                        } else {
+                            emptyList()
+                        }
+                    }
+                    val pausedNovela = async {
+                        if (boards.paused) {
+                            library.pausedSeries(es.manabe.yomiyasu.core.models.LibraryVariant.Novela)
+                        } else {
+                            emptyList()
+                        }
+                    }
                     val newMangaBooks = async {
+                        if (!boards.newBooks) return@async emptyList()
                         library.books(
                             BooksQuery(
                                 variant = es.manabe.yomiyasu.core.models.LibraryVariant.Manga,
@@ -132,6 +174,7 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                     val newNovelaBooks = async {
+                        if (!boards.newBooks) return@async emptyList()
                         library.books(
                             BooksQuery(
                                 variant = es.manabe.yomiyasu.core.models.LibraryVariant.Novela,
@@ -141,29 +184,33 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                     val newMangaSeries = async {
+                        if (!boards.newSeries) return@async emptyList()
                         library.seriesList(
                             SeriesQuery(variant = es.manabe.yomiyasu.core.models.LibraryVariant.Manga, sort = SortValue.SeriesNewest, limit = 15),
                         )
                     }
                     val newNovelaSeries = async {
+                        if (!boards.newSeries) return@async emptyList()
                         library.seriesList(
                             SeriesQuery(variant = es.manabe.yomiyasu.core.models.LibraryVariant.Novela, sort = SortValue.SeriesNewest, limit = 15),
                         )
                     }
                     val recentMangaSeries = async {
+                        if (!boards.recentSeries) return@async emptyList()
                         library.seriesList(
                             SeriesQuery(variant = es.manabe.yomiyasu.core.models.LibraryVariant.Manga, sort = SortValue.SeriesRecent, limit = 15),
                         )
                     }
                     val recentNovelaSeries = async {
+                        if (!boards.recentSeries) return@async emptyList()
                         library.seriesList(
                             SeriesQuery(variant = es.manabe.yomiyasu.core.models.LibraryVariant.Novela, sort = SortValue.SeriesRecent, limit = 15),
                         )
                     }
 
                     awaitAll(
-                        reading, tablero, readlaterManga, readlaterNovela, newMangaBooks,
-                        newNovelaBooks, newMangaSeries, newNovelaSeries,
+                        reading, tablero, readlaterManga, readlaterNovela, pausedManga, pausedNovela,
+                        newMangaBooks, newNovelaBooks, newMangaSeries, newNovelaSeries,
                         recentMangaSeries, recentNovelaSeries,
                     )
 
@@ -172,6 +219,8 @@ class HomeViewModel @Inject constructor(
                         tableroBooks = tablero.await(),
                         readlaterManga = readlaterManga.await(),
                         readlaterNovela = readlaterNovela.await(),
+                        pausedManga = pausedManga.await(),
+                        pausedNovela = pausedNovela.await(),
                         newMangaBooks = newMangaBooks.await(),
                         newNovelaBooks = newNovelaBooks.await(),
                         newMangaSeries = newMangaSeries.await(),
@@ -256,38 +305,46 @@ fun HomeRoute(
                     contentPadding = PaddingValues(vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(22.dp),
                 ) {
+                    val boards = settingsData.boards
+
                     val filteredReading = filterMainViewBooks(data.readingBooks, mainView)
-                    if (filteredReading.isNotEmpty()) {
+                    if (boards.progress && filteredReading.isNotEmpty()) {
                         item { BooksScroller("En progreso", filteredReading, settingsData, actions, downloadRecords, onOpenSerie, onOpenBook) }
                     }
 
                     val filteredTablero = filterMainViewBooks(data.tableroBooks, mainView)
-                    if (filteredTablero.isNotEmpty()) {
+                    if (boards.tablero && filteredTablero.isNotEmpty()) {
                         item { BooksScroller("Tu tablero", filteredTablero, settingsData, actions, downloadRecords, onOpenSerie, onOpenBook) }
                     }
 
-                    if (mainView != MainView.Novels && data.readlaterManga.isNotEmpty()) {
+                    if (boards.readLater && mainView != MainView.Novels && data.readlaterManga.isNotEmpty()) {
                         item { SeriesScroller("Leer más tarde (manga)", data.readlaterManga, actions, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Manga && data.readlaterNovela.isNotEmpty()) {
+                    if (boards.readLater && mainView != MainView.Manga && data.readlaterNovela.isNotEmpty()) {
                         item { SeriesScroller("Leer más tarde (novelas)", data.readlaterNovela, actions, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Novels && data.newMangaBooks.isNotEmpty()) {
+                    if (boards.paused && mainView != MainView.Novels && data.pausedManga.isNotEmpty()) {
+                        item { SeriesScroller("Pausadas (manga)", data.pausedManga, actions, onOpenSerie, onOpenBook) }
+                    }
+                    if (boards.paused && mainView != MainView.Manga && data.pausedNovela.isNotEmpty()) {
+                        item { SeriesScroller("Pausadas (novelas)", data.pausedNovela, actions, onOpenSerie, onOpenBook) }
+                    }
+                    if (boards.newBooks && mainView != MainView.Novels && data.newMangaBooks.isNotEmpty()) {
                         item { BooksScroller("Mangas nuevos", data.newMangaBooks, settingsData, actions, downloadRecords, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Manga && data.newNovelaBooks.isNotEmpty()) {
+                    if (boards.newBooks && mainView != MainView.Manga && data.newNovelaBooks.isNotEmpty()) {
                         item { BooksScroller("Novelas nuevas", data.newNovelaBooks, settingsData, actions, downloadRecords, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Novels && data.newMangaSeries.isNotEmpty()) {
+                    if (boards.newSeries && mainView != MainView.Novels && data.newMangaSeries.isNotEmpty()) {
                         item { SeriesScroller("Series de manga nuevas", data.newMangaSeries, actions, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Manga && data.newNovelaSeries.isNotEmpty()) {
+                    if (boards.newSeries && mainView != MainView.Manga && data.newNovelaSeries.isNotEmpty()) {
                         item { SeriesScroller("Series de novelas nuevas", data.newNovelaSeries, actions, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Novels && data.recentMangaSeries.isNotEmpty()) {
+                    if (boards.recentSeries && mainView != MainView.Novels && data.recentMangaSeries.isNotEmpty()) {
                         item { SeriesScroller("Series de manga con volúmenes nuevos", data.recentMangaSeries, actions, onOpenSerie, onOpenBook) }
                     }
-                    if (mainView != MainView.Manga && data.recentNovelaSeries.isNotEmpty()) {
+                    if (boards.recentSeries && mainView != MainView.Manga && data.recentNovelaSeries.isNotEmpty()) {
                         item { SeriesScroller("Series de novelas con volúmenes nuevos", data.recentNovelaSeries, actions, onOpenSerie, onOpenBook) }
                     }
                 }

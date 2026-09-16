@@ -31,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import es.manabe.yomiyasu.app.ui.Routes
+import es.manabe.yomiyasu.core.models.LibraryVariant
 import es.manabe.yomiyasu.core.models.MainView
 
 private data class TabItem(
@@ -162,6 +163,9 @@ private fun ShellNavHost(
                 mainView = mainView,
                 onOpenSerie = { navController.navigate(Routes.serie(it)) },
                 onOpenBook = { navController.navigate(Routes.book(it)) },
+                onOpenRandomSerie = { id, variant ->
+                    navController.navigate(Routes.serie(id, variant.rawValue))
+                },
             )
         }
         composable(Routes.Readlist) {
@@ -213,11 +217,21 @@ private fun ShellNavHost(
         }
         composable(
             route = Routes.SeriePattern,
-            arguments = listOf(navArgument("serieId") { type = NavType.StringType }),
+            arguments = listOf(
+                navArgument("serieId") { type = NavType.StringType },
+                navArgument("randomVariant") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
         ) { entry ->
             val serieId = entry.arguments?.getString("serieId").orEmpty()
+            val randomVariant = entry.arguments?.getString("randomVariant")
+                ?.let { raw -> LibraryVariant.entries.firstOrNull { it.rawValue == raw } }
             es.manabe.yomiyasu.features.serie.SerieRoute(
                 serieId = serieId,
+                randomVariant = randomVariant,
                 onOpenBook = { navController.navigate(Routes.book(it)) },
                 onBack = { navController.popBackStack() },
             )

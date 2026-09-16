@@ -37,6 +37,7 @@ enum DictionaryLookupMode: String, CaseIterable, Identifiable, Codable {
 enum ReaderFont: String, CaseIterable, Identifiable, Codable {
     case ipa
     case zenAntique
+    case notoSansJP
     case system
 
     var id: String { rawValue }
@@ -45,6 +46,7 @@ enum ReaderFont: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .ipa: "IPAex Gothic"
         case .zenAntique: "Zen Antique"
+        case .notoSansJP: "Noto Sans JP"
         case .system: "Sistema"
         }
     }
@@ -53,6 +55,7 @@ enum ReaderFont: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .ipa: "IPAexGothic"
         case .zenAntique: "ZenAntique"
+        case .notoSansJP: "NotoSansJP-Regular"
         case .system: nil
         }
     }

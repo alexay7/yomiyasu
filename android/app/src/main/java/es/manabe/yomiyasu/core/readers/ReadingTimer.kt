@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 
 class ReadingTimer(
     private val scope: CoroutineScope,
+    private val now: () -> Long = { System.currentTimeMillis() },
 ) {
     private val _seconds = MutableStateFlow(0)
     val seconds: StateFlow<Int> = _seconds.asStateFlow()
@@ -18,13 +19,19 @@ class ReadingTimer(
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
+    /** Minutos sin actividad de lectura tras los que se pausa el cronómetro. 0 lo desactiva. */
+    var idleTimeoutMinutes: Int = 0
+
     private var tickJob: Job? = null
     private var lastTick: Long? = null
+    private var lastActivity: Long = now()
+    private var idlePaused = false
+    private var wasRunning = false
 
     fun start() {
         if (_isRunning.value) return
         _isRunning.value = true
-        lastTick = System.currentTimeMillis()
+        lastTick = now()
 
         tickJob?.cancel()
         tickJob = scope.launch {
@@ -36,8 +43,9 @@ class ReadingTimer(
     }
 
     fun pause() {
-        tick()
+        flushSeconds()
         _isRunning.value = false
+        wasRunning = false
         tickJob?.cancel()
         tickJob = null
         lastTick = null
@@ -57,6 +65,16 @@ class ReadingTimer(
         _seconds.value = maxOf(0, _seconds.value + minutes * 60)
     }
 
+    /** Registra actividad de lectura y reanuda el cronómetro si se pausó por inactividad. */
+    fun notifyActivity() {
+        lastActivity = now()
+
+        if (idlePaused) {
+            idlePaused = false
+            start()
+        }
+    }
+
     fun formatted(): String {
         val total = _seconds.value
         val hours = total / 3600
@@ -70,10 +88,34 @@ class ReadingTimer(
         }
     }
 
-    private fun tick() {
+    fun tick() {
+        flushSeconds()
+        evaluateIdle()
+    }
+
+    private fun flushSeconds() {
         val last = lastTick ?: return
-        val delta = ((System.currentTimeMillis() - last) / 1000).toInt()
-        lastTick = System.currentTimeMillis()
+        val delta = ((now() - last) / 1000).toInt()
+        lastTick = now()
         _seconds.value += maxOf(0, delta)
+    }
+
+    private fun evaluateIdle() {
+        if (idleTimeoutMinutes <= 0) return
+
+        // Reanudación (manual o automática): el tiempo de inactividad cuenta de nuevo
+        if (_isRunning.value && !wasRunning) {
+            lastActivity = now()
+            idlePaused = false
+        }
+
+        wasRunning = _isRunning.value
+
+        if (_isRunning.value && !idlePaused &&
+            now() - lastActivity >= idleTimeoutMinutes * 60_000L
+        ) {
+            idlePaused = true
+            pause()
+        }
     }
 }

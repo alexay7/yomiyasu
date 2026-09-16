@@ -66,6 +66,8 @@ import es.manabe.yomiyasu.core.models.SeriesQuery
 import es.manabe.yomiyasu.core.networking.ApiException
 import es.manabe.yomiyasu.core.services.LibraryApi
 import es.manabe.yomiyasu.core.services.SocketService
+import es.manabe.yomiyasu.core.settings.RandomCriteria
+import es.manabe.yomiyasu.core.settings.RandomCriteriaStore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,6 +80,7 @@ import javax.inject.Inject
 class LibraryViewModel @Inject constructor(
     private val library: LibraryApi,
     private val socket: SocketService,
+    private val randomCriteria: RandomCriteriaStore,
 ) : ViewModel() {
 
     var variant by mutableStateOf(LibraryVariant.All)
@@ -183,6 +186,7 @@ class LibraryViewModel @Inject constructor(
         query = query.copy(variant = variant)
         viewModelScope.launch {
             try {
+                randomCriteria.save(RandomCriteria.from(query), variant)
                 onResult(library.randomSerie(query))
             } catch (error: ApiException) {
                 _error.value = error.userMessage
@@ -198,6 +202,7 @@ fun LibraryRoute(
     mainView: MainView,
     onOpenSerie: (String) -> Unit,
     onOpenBook: (String) -> Unit,
+    onOpenRandomSerie: (String, LibraryVariant) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val series by viewModel.series.collectAsStateWithLifecycle()
@@ -250,7 +255,13 @@ fun LibraryRoute(
             TopAppBar(
                 title = { Text("Biblioteca") },
                 actions = {
-                    IconButton(onClick = { viewModel.randomSerie { serie -> serie?.let { onOpenSerie(it.id) } } }) {
+                    IconButton(
+                        onClick = {
+                            viewModel.randomSerie { serie ->
+                                serie?.let { onOpenRandomSerie(it.id, viewModel.variant) }
+                            }
+                        },
+                    ) {
                         Icon(Icons.Filled.Casino, contentDescription = "Aleatorio")
                     }
                     IconButton(onClick = { filtersOpen = true }) {
