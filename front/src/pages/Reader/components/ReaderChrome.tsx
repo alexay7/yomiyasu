@@ -1,5 +1,5 @@
 import {ArrowLeft, ChevronLeft, ChevronRight, Timer} from "lucide-react";
-import React, {useState, type ReactNode, type RefObject} from "react";
+import React, {useState, type ReactNode} from "react";
 import {formatTime} from "../../../helpers/helpers";
 import {useReaderTimerStore} from "../../../stores/ReaderStore";
 import type {Book} from "../../../types/book";
@@ -91,13 +91,14 @@ export function ReaderBottomBar({maxPage, currentPage, onPageChange, r2l, left, 
 }
 
 interface MobilePageArrowsProps {
-    iframe:RefObject<HTMLIFrameElement | null>;
     currentPage:number;
     pages:number;
     visible:boolean;
+    onPrev:()=>void;
+    onNext:()=>void;
 }
 
-export function MobilePageArrows({iframe, currentPage, pages, visible}:MobilePageArrowsProps):React.ReactElement | null {
+export function MobilePageArrows({currentPage, pages, visible, onPrev, onNext}:MobilePageArrowsProps):React.ReactElement | null {
     if (!visible) return null;
 
     return (
@@ -105,9 +106,7 @@ export function MobilePageArrows({iframe, currentPage, pages, visible}:MobilePag
             <IconButton
                 label="Página anterior"
                 className="w-1/3"
-                onClick={()=>{
-                    iframe.current?.contentWindow?.postMessage({action:"goLeft"});
-                }}
+                onClick={onPrev}
             >
                 <ChevronLeft className="text-white" />
             </IconButton>
@@ -115,9 +114,7 @@ export function MobilePageArrows({iframe, currentPage, pages, visible}:MobilePag
             <IconButton
                 label="Página siguiente"
                 className="w-1/3"
-                onClick={()=>{
-                    iframe.current?.contentWindow?.postMessage({action:"goRight"});
-                }}
+                onClick={onNext}
             >
                 <ChevronRight className="text-white" />
             </IconButton>
@@ -153,7 +150,7 @@ export function ReaderStatsReadout({bookData, currentPage}:ReaderStatsReadoutPro
     const timer = useReaderTimerStore((state)=>state.timer);
     const [showTimeLeft, setShowTimeLeft] = useState(false);
 
-    if (!bookData.pageChars) return null;
+    if (!bookData.pageChars || bookData.pageChars.length === 0) return null;
 
     const currentCharacters = (()=>{
         if (currentPage > 1) {

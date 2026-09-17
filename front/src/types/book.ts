@@ -33,6 +33,10 @@ export interface Book {
     pageChars?:number[];
     variant: "manga" | "novela";
     mokured?:boolean;
+    /** "mokuro" (html + imágenes) o "images" (solo carpeta de imágenes). Ausente = mokuro. */
+    format?: "mokuro" | "images";
+    /** Nombres de las imágenes del tomo (solo tomos "images", lo devuelve el backend). */
+    pagePaths?: string[];
 }
 
 export interface BookProgress {

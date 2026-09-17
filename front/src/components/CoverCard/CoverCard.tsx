@@ -1,4 +1,4 @@
-import {Book as BookIcon, Play, TriangleAlert} from "lucide-react";
+import {Book as BookIcon, Images, Play, TriangleAlert} from "lucide-react";
 import {useEffect, useState, type MouseEvent} from "react";
 import {Link} from "react-router";
 import {useSettingsStore} from "../../stores/SettingsStore";
@@ -162,6 +162,16 @@ function BookCoverCard({
             <Tooltip content="Esta novela ha sido generada con mokuro, ¡NO es un epub!">
               <span className="flex size-6 items-center justify-center rounded-full bg-white/90 text-warning shadow-sm">
                 <TriangleAlert className="size-3.5" />
+              </span>
+            </Tooltip>
+          </span>
+        ) : null}
+
+        {book.format === "images" ? (
+          <span className="absolute left-1 top-1 z-[2]">
+            <Tooltip content="Manga de imágenes: solo portada y páginas, sin texto OCR">
+              <span className="flex size-6 items-center justify-center rounded-full bg-white/90 text-primary shadow-sm">
+                <Images className="size-3.5" />
               </span>
             </Tooltip>
           </span>

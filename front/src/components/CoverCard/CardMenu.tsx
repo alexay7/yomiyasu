@@ -258,14 +258,18 @@ function BookCardMenu({book, insideSerie, deck, read, setRead, openBook}:Extract
                 <SquarePen />
                 Editar libro
               </MenuItem>
-              <MenuItem onSelect={()=>void recalculateChars()}>
-                <Calculator />
-                Recalcular caracteres
-              </MenuItem>
-              <MenuItem onSelect={()=>void recalculateChars(true)}>
-                <Tags />
-                Recalcular caracteres (con bordes)
-              </MenuItem>
+              {book.format !== "images" ? (
+                <MenuItem onSelect={()=>void recalculateChars()}>
+                  <Calculator />
+                  Recalcular caracteres
+                </MenuItem>
+              ) : null}
+              {book.format !== "images" ? (
+                <MenuItem onSelect={()=>void recalculateChars(true)}>
+                  <Tags />
+                  Recalcular caracteres (con bordes)
+                </MenuItem>
+              ) : null}
               {book.variant === "novela" ? (
                 <MenuItem onSelect={()=>setCoversOpen(true)}>
                   <Image />

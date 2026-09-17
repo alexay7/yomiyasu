@@ -23,6 +23,15 @@ export function getBookInfoText(book: BookWithProgress, bookView: BookView): str
     return `${book.characters} caracteres`;
   }
 
+  // Los tomos de imágenes no tienen contador de caracteres: siempre páginas
+  if (book.format === "images") {
+    if (bookView === "remainingpages" && book.lastProgress) {
+      return `${book.pages - book.lastProgress.currentPage} pags. restantes`;
+    }
+
+    return `${book.pages} páginas`;
+  }
+
   switch (bookView) {
     case "characters": {
       return `${book.characters} caracteres`;

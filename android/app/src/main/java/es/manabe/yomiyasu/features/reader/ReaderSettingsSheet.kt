@@ -52,6 +52,7 @@ class ReaderSettingsViewModel @Inject constructor(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderSettingsSheet(
+    showOCR: Boolean = true,
     viewModel: ReaderSettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.data.collectAsStateWithLifecycle()
@@ -102,53 +103,55 @@ fun ReaderSettingsSheet(
             onChange = { value -> viewModel.update { it.copy(panAndZoom = value) } },
         )
 
-        Text("Texto OCR", style = MaterialTheme.typography.titleSmall)
-        SwitchRow(
-            label = "Mostrar texto OCR siempre",
-            checked = settings.displayOCR,
-            onChange = { value -> viewModel.update { it.copy(displayOCR = value) } },
-        )
-        SwitchRow(
-            label = "Bordes de las cajas de texto",
-            checked = settings.textBoxBorders,
-            onChange = { value -> viewModel.update { it.copy(textBoxBorders = value) } },
-        )
-        SwitchRow(
-            label = "Tocar cajas para texto/diccionario",
-            checked = settings.toggleOCRTextBoxes,
-            onChange = { value -> viewModel.update { it.copy(toggleOCRTextBoxes = value) } },
-        )
+        if (showOCR) {
+            Text("Texto OCR", style = MaterialTheme.typography.titleSmall)
+            SwitchRow(
+                label = "Mostrar texto OCR siempre",
+                checked = settings.displayOCR,
+                onChange = { value -> viewModel.update { it.copy(displayOCR = value) } },
+            )
+            SwitchRow(
+                label = "Bordes de las cajas de texto",
+                checked = settings.textBoxBorders,
+                onChange = { value -> viewModel.update { it.copy(textBoxBorders = value) } },
+            )
+            SwitchRow(
+                label = "Tocar cajas para texto/diccionario",
+                checked = settings.toggleOCRTextBoxes,
+                onChange = { value -> viewModel.update { it.copy(toggleOCRTextBoxes = value) } },
+            )
 
-        Text(
-            "Tamaño de letra: ${if (settings.fontSize == 0.0) "Automático" else settings.fontSize.toInt().toString()}",
-            style = MaterialTheme.typography.labelMedium,
-        )
-        Slider(
-            value = settings.fontSize.toFloat(),
-            onValueChange = { value -> viewModel.update { it.copy(fontSize = value.toDouble()) } },
-            valueRange = 0f..72f,
-        )
+            Text(
+                "Tamaño de letra: ${if (settings.fontSize == 0.0) "Automático" else settings.fontSize.toInt().toString()}",
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Slider(
+                value = settings.fontSize.toFloat(),
+                onValueChange = { value -> viewModel.update { it.copy(fontSize = value.toDouble()) } },
+                valueRange = 0f..72f,
+            )
 
-        Text("Fuente", style = MaterialTheme.typography.titleSmall)
-        ChipRow(
-            options = ReaderFont.entries.map { it.title },
-            selectedIndex = ReaderFont.entries.indexOf(settings.font),
-            onSelect = { index -> viewModel.update { it.copy(font = ReaderFont.entries[index]) } },
-        )
+            Text("Fuente", style = MaterialTheme.typography.titleSmall)
+            ChipRow(
+                options = ReaderFont.entries.map { it.title },
+                selectedIndex = ReaderFont.entries.indexOf(settings.font),
+                onSelect = { index -> viewModel.update { it.copy(font = ReaderFont.entries[index]) } },
+            )
 
-        Text("Diccionario", style = MaterialTheme.typography.titleSmall)
-        SwitchRow(
-            label = "Diccionario nativo",
-            checked = settings.nativeDictionary,
-            onChange = { value -> viewModel.update { it.copy(nativeDictionary = value) } },
-        )
-        ChipRow(
-            options = DictionaryLookupMode.entries.map { it.title },
-            selectedIndex = DictionaryLookupMode.entries.indexOf(settings.dictionaryVersion),
-            onSelect = { index ->
-                viewModel.update { it.copy(dictionaryVersion = DictionaryLookupMode.entries[index]) }
-            },
-        )
+            Text("Diccionario", style = MaterialTheme.typography.titleSmall)
+            SwitchRow(
+                label = "Diccionario nativo",
+                checked = settings.nativeDictionary,
+                onChange = { value -> viewModel.update { it.copy(nativeDictionary = value) } },
+            )
+            ChipRow(
+                options = DictionaryLookupMode.entries.map { it.title },
+                selectedIndex = DictionaryLookupMode.entries.indexOf(settings.dictionaryVersion),
+                onSelect = { index ->
+                    viewModel.update { it.copy(dictionaryVersion = DictionaryLookupMode.entries[index]) }
+                },
+            )
+        }
 
         Text("Novelas", style = MaterialTheme.typography.titleSmall)
         ChipRow(

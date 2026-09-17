@@ -293,6 +293,8 @@ data class Book(
     val pageChars: List<Int>? = null,
     val variant: Variant? = null,
     val mokured: Boolean? = null,
+    val format: String? = null,
+    val pagePaths: List<String>? = null,
     val status: ProgressStatus? = null,
     val lastProgress: ReadProgress? = null,
     val readlist: ReadlistValue? = null,
@@ -300,6 +302,9 @@ data class Book(
 ) {
     val resolvedStatus: ProgressStatus get() = status ?: ProgressStatus.Unread
     val isMokured: Boolean get() = mokured ?: false
+
+    /** Tomo de solo imágenes, sin html de mokuro. Ausente = mokuro. */
+    val isImageFolder: Boolean get() = format == "images"
 
     val progressFraction: Double
         get() {

@@ -8,6 +8,7 @@ import es.manabe.yomiyasu.core.models.Book
 import es.manabe.yomiyasu.core.networking.ApiClient
 import es.manabe.yomiyasu.core.networking.ApiException
 import es.manabe.yomiyasu.core.networking.Endpoint
+import es.manabe.yomiyasu.core.readers.ImageFolderPages
 import es.manabe.yomiyasu.core.readers.ProgressMirror
 import es.manabe.yomiyasu.core.services.DownloadManager
 import es.manabe.yomiyasu.core.services.LibraryApi
@@ -73,17 +74,34 @@ class MangaReaderViewModel @Inject constructor(
             try {
                 val book = library.book(bookId)
 
-                val record = downloads.records.value[bookId]
-                val (htmlData, localImagesDir) = if (record != null) {
-                    downloads.localHtmlFile(bookId).readBytes() to downloads.localImagesDirectory(bookId)
-                } else {
-                    val folder = if (book.variant?.name.equals("Novela", ignoreCase = true)) "novelas" else "mangas"
-                    val path = "$folder/${book.seriePath.orEmpty()}/${book.path.orEmpty()}.html"
-                    api.sendBytes(Endpoint.get("api/static/$path")) to null
-                }
+                val parsed: MokuroBook
+                val localImagesDir: File?
 
-                val parsed = withContext(Dispatchers.Default) {
-                    MokuroParser.parse(htmlData.decodeToString())
+                if (book.isImageFolder) {
+                    // Sin html: el manifiesto de páginas viene en el detalle del libro
+                    val pagePaths = book.pagePaths.orEmpty()
+                    check(pagePaths.isNotEmpty()) { "El tomo no tiene páginas" }
+
+                    localImagesDir = if (downloads.records.value.containsKey(bookId)) {
+                        downloads.localImagesDirectory(bookId)
+                    } else {
+                        null
+                    }
+                    parsed = ImageFolderPages.makeBook(pagePaths, book.imagesFolder)
+                } else {
+                    val record = downloads.records.value[bookId]
+                    val (htmlData, imagesDir) = if (record != null) {
+                        downloads.localHtmlFile(bookId).readBytes() to downloads.localImagesDirectory(bookId)
+                    } else {
+                        val folder = if (book.variant?.name.equals("Novela", ignoreCase = true)) "novelas" else "mangas"
+                        val path = "$folder/${book.seriePath.orEmpty()}/${book.path.orEmpty()}.html"
+                        api.sendBytes(Endpoint.get("api/static/$path")) to null
+                    }
+
+                    localImagesDir = imagesDir
+                    parsed = withContext(Dispatchers.Default) {
+                        MokuroParser.parse(htmlData.decodeToString())
+                    }
                 }
 
                 val progressRecord = runCatching { progress.progressForBook(bookId) }.getOrNull()
@@ -123,11 +141,19 @@ class MangaReaderViewModel @Inject constructor(
     }
 
     fun imageModel(book: Book, imagePath: String): Any {
-        val decodedPath = runCatching { URLDecoder.decode(imagePath, "UTF-8") }.getOrDefault(imagePath)
+        // En los tomos de imágenes el nombre ya viene tal cual (sin percent-encoding)
+        val decodedPath = if (book.isImageFolder) {
+            imagePath
+        } else {
+            runCatching { URLDecoder.decode(imagePath, "UTF-8") }.getOrDefault(imagePath)
+        }
         val localDir = _state.value.localImagesDir
+        val localFile = if (localDir != null) File(localDir, decodedPath) else null
 
-        return if (localDir != null) {
-            File(localDir, decodedPath)
+        // Descargas antiguas (o incompletas): si la imagen no está en local se
+        // cae a la URL remota en lugar de dejar la página en blanco
+        return if (localFile != null && localFile.exists()) {
+            localFile
         } else {
             staticUrls.bookImage(book, decodedPath)?.toString().orEmpty()
         }

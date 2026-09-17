@@ -32,6 +32,9 @@ export function StopWatchMenu({characters, bookData, oldProgress, currentPage, r
 
     const queryClient = useQueryClient();
 
+    // Los tomos sin OCR (carpeta de imágenes) no tienen contador de caracteres
+    const showCharacters = (bookData?.characters ?? 0) > 0 || (characters ?? 0) > 0;
+
     async function resetTimer():Promise<void> {
         if (!await confirmDialog("¿Estás seguro de que quieres reiniciar el cronómetro?, esto reiniciará el tiempo de lectura del libro entero.")) return;
 
@@ -109,7 +112,9 @@ export function StopWatchMenu({characters, bookData, oldProgress, currentPage, r
                             >
                                 <span className="text-sm font-medium text-fg">Sesión actual</span>
                                 <span className="text-xs text-fg-muted">Tiempo: {formatTime(timer - (oldProgress?.time || 0))}</span>
-                                <span className="text-xs text-fg-muted">Caracteres: {(characters || 0) - (oldProgress?.characters || 0)}</span>
+                                {showCharacters ? (
+                                    <span className="text-xs text-fg-muted">Caracteres: {(characters || 0) - (oldProgress?.characters || 0)}</span>
+                                ) : null}
                             </button>
 
                             <Separator />

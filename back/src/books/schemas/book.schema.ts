@@ -55,6 +55,12 @@ export class Book {
 
   @Prop({type:Boolean, default:false})
   mokured:boolean;
+
+  // "mokuro": tomo con un html de mokuro (y su carpeta de imágenes)
+  // "images": carpeta de imágenes sin html; los clientes usan un lector simple
+  // Los libros antiguos no tienen el campo: se tratan como "mokuro".
+  @Prop({type:String, enum:["mokuro", "images"], default:"mokuro"})
+  format:"mokuro" | "images";
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

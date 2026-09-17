@@ -9,6 +9,7 @@ import es.manabe.yomiyasu.core.models.Book
 import es.manabe.yomiyasu.core.models.Variant
 import es.manabe.yomiyasu.core.networking.ApiClient
 import es.manabe.yomiyasu.core.networking.Endpoint
+import es.manabe.yomiyasu.core.readers.ImageFolderPages
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -173,8 +174,9 @@ class DownloadManager @Inject constructor(
         updateState(book.id, DownloadState.Downloading(0.0, "Preparando…"))
 
         try {
-            when (book.variant) {
-                Variant.Novela -> downloadNovel(book)
+            when {
+                book.variant == Variant.Novela -> downloadNovel(book)
+                book.isImageFolder -> downloadImageFolder(book)
                 else -> downloadManga(book)
             }
         } catch (cancellation: CancellationException) {
@@ -236,6 +238,59 @@ class DownloadManager @Inject constructor(
                 downloadedAt = System.currentTimeMillis(),
                 byteCount = bytes,
                 pageCount = pageCount,
+            ),
+        )
+    }
+
+    /**
+     * Tomo sin mokuro: no hay html que parsear. El manifiesto de páginas viene
+     * en el detalle del libro (los listados no lo incluyen).
+     */
+    private suspend fun downloadImageFolder(book: Book) {
+        val seriePath = book.seriePath ?: throw IllegalStateException("Libro sin ruta")
+
+        val detail = api.send(Endpoint.get("api/books/book/${book.id}"), Book.serializer())
+        val pagePaths = detail.pagePaths.orEmpty()
+        check(pagePaths.isNotEmpty()) { "El tomo no tiene páginas" }
+
+        val directory = bookDirectory(book.id)
+        directory.mkdirs()
+
+        var bytes = 0L
+
+        pagePaths.forEachIndexed { index, fileName ->
+            val data = api.sendBytes(Endpoint.get("api/static/mangas/$seriePath/$fileName"))
+
+            // Misma estructura que en las descargas de mokuro: la imagen se
+            // guarda bajo la carpeta del tomo, que es lo que espera el lector
+            val destination = File(
+                localImagesDirectory(book.id),
+                ImageFolderPages.joinedPath(detail.imagesFolder, fileName),
+            )
+            destination.parentFile?.mkdirs()
+            destination.writeBytes(data)
+
+            bytes += data.size
+
+            val progress = (index + 1).toDouble() / maxOf(pagePaths.size, 1).toDouble()
+            val size = Formatter.formatShortFileSize(context, bytes)
+            updateState(
+                book.id,
+                DownloadState.Downloading(
+                    progress = progress,
+                    detail = "${index + 1}/${pagePaths.size} pág. · $size",
+                ),
+            )
+        }
+
+        finish(
+            DownloadRecord(
+                bookId = book.id,
+                visibleName = book.visibleName,
+                variant = book.variant?.name?.lowercase() ?: "manga",
+                downloadedAt = System.currentTimeMillis(),
+                byteCount = bytes,
+                pageCount = pagePaths.size,
             ),
         )
     }

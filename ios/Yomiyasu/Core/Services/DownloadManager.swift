@@ -194,7 +194,11 @@ final class DownloadManager {
             case .novela:
                 try await downloadNovel(book: book)
             default:
-                try await downloadManga(book: book)
+                if book.isImageFolder {
+                    try await downloadImageFolder(book: book)
+                } else {
+                    try await downloadManga(book: book)
+                }
             }
         } catch is CancellationError {
             logger.info("Descarga cancelada: \(book.visibleName, privacy: .public)")
@@ -264,6 +268,69 @@ final class DownloadManager {
                 downloadedAt: .now,
                 byteCount: bytes,
                 pageCount: parsed.pages.count
+            )
+        )
+    }
+
+    /// Tomo sin mokuro: no hay html que parsear, el manifiesto de páginas
+    /// viene en el detalle del libro (los listados no lo incluyen).
+    private func downloadImageFolder(book: Book) async throws {
+        guard let seriePath = book.seriePath else {
+            throw APIError.unexpectedResponse
+        }
+
+        let detail: Book = try await api.send(.get("api/books/book/\(book.id)"))
+        let pagePaths = detail.pagePaths ?? []
+
+        guard !pagePaths.isEmpty else {
+            throw APIError.unexpectedResponse
+        }
+
+        let directory = bookDirectory(book.id)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        var bytes: Int64 = 0
+
+        for (index, fileName) in pagePaths.enumerated() {
+            try Task.checkCancellation()
+
+            let data = try await api.sendData(
+                .get("api/static/mangas/\(seriePath)/\(fileName)")
+            )
+
+            // Misma estructura que en las descargas de mokuro: la imagen se
+            // guarda bajo la carpeta del tomo, que es lo que espera el lector
+            let destination = localImagesDirectory(for: book.id)
+                .appendingPathComponent(
+                    ImageFolderPages.joinedPath(
+                        imagesFolder: detail.imagesFolder,
+                        fileName: fileName
+                    )
+                )
+            try FileManager.default.createDirectory(
+                at: destination.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try data.write(to: destination)
+
+            bytes += Int64(data.count)
+
+            let progress = Double(index + 1) / Double(max(pagePaths.count, 1))
+            let size = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+            states[book.id] = .downloading(
+                progress: progress,
+                detail: "\(index + 1)/\(pagePaths.count) pág. · \(size)"
+            )
+        }
+
+        finish(
+            DownloadRecord(
+                bookId: book.id,
+                visibleName: book.visibleName,
+                variant: book.variant?.rawValue ?? "manga",
+                downloadedAt: .now,
+                byteCount: bytes,
+                pageCount: pagePaths.count
             )
         )
     }

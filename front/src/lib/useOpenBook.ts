@@ -29,7 +29,8 @@ export function useOpenBook(): (book: BookWithProgress, options?: OpenBookOption
     const {mouse = false, incognito = false, confirmReread = true} = options;
 
     if (book.variant === "manga" || book.mokured) {
-      if (siteSettings.openHTML) {
+      // Los tomos de imágenes no tienen html que abrir directamente
+      if (siteSettings.openHTML && book.format !== "images") {
         const htmlUrl = mokuroHtmlUrl(book);
 
         // El HTML estático necesita el fondo oscuro persistido en mokuro

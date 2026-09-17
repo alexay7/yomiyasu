@@ -1,6 +1,7 @@
 package es.manabe.yomiyasu.features.settings
 
 import android.content.Context
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Dns
@@ -23,6 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -136,12 +139,19 @@ fun SettingsRoute(
     isSocketConnected: Boolean,
     onOpenAccount: () -> Unit,
     onLogout: () -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.data.collectAsStateWithLifecycle()
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val backAction: (() -> Unit)? = onBack ?: backDispatcher?.let { dispatcher ->
+        { dispatcher.onBackPressed() }
+    }
+
     SettingsScreen(
         settings = settings,
+        onBack = backAction,
         currentServerUrl = viewModel.serverUrl,
         isSocketConnected = isSocketConnected,
         onAppearanceChange = viewModel::setAppearance,
@@ -162,6 +172,7 @@ fun SettingsRoute(
 @Composable
 private fun SettingsScreen(
     settings: AppSettingsData,
+    onBack: (() -> Unit)?,
     currentServerUrl: String,
     isSocketConnected: Boolean,
     onAppearanceChange: (ThemeMode) -> Unit,
@@ -182,7 +193,21 @@ private fun SettingsScreen(
     var serverError by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Ajustes") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Ajustes") },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                            )
+                        }
+                    }
+                },
+            )
+        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier

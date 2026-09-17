@@ -69,7 +69,7 @@ struct ReadlistView: View {
             LazyVGrid(columns: columns, spacing: 14) {
                 ForEach(series) { serie in
                     NavigationLink(value: SerieRoute(id: serie.id)) {
-                        SerieCard(serie: serie)
+                        SerieCard(serie: serie, width: nil)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)

@@ -143,6 +143,59 @@ final class DownloadManagerTests: XCTestCase {
         XCTAssertEqual(manager.totalBytes, record.byteCount)
     }
 
+    private func makeImageFolderBook() throws -> Book {
+        let json = """
+        {
+          "_id": "i1",
+          "path": "Vol 1",
+          "serie": "s3",
+          "seriePath": "Serie",
+          "pages": 2,
+          "visibleName": "Vol 1",
+          "thumbnailPath": "001.jpg",
+          "variant": "manga",
+          "format": "images"
+        }
+        """
+
+        return try decoder.decode(Book.self, from: Data(json.utf8))
+    }
+
+    func testImageFolderDownloadWritesOnlyImages() async throws {
+        URLProtocolStub.handler = { request in
+            let path = request.url?.path ?? ""
+
+            if path == "/api/books/book/i1" {
+                return URLProtocolStub.respond(to: request, status: 200, json: """
+                {"_id":"i1","path":"Vol 1","serie":"s3","seriePath":"Serie","pages":2,
+                 "visibleName":"Vol 1","thumbnailPath":"001.jpg","variant":"manga",
+                 "imagesFolder":"Vol 1","format":"images","pagePaths":["001.jpg","002.jpg"]}
+                """)
+            }
+
+            if path.hasSuffix(".jpg") {
+                return URLProtocolStub.respond(to: request, status: 200, json: "image-bytes")
+            }
+
+            return URLProtocolStub.respond(to: request, status: 404, json: "{}")
+        }
+
+        let manager = DownloadManager(api: makeAPI(), rootURL: rootURL)
+        let book = try makeImageFolderBook()
+
+        manager.enqueue(book)
+        await waitForDownload(manager, bookId: book.id)
+
+        let fileManager = FileManager.default
+        let imagesDirectory = manager.localImagesDirectory(for: book.id)
+
+        XCTAssertTrue(fileManager.fileExists(atPath: imagesDirectory.appendingPathComponent("Vol 1/001.jpg").path))
+        XCTAssertTrue(fileManager.fileExists(atPath: imagesDirectory.appendingPathComponent("Vol 1/002.jpg").path))
+        XCTAssertFalse(fileManager.fileExists(atPath: manager.localHTMLURL(for: book.id).path))
+        XCTAssertEqual(manager.records[book.id]?.pageCount, 2)
+        XCTAssertGreaterThan(manager.records[book.id]?.byteCount ?? 0, 0)
+    }
+
     func testNovelDownloadWritesEpub() async throws {
         URLProtocolStub.handler = { request in
             URLProtocolStub.respond(to: request, status: 200, json: "epub-bytes")

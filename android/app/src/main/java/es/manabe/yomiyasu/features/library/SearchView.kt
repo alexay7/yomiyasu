@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -234,6 +236,7 @@ fun SearchView(
                             title = book.visibleName,
                             subtitle = (book.variant ?: Variant.Manga).title,
                             imageUrl = staticUrls.bookCover(book)?.toString(),
+                            isImageFolder = book.isImageFolder,
                             onClick = { onOpenBook(book.id) },
                         )
                     }
@@ -259,6 +262,7 @@ private fun ResultRow(
     subtitle: String,
     imageUrl: String?,
     onClick: () -> Unit,
+    isImageFolder: Boolean = false,
 ) {
     Row(
         modifier = Modifier
@@ -278,12 +282,25 @@ private fun ResultRow(
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(
-                text = title,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (isImageFolder) {
+                    Icon(
+                        imageVector = Icons.Filled.PhotoLibrary,
+                        contentDescription = "Manga de imágenes",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+                Text(
+                    text = title,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,

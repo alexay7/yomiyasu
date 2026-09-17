@@ -100,6 +100,30 @@ class ModelDecodingTest {
     }
 
     @Test
+    fun `book decodes image folder format and page paths`() {
+        val book = json.decodeFromString(
+            Book.serializer(),
+            """{"_id":"b2","visibleName":"Tomo imágenes","format":"images",
+               "pagePaths":["001.jpg","002.jpg","010.jpg"],"variant":"manga"}""",
+        )
+
+        assertTrue(book.isImageFolder)
+        assertEquals(listOf("001.jpg", "002.jpg", "010.jpg"), book.pagePaths)
+    }
+
+    @Test
+    fun `book without format is treated as mokuro`() {
+        val book = json.decodeFromString(
+            Book.serializer(),
+            """{"_id":"b3","visibleName":"Tomo","variant":"manga"}""",
+        )
+
+        assertFalse(book.isImageFolder)
+        assertNull(book.format)
+        assertNull(book.pagePaths)
+    }
+
+    @Test
     fun `unknown fields are ignored`() {
         val book = json.decodeFromString(
             Book.serializer(),

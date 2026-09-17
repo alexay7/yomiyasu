@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct ReaderSettingsView: View {
+    /// Los tomos sin mokuro no tienen texto OCR ni diccionario por toque.
+    var showsOCR = true
+
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.dismiss) private var dismiss
 
@@ -26,42 +29,44 @@ struct ReaderSettingsView: View {
                     Toggle("Pan y zoom", isOn: $reader.panAndZoom)
                 }
 
-                Section {
-                    Toggle("Mostrar texto OCR", isOn: $reader.displayOCR)
-                    Toggle("Bordes de las cajas", isOn: $reader.textBoxBorders)
-                    Toggle("Mantener texto al tocar", isOn: $reader.toggleOCRTextBoxes)
+                if showsOCR {
+                    Section {
+                        Toggle("Mostrar texto OCR", isOn: $reader.displayOCR)
+                        Toggle("Bordes de las cajas", isOn: $reader.textBoxBorders)
+                        Toggle("Mantener texto al tocar", isOn: $reader.toggleOCRTextBoxes)
 
-                    Picker("Fuente", selection: $reader.font) {
-                        ForEach(ReaderFont.allCases) { font in
-                            Text(font.title).tag(font)
+                        Picker("Fuente", selection: $reader.font) {
+                            ForEach(ReaderFont.allCases) { font in
+                                Text(font.title).tag(font)
+                            }
                         }
+
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Text("Tamaño de fuente")
+                                Spacer()
+                                Text(reader.fontSize > 0 ? "\(Int(reader.fontSize)) pt" : "Auto")
+                                    .foregroundStyle(.secondary)
+                            }
+                            Slider(value: $reader.fontSize, in: 0...60, step: 1)
+                        }
+                    } header: {
+                        Text("Texto OCR")
+                    } footer: {
+                        Text("El tamaño «Auto» usa el de cada caja de texto.")
                     }
 
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text("Tamaño de fuente")
-                            Spacer()
-                            Text(reader.fontSize > 0 ? "\(Int(reader.fontSize)) pt" : "Auto")
-                                .foregroundStyle(.secondary)
-                        }
-                        Slider(value: $reader.fontSize, in: 0...60, step: 1)
-                    }
-                } header: {
-                    Text("Texto OCR")
-                } footer: {
-                    Text("El tamaño «Auto» usa el de cada caja de texto.")
-                }
+                    Section("Diccionario") {
+                        Toggle("Diccionario nativo", isOn: $reader.nativeDictionary)
 
-                Section("Diccionario") {
-                    Toggle("Diccionario nativo", isOn: $reader.nativeDictionary)
-
-                    Picker("Búsqueda", selection: $reader.dictionaryVersion) {
-                        ForEach(DictionaryLookupMode.allCases) { mode in
-                            Text(mode.title).tag(mode)
+                        Picker("Búsqueda", selection: $reader.dictionaryVersion) {
+                            ForEach(DictionaryLookupMode.allCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
                         }
+                        .pickerStyle(.segmented)
+                        .disabled(!reader.nativeDictionary)
                     }
-                    .pickerStyle(.segmented)
-                    .disabled(!reader.nativeDictionary)
                 }
 
                 Section {

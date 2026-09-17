@@ -98,6 +98,10 @@ export class BooksController {
         
         if (!foundBook) throw new NotFoundException();
 
+        if (foundBook.format === "images") {
+            throw new BadRequestException("Este tomo no tiene html de mokuro");
+        }
+
         const mainFolderPath = join(process.cwd(), "..", "exterior");
 
         if (foundBook.mokured || foundBook.variant === "manga") {
@@ -168,7 +172,17 @@ export class BooksController {
     @UseInterceptors(CacheInterceptor)
     @ApiOkResponse({status:HttpStatus.OK})
     async getBook(@Param("id") book:Types.ObjectId) {
-        return this.booksService.findById(book);
+        const foundBook = await this.booksService.findById(book);
+
+        if (!foundBook) throw new NotFoundException();
+
+        if (foundBook.format === "images") {
+            const pagePaths = await this.booksService.getPagePaths(foundBook);
+
+            return {...foundBook.toObject(), pagePaths};
+        }
+
+        return foundBook;
     }
     
     @Get(":id/defaultname")
@@ -242,6 +256,22 @@ export class BooksController {
         if (!foundBook.imagesFolder) throw new BadRequestException();
 
         const imagesFolderPath = resolveInside(exteriorRoot, "mangas", foundBook.seriePath, foundBook.imagesFolder);
+
+        // Tomo sin mokuro: solo hay imágenes que descargar
+        if (foundBook.format === "images") {
+            if (!fs.existsSync(imagesFolderPath)) throw new NotFoundException();
+
+            await streamZipToResponse(
+                res,
+                [
+                    {kind: "directory", path: imagesFolderPath, name: foundBook.imagesFolder}
+                ],
+                `${foundBook.sortName}.zip`
+            );
+
+            return;
+        }
+
         const htmlPath = resolveInside(exteriorRoot, "mangas", foundBook.seriePath, `${foundBook.path}.html`);
 
         if (!fs.existsSync(imagesFolderPath) || !fs.existsSync(htmlPath)) throw new NotFoundException();

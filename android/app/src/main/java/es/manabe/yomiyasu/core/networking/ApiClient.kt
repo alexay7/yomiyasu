@@ -69,11 +69,13 @@ class ApiClient(
         endpoint: Endpoint,
         authorized: Boolean,
         allowRefresh: Boolean,
-    ): ByteArray {
+    ): ByteArray = withContext(ioDispatcher) {
+        // La lectura del cuerpo también hace red: tiene que ir en el dispatcher
+        // de IO o StrictMode lanza NetworkOnMainThreadException en debug
         val response = execute(endpoint, authorized)
 
         if (response.isSuccessful) {
-            return response.use { it.body?.bytes() ?: ByteArray(0) }
+            return@withContext response.use { it.body?.bytes() ?: ByteArray(0) }
         }
 
         val bodyText = response.use { it.body?.string() }
@@ -84,7 +86,7 @@ class ApiClient(
         if (response.code == 401 && authorized && allowRefresh) {
             val provider = authProvider ?: throw ApiException.Http(response.code, envelope)
             provider.refreshTokens()
-            return request(endpoint, authorized = true, allowRefresh = false)
+            return@withContext request(endpoint, authorized = true, allowRefresh = false)
         }
 
         throw ApiException.Http(response.code, envelope)
@@ -117,12 +119,10 @@ class ApiClient(
 
         val request = requestBuilder.build()
 
-        return withContext(ioDispatcher) {
-            try {
-                client.newCall(request).execute()
-            } catch (error: Exception) {
-                throw ApiException.Transport(error)
-            }
+        return try {
+            client.newCall(request).execute()
+        } catch (error: Exception) {
+            throw ApiException.Transport(error)
         }
     }
 }

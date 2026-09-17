@@ -4,16 +4,17 @@ struct SerieCard: View {
     @Environment(AppEnvironment.self) private var environment
 
     let serie: Serie
-    var width: CGFloat = 120
+    /// Ancho fijo de la tarjeta. En las cuadrículas se pasa `nil` para que
+    /// ocupe la celda entera (con un ancho fijo la portada desbordaba su
+    /// columna y se pegaba a las vecinas). Los carruseles usan ancho fijo.
+    var width: CGFloat? = 120
 
     @State private var actionError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topTrailing) {
-                RemoteImage(url: StaticURLs.serieCover(serie, baseURL: environment.api.baseURL))
-                    .frame(width: width, height: width * 1.45)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                cover
 
                 if serie.unreadCount > 0 {
                     Text("\(serie.unreadCount)")
@@ -28,11 +29,12 @@ struct SerieCard: View {
                 }
             }
 
-            Text(serie.visibleName)
-                .font(.caption)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-                .frame(width: width, alignment: .leading)
+            sized(
+                Text(serie.visibleName)
+                    .font(.caption)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            )
 
             HStack(spacing: 6) {
                 DifficultyFlame(difficulty: serie.difficulty ?? 0)
@@ -68,6 +70,33 @@ struct SerieCard: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("serieCard-\(serie.id)")
+    }
+
+    // MARK: - Portada
+
+    @ViewBuilder
+    private var cover: some View {
+        if let width {
+            RemoteImage(url: StaticURLs.serieCover(serie, baseURL: environment.api.baseURL))
+                .frame(width: width, height: width * 1.45)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        } else {
+            RemoteImage(url: StaticURLs.serieCover(serie, baseURL: environment.api.baseURL))
+                .aspectRatio(1 / 1.45, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+    }
+
+    /// Aplica el ancho de la tarjeta al contenido: fijo si se indicó uno,
+    /// o el ancho completo de la celda en las cuadrículas.
+    @ViewBuilder
+    private func sized<V: View>(_ view: V) -> some View {
+        if let width {
+            view.frame(width: width, alignment: .leading)
+        } else {
+            view.frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     // MARK: - Menú contextual

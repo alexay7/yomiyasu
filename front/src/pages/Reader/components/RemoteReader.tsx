@@ -165,10 +165,11 @@ export default function RemoteReader({readerVars:{bookData, currentPage, bookPro
         />
         <ReadingTimerIndicator enabled={siteSettings.showCrono}/>
         <MobilePageArrows
-            iframe={iframe}
             currentPage={currentPage}
             pages={bookData.pages}
             visible={!showToolBar && isTabletOrMobile}
+            onPrev={()=>iframe.current?.contentWindow?.postMessage({action:"goLeft"})}
+            onNext={()=>iframe.current?.contentWindow?.postMessage({action:"goRight"})}
         />
         {showToolBar && (
             <ReaderBottomBar

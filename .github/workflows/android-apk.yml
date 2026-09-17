@@ -62,7 +62,7 @@ jobs:
             :app:assembleDebug \
             :app:assembleRelease \
             -Pyomiyasu.versionCode="${GITHUB_RUN_NUMBER}" \
-            -Pyomiyasu.versionName="0.1.0-${GITHUB_RUN_NUMBER}"
+            -Pyomiyasu.versionName="0.1.1-${GITHUB_RUN_NUMBER}"
 
       - name: Preparar APKs
         working-directory: android

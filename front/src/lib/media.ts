@@ -31,6 +31,14 @@ export function mokuroHtmlUrl(book: Pick<Book, "variant" | "seriePath" | "path">
   return `/api/static/${book.variant}s/${encodeURI(book.seriePath)}/${encodeURI(book.path)}.html`;
 }
 
+/** URL de una página de un tomo sin mokuro. */
+export function bookPageUrl(
+  book: Pick<Book, "variant" | "seriePath" | "imagesFolder">,
+  pagePath: string
+): string {
+  return `/api/static/${book.variant}s/${encodeURI(book.seriePath)}/${encodeURI(book.imagesFolder)}/${encodeURI(pagePath)}`;
+}
+
 /** URL de descarga directa del EPUB. */
 export function bookDownloadUrl(book: Pick<BookWithProgress, "_id">): string {
   return `/api/books/${book._id}/download`;

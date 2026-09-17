@@ -4,13 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -41,10 +44,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -167,6 +172,35 @@ fun MangaReaderView(
     val currentPageNumber: Int = spreads.getOrNull(pagerState.currentPage)?.firstPage?.plus(1) ?: 1
     val totalPages = mokuro?.pages?.size ?: 0
 
+    // Página (0-based) de referencia para conservar la posición de lectura al
+    // cambiar «doble página» o «portada»: sin esto el pager mantiene el índice
+    // del spread y salta a otra página.
+    val anchorPage = remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(loadState.book?.id, loadState.startPage) {
+        anchorPage.intValue = loadState.startPage
+    }
+
+    LaunchedEffect(spreads) {
+        if (spreads.isEmpty()) return@LaunchedEffect
+
+        val target = SpreadLayout.spreadIndex(
+            page = anchorPage.intValue,
+            doublePage = settings.doublePage,
+            hasCover = settings.hasCover,
+        ).coerceIn(0, spreads.size - 1)
+
+        if (pagerState.currentPage != target) {
+            pagerState.scrollToPage(target)
+        }
+    }
+
+    LaunchedEffect(pagerState, spreads) {
+        snapshotFlow { pagerState.currentPage }.collect { index ->
+            spreads.getOrNull(index)?.firstPage?.let { anchorPage.intValue = it }
+        }
+    }
+
     LaunchedEffect(spreads.size) {
         if (spreads.isEmpty()) return@LaunchedEffect
 
@@ -230,6 +264,7 @@ fun MangaReaderView(
                     spreads = spreads,
                     pagerState = pagerState,
                     selectedBoxId = selectedBoxId,
+                    isImageFolder = book!!.isImageFolder,
                     imageModel = { imagePath -> viewModel.imageModel(book!!, imagePath) },
                     onBoxTap = { box, hit ->
                         if (selectedBoxId == box.id && settings.nativeDictionary) {
@@ -271,6 +306,7 @@ fun MangaReaderView(
                             isDownloaded = downloadRecords.containsKey(currentBookId),
                             downloadState = downloadStates[currentBookId] ?: DownloadState.NotDownloaded,
                             isOnline = isOnline,
+                            showTextButton = !book!!.isImageFolder,
                             onBack = {
                                 book?.let { viewModel.saveProgress(it, currentPageNumber, timerSeconds) }
                                 onBack()
@@ -333,7 +369,7 @@ fun MangaReaderView(
 
     if (showingSettings) {
         ModalBottomSheet(onDismissRequest = { showingSettings = false }) {
-            ReaderSettingsSheet()
+            ReaderSettingsSheet(showOCR = book?.isImageFolder != true)
         }
     }
 
@@ -384,6 +420,7 @@ private fun ReaderPager(
     spreads: List<ReaderSpread>,
     pagerState: PagerState,
     selectedBoxId: Int,
+    isImageFolder: Boolean,
     imageModel: (String) -> Any,
     onBoxTap: (MokuroTextBox, MokuroTextHit) -> Unit,
     onToggleBars: () -> Unit,
@@ -392,6 +429,10 @@ private fun ReaderPager(
     var zoom by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
+
+    // Proporción aprendida de cada imagen de un tomo sin mokuro (no tiene
+    // dimensiones en los datos): permite maquetar el spread como un bloque
+    val imageAspects = remember { mutableStateMapOf<Int, Float>() }
 
     val keepZoom = settings.defaultZoomMode == ZoomMode.Keep
 
@@ -444,40 +485,84 @@ private fun ReaderPager(
             CompositionLocalProvider(
                 LocalLayoutDirection provides if (settings.r2l) LayoutDirection.Rtl else LayoutDirection.Ltr,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    spread.pages.forEach { pageNumber ->
-                        val page = mokuro.pages.getOrNull(pageNumber) ?: return@forEach
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val fitMode = settings.defaultZoomMode.takeIf { it != ZoomMode.Keep }
+                        ?: ZoomMode.FitScreen
+                    val handlePageTap: (Offset) -> Unit = { position ->
+                        if (zoom <= 1.001f && containerSize.width > 0) {
+                            val third = containerSize.width / 3f
+                            when {
+                                position.x < third -> onNavigate(!settings.r2l)
+                                position.x > 2 * third -> onNavigate(settings.r2l)
+                                else -> onToggleBars()
+                            }
+                        }
+                    }
 
-                        MokuroPageView(
-                            page = page,
-                            imageModel = imageModel(page.imagePath),
-                            fitMode = settings.defaultZoomMode.takeIf { it != ZoomMode.Keep }
-                                ?: ZoomMode.FitScreen,
-                            fontSizeOverride = settings.fontSize.toFloat(),
-                            displayOCR = settings.displayOCR,
-                            textBoxBorders = settings.textBoxBorders,
-                            selectedBoxId = selectedBoxId.takeIf { it >= 0 },
-                            font = settings.font,
-                            boxTapsEnabled = settings.toggleOCRTextBoxes,
-                            onBoxTap = { box, hit, _ -> onBoxTap(box, hit) },
-                            onPageTap = { position ->
-                                if (zoom <= 1.001f && containerSize.width > 0) {
-                                    val third = containerSize.width / 3f
-                                    when {
-                                        position.x < third -> onNavigate(!settings.r2l)
-                                        position.x > 2 * third -> onNavigate(settings.r2l)
-                                        else -> onToggleBars()
-                                    }
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxSize(),
-                        )
+                    // En "ajustar a pantalla" (y "mantener zoom") las páginas
+                    // del spread se escalan como un bloque para que queden
+                    // juntas y centradas, como en el lector de iOS. En el resto
+                    // de modos cada página ocupa su mitad con scroll propio.
+                    val aspects = spread.pages.map { pageNumber ->
+                        val page = mokuro.pages.getOrNull(pageNumber)
+                        when {
+                            page == null -> null
+                            page.size.width > 0f && page.size.height > 0f ->
+                                page.size.width / page.size.height
+                            else -> imageAspects[pageNumber]
+                        }
+                    }
+                    val groupLayout = settings.defaultZoomMode == ZoomMode.FitScreen ||
+                        settings.defaultZoomMode == ZoomMode.Keep
+                    val totalAspect = aspects
+                        .takeIf { groupLayout && it.all { aspect -> aspect != null && aspect > 0f } }
+                        ?.filterNotNull()
+                        ?.sum()
+                    val pageHeight = totalAspect?.let { minOf(maxHeight, maxWidth / it) }
+
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        spread.pages.forEachIndexed { index, pageNumber ->
+                            val page = mokuro.pages.getOrNull(pageNumber) ?: return@forEachIndexed
+                            val aspect = aspects.getOrNull(index)
+
+                            val pageModifier = if (pageHeight != null && aspect != null) {
+                                Modifier
+                                    .height(pageHeight)
+                                    .width(pageHeight * aspect)
+                            } else {
+                                Modifier.weight(1f).fillMaxSize()
+                            }
+
+                            if (isImageFolder) {
+                                ImagePageView(
+                                    page = page,
+                                    imageModel = imageModel(page.imagePath),
+                                    fitMode = fitMode,
+                                    onPageTap = handlePageTap,
+                                    onIntrinsicSize = { learned -> imageAspects[pageNumber] = learned },
+                                    modifier = pageModifier,
+                                )
+                            } else {
+                                MokuroPageView(
+                                    page = page,
+                                    imageModel = imageModel(page.imagePath),
+                                    fitMode = fitMode,
+                                    fontSizeOverride = settings.fontSize.toFloat(),
+                                    displayOCR = settings.displayOCR,
+                                    textBoxBorders = settings.textBoxBorders,
+                                    selectedBoxId = selectedBoxId.takeIf { it >= 0 },
+                                    font = settings.font,
+                                    boxTapsEnabled = settings.toggleOCRTextBoxes,
+                                    onBoxTap = { box, hit, _ -> onBoxTap(box, hit) },
+                                    onPageTap = handlePageTap,
+                                    modifier = pageModifier,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -491,6 +576,7 @@ private fun ReaderTopBar(
     isDownloaded: Boolean,
     downloadState: DownloadState,
     isOnline: Boolean,
+    showTextButton: Boolean,
     onBack: () -> Unit,
     onDownload: () -> Unit,
     onOpenText: () -> Unit,
@@ -541,8 +627,10 @@ private fun ReaderTopBar(
                 }
             }
 
-            IconButton(onClick = onOpenText) {
-                Icon(Icons.Filled.TextFields, contentDescription = "Texto", tint = Color.White)
+            if (showTextButton) {
+                IconButton(onClick = onOpenText) {
+                    Icon(Icons.Filled.TextFields, contentDescription = "Texto", tint = Color.White)
+                }
             }
 
             IconButton(onClick = onOpenSettings) {

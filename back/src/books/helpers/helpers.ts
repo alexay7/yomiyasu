@@ -3,32 +3,34 @@ import {dirname, join} from "path";
 import {load} from "cheerio";
 import EPub from "epub2";
 
-async function extractFirstFileNameFromFolder(folderPath: string): Promise<string | null> {
+const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".avif"];
+
+function isImageFile(fileName: string): boolean {
+    const lower = fileName.toLowerCase();
+    return IMAGE_EXTENSIONS.some((extension) => lower.endsWith(extension));
+}
+
+/**
+ * Imágenes de una carpeta (extensiones soportadas) ordenadas de forma natural
+ * ("2.jpg" antes que "10.jpg"), que es el orden de lectura de un tomo.
+ */
+export async function listImageFiles(folderPath: string): Promise<string[]> {
     try {
         const files = await fs.readdir(folderPath);
 
-        if (files.length > 0) {
-            // Find the first file that is a .jpg, .png or .jpeg
-            const firstFileName = files.find((file) => {
-                return file.endsWith(".jpg") || file.endsWith(".png") || file.endsWith(".jpeg");
-            });
-
-            if (!firstFileName) return null;
-
-            if (!firstFileName.endsWith(".jpg") && !firstFileName.endsWith(".png") && !firstFileName.endsWith(".jpeg")) return null;
-            return firstFileName;
-        }
-
-        return null; // Return null if no files found
+        return files
+            .filter(isImageFile)
+            .sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: "base"}));
     } catch {
         console.error("Directory " + folderPath + " does not exist");
-        return null;
+        return [];
     }
 }
 
-async function countFilesInFolder(folderPath: string): Promise<number> {
-    const files = await fs.readdir(folderPath);
-    return files.length;
+async function extractFirstFileNameFromFolder(folderPath: string): Promise<string | null> {
+    const images = await listImageFiles(folderPath);
+
+    return images[0] ?? null;
 }
 
 export async function getNovelCharacterCount(book:EPub): Promise<number> {
@@ -148,8 +150,8 @@ export async function extractUrlFromHtml(
         const imagesPath = join(dirname(bookPath), imagesName);
         const firstImage = await extractFirstFileNameFromFolder(imagesPath);
         if (!firstImage) return null;
-        
-        const totalImages = await countFilesInFolder(imagesPath);
+
+        const totalImages = (await listImageFiles(imagesPath)).length;
 
         if (!totalImages) return null;
 

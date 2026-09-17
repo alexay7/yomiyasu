@@ -78,10 +78,11 @@ export default function LocalReader({readerVars:{currentPage,
         />
         <ReadingTimerIndicator enabled={siteSettings.showCrono}/>
         <MobilePageArrows
-            iframe={iframe}
             currentPage={currentPage}
             pages={pages}
             visible={!showToolBar && isTabletOrMobile}
+            onPrev={()=>iframe.current?.contentWindow?.postMessage({action:"goLeft"})}
+            onNext={()=>iframe.current?.contentWindow?.postMessage({action:"goRight"})}
         />
         {showToolBar && (
             <ReaderBottomBar

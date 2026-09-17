@@ -1,6 +1,7 @@
 package es.manabe.yomiyasu.features.downloads
 
 import android.text.format.Formatter
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlaylistAdd
@@ -172,8 +174,14 @@ class DownloadsViewModel @Inject constructor(
 @Composable
 fun DownloadsRoute(
     onOpenBook: (String) -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: DownloadsViewModel = hiltViewModel(),
 ) {
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val backAction: (() -> Unit)? = onBack ?: backDispatcher?.let { dispatcher ->
+        { dispatcher.onBackPressed() }
+    }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val seriesDialogVisible by viewModel.seriesDialogVisible.collectAsStateWithLifecycle()
     val seriesBusy by viewModel.seriesBusy.collectAsStateWithLifecycle()
@@ -191,6 +199,16 @@ fun DownloadsRoute(
         topBar = {
             TopAppBar(
                 title = { Text("Descargas") },
+                navigationIcon = {
+                    if (backAction != null) {
+                        IconButton(onClick = backAction) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                            )
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = viewModel::openSeriesDialog) {
                         Icon(

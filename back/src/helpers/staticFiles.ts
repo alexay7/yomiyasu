@@ -3,7 +3,7 @@ import {join} from "path";
 import {Response} from "express";
 
 const THUMBNAILS_PREFIX = "/thumbnails/";
-const ORIGINAL_EXTENSIONS = [".jpg", ".jpeg", ".png"];
+const ORIGINAL_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".avif"];
 
 /**
  * Portada original asociada a una miniatura, o null si la ruta no es una

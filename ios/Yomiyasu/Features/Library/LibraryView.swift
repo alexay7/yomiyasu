@@ -223,7 +223,7 @@ struct LibraryView: View {
             LazyVGrid(columns: columns, spacing: 14) {
                 ForEach(model.series) { serie in
                     NavigationLink(value: SerieRoute(id: serie.id)) {
-                        SerieCard(serie: serie)
+                        SerieCard(serie: serie, width: nil)
                     }
                     .buttonStyle(.plain)
                     .onAppear {

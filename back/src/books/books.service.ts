@@ -4,6 +4,7 @@ import {Book, BookDocument} from "./schemas/book.schema";
 import {Model, Types} from "mongoose";
 import {SearchQuery, UpdateBook, UserBook} from "./interfaces/query";
 import {resolveInside, ZIP_COMPRESSION_LEVEL} from "./helpers/zipDownload";
+import {listImageFiles} from "./helpers/helpers";
 import * as archiver from "archiver";
 import * as fs from "fs-extra";
 import * as path from "path";
@@ -185,12 +186,42 @@ export class BooksService {
     }
   }
 
-  async findById(id: Types.ObjectId): Promise<Book | null> {
+  async findById(id: Types.ObjectId): Promise<BookDocument | null> {
       return this.bookModel.findById(id);
+  }
+
+  /**
+   * Rutas de las imágenes de un tomo sin mokuro, en orden de lectura. Los
+   * tomos con html no la necesitan: el propio html es el manifiesto.
+   */
+  async getPagePaths(book: Book): Promise<string[]> {
+      if (book.format !== "images" || !book.seriePath || !book.imagesFolder) return [];
+
+      const folderPath = path.join(process.cwd(), "..", "exterior", "mangas", book.seriePath, book.imagesFolder);
+
+      return listImageFiles(folderPath);
   }
 
   async editBook(id:Types.ObjectId, updateBook:UpdateBook) {
       return this.bookModel.findByIdAndUpdate(id, updateBook, {new:true});
+  }
+
+  /**
+   * Convierte un tomo de imágenes en tomo de mokuro al aparecer su html.
+   * Conserva el nombre visible y la ordenación que tuviera el tomo.
+   */
+  async convertToMokuro(id:Types.ObjectId, fields: {
+      imagesFolder: string;
+      thumbnailPath: string;
+      pages: number;
+      characters: number;
+      pageChars: number[];
+  }): Promise<BookDocument | null> {
+      return this.bookModel.findByIdAndUpdate(
+          id,
+          {...fields, format: "mokuro", lastModifiedDate: new Date()},
+          {new: true}
+      );
   }
 
   async getSerieBooks(serie:Types.ObjectId) {
@@ -285,6 +316,7 @@ export class BooksService {
       thumbnailPath: string;
       variant:"manga" | "novela";
       pageChars?:number[];
+      format?:"mokuro" | "images";
   }): Promise<Book | null> {
       const found = await this.bookModel.findOne({path: newBook.path, variant:newBook.variant});
 

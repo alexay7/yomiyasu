@@ -31,6 +31,17 @@ struct BookCard: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                 }
 
+                if book.isImageFolder {
+                    Image(systemName: "photo.stack.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(3)
+                        .background(Circle().fill(.white.opacity(0.92)))
+                        .padding(4)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                        .accessibilityLabel("Manga de imágenes")
+                }
+
                 if isDownloaded {
                     Image(systemName: "arrow.down.circle.fill")
                         .font(.caption)

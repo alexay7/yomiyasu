@@ -14,6 +14,7 @@ import {getCookie} from "../../helpers/cookies";
 import {useSettingsStore} from "../../stores/SettingsStore";
 import RemoteReader from "./components/RemoteReader";
 import LocalReader from "./components/LocalReader";
+import ImageReader from "./components/ImageReader";
 import {toast} from "react-toastify";
 import {useFullscreen} from "../../helpers/useFullscreen";
 import {ShortcutItem, ShortcutsDialog} from "./components/ShortcutsDialog";
@@ -33,6 +34,11 @@ const mangaShortcuts:ShortcutItem[] = [
     {keys:["f"], description:"Pantalla completa"},
     {keys:["?"], description:"Mostrar esta ayuda"},
 ];
+
+// Los tomos de imágenes no tienen panel de texto ni OCR
+const imageShortcuts:ShortcutItem[] = mangaShortcuts.filter(
+    (shortcut) => !shortcut.keys.includes("p")
+);
 
 type ReaderProps = {
     type:"local",
@@ -79,6 +85,9 @@ function Reader(props:ReaderProps):React.ReactElement {
     });
 
     useTitle(bookData ? bookData.visibleName : "Lector");
+
+    // Tomo sin mokuro: lector de imágenes en lugar del iframe
+    const isImageBook = bookData?.format === "images";
 
     const {data:bookProgress, isLoading} = useQuery({
         queryKey:keys.bookProgress(id),
@@ -197,9 +206,10 @@ function Reader(props:ReaderProps):React.ReactElement {
     useEffect(()=>{
         /**
          * Cuando se tengan los datos del libro del backend, se analiza el localstorage para ver
-         * la configuración anterior del volumen
+         * la configuración anterior del volumen. Los tomos de imágenes no tienen
+         * estado de mokuro que restaurar.
          */
-        if (bookData) {
+        if (bookData && bookData.format !== "images") {
             const stored = readMokuroSettings(bookData);
             setDoublePages(!stored.singlePageView);
             setCurrentPage(Math.max(1, (stored.page_idx ?? 0) + 1));
@@ -219,6 +229,9 @@ function Reader(props:ReaderProps):React.ReactElement {
         }
 
         function handleKeyDown(e:KeyboardEvent):void {
+            // El lector de imágenes gestiona sus propios atajos
+            if (isImageBook) return;
+
             const target = e.target as HTMLElement | null;
 
             if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
@@ -404,15 +417,17 @@ function Reader(props:ReaderProps):React.ReactElement {
         // Recibe mensajes del iframe
         addEventListener("message", handleNewMessage);
 
-        // Detectar clicks en pc
-        if (readerSettings.dictionaryVersion === "word") {
-            addEventListener("click", handleMouseUp);
-        } else {
-            addEventListener("mouseup", handleMouseUp);
-        }
+        // Detectar clicks en pc (solo el lector de mokuro tiene texto seleccionable)
+        if (!isImageBook) {
+            if (readerSettings.dictionaryVersion === "word") {
+                addEventListener("click", handleMouseUp);
+            } else {
+                addEventListener("mouseup", handleMouseUp);
+            }
 
-        // Detectar clicks en móviles
-        addEventListener("touchend", handleTouchUp);
+            // Detectar clicks en móviles
+            addEventListener("touchend", handleTouchUp);
+        }
 
         // Sirve para calcular la altura en dispositivos móviles
         addEventListener("resize", handleResize);
@@ -422,16 +437,18 @@ function Reader(props:ReaderProps):React.ReactElement {
 
         return ()=>{
             removeEventListener("message", handleNewMessage);
-            if (readerSettings.dictionaryVersion === "word") {
-                removeEventListener("click", handleMouseUp);
-            } else {
-                removeEventListener("mouseup", handleMouseUp);
+            if (!isImageBook) {
+                if (readerSettings.dictionaryVersion === "word") {
+                    removeEventListener("click", handleMouseUp);
+                } else {
+                    removeEventListener("mouseup", handleMouseUp);
+                }
+                removeEventListener("touchend", handleTouchUp);
             }
-            removeEventListener("touchend", handleTouchUp);
             removeEventListener("resize", handleResize);
             removeEventListener("keydown", handleKeyDown);
         };
-    }, [bookData, readerSettings, siteSettings, navigate, modifyReaderSettings, toggleFullscreen]);
+    }, [bookData, isImageBook, readerSettings, siteSettings, navigate, modifyReaderSettings, toggleFullscreen]);
 
     function closeSettingsMenu():void {
         setShowSettings(false);
@@ -439,16 +456,21 @@ function Reader(props:ReaderProps):React.ReactElement {
 
     return (
         <div className="text-app-text relative overflow-hidden h-[100svh] flex flex-col">
-            {iframe && iframe.current && iframe.current.contentWindow && (
+            {(isImageBook || (iframe.current && iframe.current.contentWindow)) && (
                 <ReaderSettings showMenu={showSettings} closeSettings={closeSettingsMenu}
-                    iframeWindow={iframe.current.contentWindow}
+                    iframeWindow={isImageBook ? null : iframe.current?.contentWindow}
+                    mode={isImageBook ? "images" : "mokuro"}
                 />
             )}
             <PageText lines={pageText} open={openTextSidebar} setOpen={setOpenTextSidebar}/>
             <Dictionary searchWord={searchWord} setSearchWord={setSearchWord}/>
-            <ShortcutsDialog open={showShortcuts} onClose={()=>setShowShortcuts(false)} shortcuts={mangaShortcuts}/>
+            <ShortcutsDialog open={showShortcuts} onClose={()=>setShowShortcuts(false)} shortcuts={isImageBook ? imageShortcuts : mangaShortcuts}/>
             {bookData && !isLoading && (
-                <RemoteReader readerVars={{bookData,bookProgress,currentPage,iframe,showSettings,setShowSettings,doublePages,setOpenTextSidebar,setShowShortcuts,saveProgress}}/>
+                isImageBook ? (
+                    <ImageReader readerVars={{bookData,bookProgress,currentPage,setCurrentPage,showSettings,setShowSettings,setShowShortcuts,saveProgress}}/>
+                ) : (
+                    <RemoteReader readerVars={{bookData,bookProgress,currentPage,iframe,showSettings,setShowSettings,doublePages,setOpenTextSidebar,setShowShortcuts,saveProgress}}/>
+                )
             )}
             {props.type === "local" && (
                 <LocalReader readerVars={{currentPage,iframe,showSettings,setShowSettings,setOpenTextSidebar,localHtml:props.localHtml,pages:props.pages,iframeOnLoad:props.iframeOnLoad,name:props.name,resetBook:props.resetBook}}/>

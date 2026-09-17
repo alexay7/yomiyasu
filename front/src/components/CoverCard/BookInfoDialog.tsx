@@ -15,8 +15,11 @@ export function BookInfoDialog({book, open, onOpenChange}:BookInfoDialogProps):R
     ["Ruta", book.path],
     ["Serie", book.seriePath],
     ["Páginas", String(book.pages)],
-    ["Caracteres", String(book.characters ?? 0)],
+    ...(book.format === "images"
+      ? []
+      : [["Caracteres", String(book.characters ?? 0)] as [string, string]]),
     ["Variante", book.variant === "manga" ? "Manga" : "Novela"],
+    ["Formato", book.format === "images" ? "Imágenes (sin mokuro)" : "Mokuro"],
     ["Mokuro", book.mokured ? "Sí" : "No"],
     ["Añadido", book.createdDate ? dayjs(book.createdDate).format("DD/MM/YYYY HH:mm") : "—"],
     ["Modificado", book.lastModifiedDate ? dayjs(book.lastModifiedDate).format("DD/MM/YYYY HH:mm") : "—"],

@@ -159,6 +159,41 @@ final class LibraryModelsTests: XCTestCase {
         XCTAssertEqual(book.progressFraction, 0.5, accuracy: 0.001)
     }
 
+    func testBookDecodingWithImageFolderFormat() throws {
+        let json = """
+        {
+          "_id": "b3",
+          "path": "Vol 1",
+          "seriePath": "seriePath",
+          "pages": 3,
+          "visibleName": "Vol 1",
+          "imagesFolder": "Vol 1",
+          "thumbnailPath": "001.jpg",
+          "variant": "manga",
+          "format": "images",
+          "pagePaths": ["001.jpg", "002.jpg", "003.jpg"]
+        }
+        """
+
+        let book = try decoder.decode(Book.self, from: Data(json.utf8))
+
+        XCTAssertEqual(book.format, .images)
+        XCTAssertTrue(book.isImageFolder)
+        XCTAssertEqual(book.pagePaths, ["001.jpg", "002.jpg", "003.jpg"])
+    }
+
+    func testBookWithoutFormatIsMokuro() throws {
+        let json = """
+        {"_id": "b4", "visibleName": "M", "variant": "manga"}
+        """
+
+        let book = try decoder.decode(Book.self, from: Data(json.utf8))
+
+        XCTAssertNil(book.format)
+        XCTAssertFalse(book.isImageFolder)
+        XCTAssertNil(book.pagePaths)
+    }
+
     func testBookProgressFallbackToCharactersForNovels() throws {
         let json = """
         {

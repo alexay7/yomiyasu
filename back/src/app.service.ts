@@ -4,7 +4,7 @@ import {Cron} from "@nestjs/schedule";
 import {join, extname} from "path";
 import * as fs from "fs";
 import {BooksService} from "./books/books.service";
-import {extractUrlFromHtml, getCharacterCount, getNovelCharacterCount, getNovelCover} from "./books/helpers/helpers";
+import {extractUrlFromHtml, getCharacterCount, getNovelCharacterCount, getNovelCover, listImageFiles} from "./books/helpers/helpers";
 import {ensureThumbnails} from "./books/helpers/thumbnail";
 import {Book} from "./books/schemas/book.schema";
 import {WebsocketsGateway} from "./websockets/websockets.gateway";
@@ -61,6 +61,10 @@ export class AppService {
               bookName: string;
               bookPath?: string;
           }[] = [];
+          const existingImageFolders: {
+              seriePath: string;
+              folderName: string;
+          }[] = [];
           const mainFolderPath = join(process.cwd(), "..", "exterior", "mangas");
           let areChanges = false;
 
@@ -91,6 +95,22 @@ export class AppService {
                               bookName: foundBook.replace(".html", ""),
                               bookPath: join(itemPath, foundBook)
                           });
+                      });
+
+                      // Carpetas de la serie: pueden ser carpetas de imágenes de
+                      // un html (mokuro) o tomos de imágenes sin mokuro. Cuál es
+                      // cuál se decide más abajo, al conocer los html.
+                      subItems.forEach((subItem) => {
+                          try {
+                              if (fs.statSync(join(itemPath, subItem)).isDirectory()) {
+                                  existingImageFolders.push({
+                                      seriePath: item,
+                                      folderName: subItem
+                                  });
+                              }
+                          } catch (error) {
+                              this.logger.warn(`No se pudo leer ${join(itemPath, subItem)}: ${error}`);
+                          }
                       });
                   }
               }
@@ -143,25 +163,23 @@ export class AppService {
 
           // INICIO PROCESO DE LIBROS
           // Busca todos los libros no marcados como desaparecidos de la base de datos
-          const savedBooks = (await this.booksService.findNonMissing("manga")).map(
-              (item) => {
-                  return {
-                      bookName: item.path,
-                      seriePath: item.serie
-                  };
-              }
+          const savedBooks = await this.booksService.findNonMissing("manga");
+
+          const savedBookNames = new Set(savedBooks.map((book) => book.path));
+          const existingHtmlBookNames = new Set(existingBooks.map((book) => book.bookName));
+
+          // Carpetas de imágenes referenciadas por un html (mokuro): no son
+          // tomos por sí mismas, sino las páginas de ese html. Los tomos de
+          // imágenes no cuentan: su carpeta es su propio contenido.
+          const referencedImageFolders = new Set<string>(
+              savedBooks
+                  .filter((book) => book.format !== "images" && book.imagesFolder)
+                  .map((book) => `${book.seriePath}/${book.imagesFolder}`)
           );
 
-          // Filtra los libros nuevos
+          // Filtra los libros nuevos (html)
           const booksToAddInDb = existingBooks.filter(
-              (value) =>
-                  !savedBooks.map((elem) => elem.bookName).includes(value.bookName)
-          );
-
-          // Filtra los libros a marcar como borrados
-          const booksToMarkAsDeleted = savedBooks.filter(
-              (value) =>
-                  !existingBooks.map((elem) => elem.bookName).includes(value.bookName)
+              (value) => !savedBookNames.has(value.bookName)
           );
 
           // Añade los libros nuevos a la base de datos
@@ -170,37 +188,126 @@ export class AppService {
               areChanges = true;
 
               const addResults = await Promise.allSettled(booksToAddInDb.map(async(elem) => {
-                  if (elem.bookPath) {
-                      const imagesFolder = await extractUrlFromHtml(elem.bookPath);
+                  if (!elem.bookPath) return;
 
-                      if (imagesFolder) {
-                        // Zip the imagesFolder into a zip file with the name of the folder and extension .cbz, save it at the same level as the folder
-                        // const zipPath = join(mainFolderPath, elem.seriePath,imagesFolder.folderName + ".cbz");
-                        // const folderPath = join(mainFolderPath,elem.seriePath, imagesFolder.folderName);
+                  const imagesFolder = await extractUrlFromHtml(elem.bookPath);
 
-                        // await this.booksService.zipImagesFolder(folderPath, zipPath);
+                  if (!imagesFolder) return;
 
+                  // Marca la carpeta como páginas de este html para que no se
+                  // registre también como tomo de imágenes
+                  referencedImageFolders.add(`${elem.seriePath}/${imagesFolder.folderName}`);
 
-                          const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath, "manga");
-                          await this.seriesService.increaseBookCount(foundSerie._id);
+                  const savedBook = savedBooks.find((book) => book.path === elem.bookName);
+
+                  if (savedBook) {
+                      // La carpeta era un tomo de imágenes y ahora tiene html:
+                      // se convierte en tomo de mokuro
+                      if (savedBook.format === "images" && savedBook._id) {
                           const charData = await getCharacterCount(elem.bookPath);
 
-                          const newBook = {
-                              path: elem.bookName,
-                              visibleName: elem.bookName,
-                              sortName: elem.bookName,
+                          this.logger.log(`\x1b[34m${elem.bookName} convertido a tomo de mokuro`);
+
+                          await this.booksService.convertToMokuro(savedBook._id, {
                               imagesFolder: imagesFolder.folderName,
-                              serie: foundSerie,
-                              seriePath:elem.seriePath,
                               thumbnailPath: imagesFolder.thumbnailPath,
                               pages: imagesFolder.totalImages,
                               characters: charData.total,
-                              pageChars:charData.pages,
-                              variant:"manga" as "manga" | "novela"
-                          };
-                          await this.booksService.updateOrCreate(newBook);
+                              pageChars: charData.pages
+                          });
                       }
+
+                      return;
                   }
+
+                  const foundSerie = await this.seriesService.getIdFromPath(elem.seriePath, "manga");
+                  await this.seriesService.increaseBookCount(foundSerie._id);
+                  const charData = await getCharacterCount(elem.bookPath);
+
+                  const newBook = {
+                      path: elem.bookName,
+                      visibleName: elem.bookName,
+                      sortName: elem.bookName,
+                      imagesFolder: imagesFolder.folderName,
+                      serie: foundSerie,
+                      seriePath:elem.seriePath,
+                      thumbnailPath: imagesFolder.thumbnailPath,
+                      pages: imagesFolder.totalImages,
+                      characters: charData.total,
+                      pageChars:charData.pages,
+                      variant:"manga" as "manga" | "novela",
+                      format:"mokuro" as "mokuro" | "images"
+                  };
+                  await this.booksService.updateOrCreate(newBook);
+              }));
+
+              this.logFailedBooks(addResults, "manga");
+          }
+
+          // Carpetas de imágenes sin html que las referencie: candidatas a tomo.
+          // Se calcula después de registrar los html nuevos para conocer sus carpetas.
+          const imageFolderCandidates = (
+              await Promise.all(
+                  existingImageFolders
+                      .filter(
+                          (folder) =>
+                              !referencedImageFolders.has(`${folder.seriePath}/${folder.folderName}`)
+                      )
+                      .map(async(folder) => ({
+                          ...folder,
+                          images: await listImageFiles(join(mainFolderPath, folder.seriePath, folder.folderName))
+                      }))
+              )
+          ).filter((folder) => folder.images.length > 0);
+
+          const imageBookNames = new Set(imageFolderCandidates.map((folder) => folder.folderName));
+
+          // Un tomo de mokuro marcado como desaparecido no debe resucitar como
+          // tomo de imágenes solo porque su carpeta siga en disco
+          const missingBookFormats = new Map(
+              (await this.booksService.findMissing("manga")).map((book) => [book.path, book.format])
+          );
+
+          // Tomos de imágenes nuevos (sin colisión con un html del mismo nombre)
+          const imageBooksToAdd = imageFolderCandidates.filter(
+              (folder) =>
+                  !savedBookNames.has(folder.folderName) &&
+                  !existingHtmlBookNames.has(folder.folderName) &&
+                  missingBookFormats.get(folder.folderName) !== "mokuro"
+          );
+
+          // Filtra los libros a marcar como borrados
+          const booksToMarkAsDeleted = savedBooks.filter(
+              (value) =>
+                  !existingHtmlBookNames.has(value.path) &&
+                  !imageBookNames.has(value.path)
+          );
+
+          // Añade los tomos de imágenes (carpetas sin html de mokuro)
+          if (imageBooksToAdd.length > 0) {
+              this.logger.log("\x1b[34mEncontrados tomos de imágenes nuevos");
+              areChanges = true;
+
+              const addResults = await Promise.allSettled(imageBooksToAdd.map(async(folder) => {
+                  const foundSerie = await this.seriesService.getIdFromPath(folder.seriePath, "manga");
+                  await this.seriesService.increaseBookCount(foundSerie._id);
+
+                  const newBook = {
+                      path: folder.folderName,
+                      visibleName: folder.folderName,
+                      sortName: folder.folderName,
+                      imagesFolder: folder.folderName,
+                      serie: foundSerie,
+                      seriePath: folder.seriePath,
+                      thumbnailPath: folder.images[0],
+                      pages: folder.images.length,
+                      characters: 0,
+                      pageChars: [],
+                      variant: "manga" as const,
+                      format: "images" as const
+                  };
+
+                  await this.booksService.updateOrCreate(newBook);
               }));
 
               this.logFailedBooks(addResults, "manga");
@@ -214,7 +321,7 @@ export class AppService {
               this.logger.log("\x1b[34mEncontrados libros desaparecidos");
               areChanges = true;
               booksToMarkAsDeleted.forEach(async(elem) => {
-                  await this.booksService.markAsMissing(elem.bookName, "manga");
+                  await this.booksService.markAsMissing(elem.path, "manga");
               });
           }
           // FIN PROCESO DE LIBROS

@@ -30,6 +30,8 @@ struct BookReaderView: View {
                     }
             }
         }
+        // La barra de pestañas taparía la parte inferior de las páginas
+        .toolbar(.hidden, for: .tabBar)
     }
 
     private func load() async {

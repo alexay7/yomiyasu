@@ -259,6 +259,13 @@ extension Serie {
     }
 }
 
+/// Formato del tomo: mokuro (html con OCR) o carpeta de imágenes sin html.
+/// El backend no manda el campo en libros antiguos: ausente = mokuro.
+enum BookFormat: String, Decodable, Sendable {
+    case mokuro
+    case images
+}
+
 struct Book: Decodable, Identifiable, Sendable, Equatable {
     let id: String
     let path: String?
@@ -277,6 +284,9 @@ struct Book: Decodable, Identifiable, Sendable, Equatable {
     let pageChars: [Int]?
     let variant: Variant?
     let mokured: Bool?
+    let format: BookFormat?
+    /// Nombres de las imágenes del tomo (solo tomos "images").
+    let pagePaths: [String]?
 
     let status: ProgressStatus?
     let lastProgress: ReadProgress?
@@ -301,6 +311,8 @@ struct Book: Decodable, Identifiable, Sendable, Equatable {
         case pageChars
         case variant
         case mokured
+        case format
+        case pagePaths
         case status
         case lastProgress
         case readlist
@@ -311,6 +323,7 @@ struct Book: Decodable, Identifiable, Sendable, Equatable {
 extension Book {
     var resolvedStatus: ProgressStatus { status ?? .unread }
     var isMokured: Bool { mokured ?? false }
+    var isImageFolder: Bool { format == .images }
     var progressFraction: Double {
         guard let pages, pages > 0, let currentPage = lastProgress?.currentPage else {
             if let characters, characters > 0, let readCharacters = lastProgress?.characters {

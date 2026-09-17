@@ -92,6 +92,7 @@ struct NovelReaderView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .statusBarHidden(!showingBars)
         .task(id: currentBookId) {
             await load()

@@ -1,4 +1,6 @@
+import Nuke
 import SwiftUI
+import UIKit
 import os
 
 struct ReaderView: View {
@@ -78,6 +80,7 @@ struct ReaderView: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .statusBarHidden(!showingBars)
         .task(id: currentBookId) {
             await load()
@@ -90,6 +93,12 @@ struct ReaderView: View {
         }
         .onChange(of: environment.settings.idleTimeout) {
             timer.idleTimeoutMinutes = environment.settings.idleTimeout
+        }
+        .onChange(of: environment.readerSettings.doublePage) {
+            rebuildSpreads()
+        }
+        .onChange(of: environment.readerSettings.hasCover) {
+            rebuildSpreads()
         }
         .onDisappear {
             Task { await saveProgress() }
@@ -108,7 +117,7 @@ struct ReaderView: View {
             }
         }
         .sheet(isPresented: $showingSettings) {
-            ReaderSettingsView()
+            ReaderSettingsView(showsOCR: book?.isImageFolder != true)
                 .environment(environment)
         }
         .sheet(isPresented: $showingPageText) {
@@ -178,12 +187,14 @@ struct ReaderView: View {
 
             downloadButton
 
-            Button {
-                showingPageText = true
-            } label: {
-                Image(systemName: "text.justify.left")
+            if book?.isImageFolder != true {
+                Button {
+                    showingPageText = true
+                } label: {
+                    Image(systemName: "text.justify.left")
+                }
+                .accessibilityLabel("Texto")
             }
-            .accessibilityLabel("Texto")
 
             Button {
                 showingSettings = true
@@ -302,6 +313,65 @@ struct ReaderView: View {
         book.variant == .novela ? "novelas" : "mangas"
     }
 
+    /// Rehace los spreads al cambiar «doble página» o «portada» desde los
+    /// ajustes, conservando la página que se está leyendo. Sin esto el cambio
+    /// no se aplicaba hasta salir y volver a abrir el tomo.
+    private func rebuildSpreads() {
+        guard let mokuro, !mokuro.pages.isEmpty else { return }
+
+        let settings = environment.readerSettings
+        let currentPage = spreads.indices.contains(currentSpreadIndex)
+            ? spreads[currentSpreadIndex].firstPage
+            : 0
+
+        let layout = SpreadLayout.spreads(
+            pageCount: mokuro.pages.count,
+            doublePage: settings.doublePage,
+            hasCover: settings.hasCover
+        )
+        let index = SpreadLayout.spreadIndex(
+            forPage: currentPage,
+            doublePage: settings.doublePage,
+            hasCover: settings.hasCover
+        )
+
+        spreads = layout
+        initialSpreadIndex = min(index, max(layout.count - 1, 0))
+        currentSpreadIndex = initialSpreadIndex
+        navigateTo = initialSpreadIndex
+        pagerID = UUID()
+    }
+
+    /// Tamaño de la primera página de un tomo de imágenes, para maquetar los
+    /// spreads antes de tener el resto decodificadas. Si falla se usa la
+    /// proporción de reserva de `ImageFolderPages`.
+    private func loadFirstPageSize(for book: Book, fileName: String, localBaseURL: URL?) async -> CGSize? {
+        let url: URL
+
+        if let localBaseURL {
+            url = localBaseURL.appendingPathComponent(fileName)
+        } else {
+            url = StaticURLs.url(
+                path: "\(staticPrefix(for: book))/\(book.seriePath ?? "")/\(fileName)",
+                baseURL: environment.api.baseURL
+            )
+        }
+
+        if url.isFileURL {
+            return await Task.detached(priority: .userInitiated) {
+                UIImage(contentsOfFile: url.path)?.size
+            }.value
+        }
+
+        let request = ImageRequestFactory.make(url: url, token: environment.session.accessToken)
+
+        guard let image = try? await ImagePipeline.shared.image(for: request) else {
+            return nil
+        }
+
+        return image.size
+    }
+
     private func load() async {
         isLoading = true
         error = nil
@@ -312,26 +382,53 @@ struct ReaderView: View {
         do {
             let fetchedBook = try await environment.library.book(id: currentBookId)
 
-            let htmlData: Data
             var imagesBaseURL: URL?
 
             if let record = environment.downloads.records[currentBookId] {
-                htmlData = try Data(contentsOf: environment.downloads.localHTMLURL(for: record.bookId))
                 imagesBaseURL = environment.downloads.localImagesDirectory(for: record.bookId)
                 logger.info("Leyendo «\(record.visibleName, privacy: .public)» desde descarga local")
+            }
+
+            let parsed: MokuroBook
+
+            if fetchedBook.isImageFolder {
+                let pagePaths = fetchedBook.pagePaths ?? []
+                guard !pagePaths.isEmpty else {
+                    throw APIError.unexpectedResponse
+                }
+
+                let firstPageSize = await loadFirstPageSize(
+                    for: fetchedBook,
+                    fileName: ImageFolderPages.joinedPath(
+                        imagesFolder: fetchedBook.imagesFolder,
+                        fileName: pagePaths[0]
+                    ),
+                    localBaseURL: imagesBaseURL
+                )
+                parsed = ImageFolderPages.makeBook(
+                    pagePaths: pagePaths,
+                    imagesFolder: fetchedBook.imagesFolder,
+                    firstPageSize: firstPageSize
+                )
             } else {
-                let prefix = staticPrefix(for: fetchedBook)
-                let path = "\(prefix)/\(fetchedBook.seriePath ?? "")/\(fetchedBook.path ?? "").html"
-                htmlData = try await environment.api.sendData(.get("api/static/\(path)"))
-            }
+                let htmlData: Data
 
-            guard let html = String(data: htmlData, encoding: .utf8) else {
-                throw APIError.unexpectedResponse
-            }
+                if let record = environment.downloads.records[currentBookId] {
+                    htmlData = try Data(contentsOf: environment.downloads.localHTMLURL(for: record.bookId))
+                } else {
+                    let prefix = staticPrefix(for: fetchedBook)
+                    let path = "\(prefix)/\(fetchedBook.seriePath ?? "")/\(fetchedBook.path ?? "").html"
+                    htmlData = try await environment.api.sendData(.get("api/static/\(path)"))
+                }
 
-            let parsed = try await Task.detached(priority: .userInitiated) {
-                try MokuroParser.parse(html: html)
-            }.value
+                guard let html = String(data: htmlData, encoding: .utf8) else {
+                    throw APIError.unexpectedResponse
+                }
+
+                parsed = try await Task.detached(priority: .userInitiated) {
+                    try MokuroParser.parse(html: html)
+                }.value
+            }
 
             guard !parsed.pages.isEmpty else {
                 throw MokuroParserError.invalidHTML

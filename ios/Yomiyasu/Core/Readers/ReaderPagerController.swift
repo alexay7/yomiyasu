@@ -194,7 +194,13 @@ final class ReaderPagerController: UIViewController {
         let decodedPath = page.imagePath.removingPercentEncoding ?? page.imagePath
 
         if let localBaseURL {
-            return localBaseURL.appendingPathComponent(decodedPath)
+            let localURL = localBaseURL.appendingPathComponent(decodedPath)
+
+            // Descargas antiguas (o incompletas): si la imagen no está en local
+            // se cae a la URL remota en lugar de dejar la página en blanco
+            if FileManager.default.fileExists(atPath: localURL.path) {
+                return localURL
+            }
         }
 
         return StaticURLs.url(path: "\(staticPrefix)/\(seriePath)/\(decodedPath)", baseURL: baseURL)

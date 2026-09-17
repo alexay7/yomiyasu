@@ -1,5 +1,6 @@
 package es.manabe.yomiyasu.features.settings
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,9 +14,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -172,12 +177,19 @@ class AccountViewModel @Inject constructor(
 @Composable
 fun AccountRoute(
     onLogout: () -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: AccountViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val username by viewModel.username.collectAsStateWithLifecycle()
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val backAction: (() -> Unit)? = onBack ?: backDispatcher?.let { dispatcher ->
+        { dispatcher.onBackPressed() }
+    }
+
     AccountScreen(
+        onBack = backAction,
         currentUsername = username,
         state = state,
         onNewUsernameChange = viewModel::updateNewUsername,
@@ -192,6 +204,7 @@ fun AccountRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AccountScreen(
+    onBack: (() -> Unit)?,
     currentUsername: String,
     state: AccountViewModel.UiState,
     onNewUsernameChange: (String) -> Unit,
@@ -202,7 +215,21 @@ private fun AccountScreen(
     onChangePassword: () -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Cuenta") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Cuenta") },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                            )
+                        }
+                    }
+                },
+            )
+        },
     ) { padding ->
         Column(
             modifier = Modifier
