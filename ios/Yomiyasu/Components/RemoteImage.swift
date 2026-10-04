@@ -18,6 +18,7 @@ struct CoverPlaceholder: View {
 
 struct RemoteImage: View {
     @Environment(AppEnvironment.self) private var environment
+    @State private var token: String?
 
     let url: URL?
 
@@ -31,10 +32,15 @@ struct RemoteImage: View {
                 CoverPlaceholder()
             }
         }
+        .task(id: url) {
+            // Las portadas tampoco pasan por APIClient: renovar el token aquí
+            // evita que queden rotas cuando caduca el access token
+            token = try? await environment.session.freshAccessToken()
+        }
     }
 
     private var request: ImageRequest? {
         guard let url else { return nil }
-        return ImageRequestFactory.make(url: url, token: environment.session.accessToken)
+        return ImageRequestFactory.make(url: url, token: token ?? environment.session.accessToken)
     }
 }

@@ -29,6 +29,7 @@ final class ReaderPagerController: UIViewController {
     var onToggleBars: (() -> Void)?
 
     private var prefetcher: ImagePrefetcher?
+    private var prefetchedPages = Set<Int>()
     private var isZoomed = false
 
     var selectedBox: BoxSelection? {
@@ -85,7 +86,7 @@ final class ReaderPagerController: UIViewController {
         pageController.setViewControllers([initial], direction: .forward, animated: false)
 
         loadImages(for: initial)
-        prefetchPages(after: currentIndex)
+        prefetchPages(around: currentIndex)
     }
 
     func updateSettings() {
@@ -125,7 +126,7 @@ final class ReaderPagerController: UIViewController {
         currentIndex = index
         selectedBox = nil
         loadImages(for: controller)
-        prefetchPages(after: index)
+        prefetchPages(around: index)
     }
 
     static func navigationDirection(
@@ -206,37 +207,79 @@ final class ReaderPagerController: UIViewController {
         return StaticURLs.url(path: "\(staticPrefix)/\(seriePath)/\(decodedPath)", baseURL: baseURL)
     }
 
-    private func imageRequest(for page: MokuroPage) -> ImageRequest {
-        ImageRequestFactory.make(url: pageURL(for: page), token: environment.session.accessToken)
+    private func imageRequest(for page: MokuroPage, token: String?) -> ImageRequest {
+        ImageRequestFactory.make(url: pageURL(for: page), token: token)
     }
 
     private func loadImages(for controller: SpreadViewController) {
-        for pageIndex in controller.spreadView.spread.pages {
-            guard book.pages.indices.contains(pageIndex) else { continue }
-            let page = book.pages[pageIndex]
-            let request = imageRequest(for: page)
+        let pageIndices = controller.spreadView.spread.pages.filter { book.pages.indices.contains($0) }
+        guard !pageIndices.isEmpty else { return }
 
-            Task { [weak controller] in
-                guard let image = try? await ImagePipeline.shared.image(for: request) else {
-                    return
+        Task { [weak self, weak controller] in
+            guard let self, let controller else { return }
+
+            // Las imágenes no pasan por APIClient: renovar aquí el token si está
+            // a punto de caducar evita páginas en blanco al expirar la sesión
+            let token = (try? await self.environment.session.freshAccessToken())
+                ?? self.environment.session.accessToken
+
+            for pageIndex in pageIndices {
+                self.prefetchedPages.insert(pageIndex)
+                let request = self.imageRequest(for: self.book.pages[pageIndex], token: token)
+
+                Task { [weak controller] in
+                    guard let image = try? await ImagePipeline.shared.image(for: request) else {
+                        return
+                    }
+                    controller?.spreadView.setImage(image, forPageIndex: pageIndex)
                 }
-                controller?.spreadView.setImage(image, forPageIndex: pageIndex)
             }
         }
     }
 
-    private func prefetchPages(after index: Int) {
-        let pageIndices = spreads.dropFirst(index + 1).prefix(3).flatMap(\.pages)
-        let requests = pageIndices.compactMap { pageIndex -> ImageRequest? in
-            guard book.pages.indices.contains(pageIndex) else { return nil }
-            return imageRequest(for: book.pages[pageIndex])
+    /// Precarga las páginas de los spreads alrededor del actual (no solo hacia
+    /// delante) reutilizando un único prefetcher: crear uno nuevo en cada giro
+    /// cancelaba las descargas en vuelo del anterior.
+    private func prefetchPages(around index: Int, radius: Int = 3) {
+        let lower = max(0, index - radius)
+        let upper = min(spreads.count - 1, index + radius)
+        guard lower <= upper else { return }
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            let token = (try? await self.environment.session.freshAccessToken())
+                ?? self.environment.session.accessToken
+            var requests: [ImageRequest] = []
+
+            for spreadIndex in lower...upper where spreadIndex != index {
+                for pageIndex in self.spreads[spreadIndex].pages {
+                    guard self.book.pages.indices.contains(pageIndex) else { continue }
+                    guard !self.prefetchedPages.contains(pageIndex) else { continue }
+
+                    self.prefetchedPages.insert(pageIndex)
+                    requests.append(self.imageRequest(for: self.book.pages[pageIndex], token: token))
+                }
+            }
+
+            guard !requests.isEmpty else { return }
+
+            let prefetcher: ImagePrefetcher
+
+            if let existing = self.prefetcher {
+                prefetcher = existing
+            } else {
+                let newPrefetcher = ImagePrefetcher(
+                    pipeline: .shared,
+                    destination: .memoryCache,
+                    maxConcurrentRequestCount: 2
+                )
+                self.prefetcher = newPrefetcher
+                prefetcher = newPrefetcher
+            }
+
+            prefetcher.startPrefetching(with: requests)
         }
-
-        guard !requests.isEmpty else { return }
-
-        let prefetcher = ImagePrefetcher(pipeline: .shared)
-        prefetcher.startPrefetching(with: requests)
-        self.prefetcher = prefetcher
     }
 
     private func handleBoxTap(
@@ -308,7 +351,11 @@ extension ReaderPagerController: UIPageViewControllerDataSource, UIPageViewContr
             return nil
         }
 
-        return makeSpreadController(index: controller.spreadIndex - 1)
+        // Pedir las imágenes del vecino en cuanto UIPageViewController lo pide
+        // evita que el spread entre en blanco durante el swipe
+        let neighbor = makeSpreadController(index: controller.spreadIndex - 1)
+        loadImages(for: neighbor)
+        return neighbor
     }
 
     func pageViewController(
@@ -320,7 +367,9 @@ extension ReaderPagerController: UIPageViewControllerDataSource, UIPageViewContr
             return nil
         }
 
-        return makeSpreadController(index: controller.spreadIndex + 1)
+        let neighbor = makeSpreadController(index: controller.spreadIndex + 1)
+        loadImages(for: neighbor)
+        return neighbor
     }
 
     func pageViewController(
@@ -336,7 +385,7 @@ extension ReaderPagerController: UIPageViewControllerDataSource, UIPageViewContr
         onSpreadChanged?(currentIndex)
 
         loadImages(for: controller)
-        prefetchPages(after: currentIndex)
+        prefetchPages(around: currentIndex)
     }
 }
 

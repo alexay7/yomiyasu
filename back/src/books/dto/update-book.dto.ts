@@ -21,6 +21,14 @@ export class UpdateBookDto implements Partial<Book> {
     @IsArray()
     @IsOptional()
     pageChars?: number[];
+
+    @IsString()
+    @IsOptional()
+    ocrStatus?: "processing" | "done" | "error" | null;
+
+    @IsNumber()
+    @IsOptional()
+    ocrProgress?: number;
 }
 
 export class UpdateCoverDto {

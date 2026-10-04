@@ -20,8 +20,8 @@ val keystoreProperties = Properties().apply {
 val debugServerUrl = providers.gradleProperty("yomiyasu.serverUrl").getOrElse("")
 
 // Permite que la CI fije versión sin tocar el fichero (-Pyomiyasu.versionCode / -Pyomiyasu.versionName)
-val appVersionCode = providers.gradleProperty("yomiyasu.versionCode").getOrElse("2").toInt()
-val appVersionName = providers.gradleProperty("yomiyasu.versionName").getOrElse("0.1.1")
+val appVersionCode = providers.gradleProperty("yomiyasu.versionCode").getOrElse("3").toInt()
+val appVersionName = providers.gradleProperty("yomiyasu.versionName").getOrElse("0.1.2")
 
 android {
     namespace = "es.manabe.yomiyasu"

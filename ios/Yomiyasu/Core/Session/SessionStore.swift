@@ -25,6 +25,8 @@ final class SessionStore: AuthTokenProvider {
 
     private let keychain: KeychainStore
     private let api: APIClient
+    private let defaults: UserDefaults
+    private var refreshTask: Task<String, Error>?
 
     private enum Key {
         static let accessToken = "accessToken"
@@ -32,9 +34,18 @@ final class SessionStore: AuthTokenProvider {
         static let uuid = "uuid"
     }
 
-    init(api: APIClient, keychain: KeychainStore = KeychainStore()) {
+    private enum DefaultsKey {
+        static let cachedUser = "session.cachedUser"
+    }
+
+    init(
+        api: APIClient,
+        keychain: KeychainStore = KeychainStore(),
+        defaults: UserDefaults = .standard
+    ) {
         self.api = api
         self.keychain = keychain
+        self.defaults = defaults
         api.authProvider = self
     }
 
@@ -56,9 +67,20 @@ final class SessionStore: AuthTokenProvider {
 
         do {
             let user: AuthUser = try await api.send(.get("api/auth/me"))
+            cacheUser(user)
             updateState(.loggedIn(user))
+        } catch let error as APIError {
+            switch error {
+            case .http(let status, _) where status == 401 || status == 403:
+                // El servidor ha rechazado los tokens: sesión caducada
+                clearSession(notice: Self.sessionExpiredMessage)
+            default:
+                // Sin conexión (o error temporal): conservar los tokens y
+                // restaurar el último usuario conocido en lugar de cerrar sesión
+                restoreCachedUserOrLoggedOut()
+            }
         } catch {
-            clearSession(notice: Self.sessionExpiredMessage)
+            restoreCachedUserOrLoggedOut()
         }
     }
 
@@ -83,7 +105,40 @@ final class SessionStore: AuthTokenProvider {
         }
 
         persist(accessToken: accessToken, refreshToken: refreshToken)
+        cacheUser(response.user)
         updateState(.loggedIn(response.user))
+    }
+
+    /// Devuelve un access token utilizable para peticiones que no pasan por
+    /// APIClient (imágenes): si el actual está a punto de caducar lo renueva,
+    /// compartiendo una única renovación entre llamadas concurrentes.
+    func freshAccessToken() async throws -> String? {
+        guard let token = accessTokenValue else { return nil }
+
+        if !Self.isExpiringSoon(token) {
+            return token
+        }
+
+        guard refreshTokenValue != nil else { return token }
+
+        if let refreshTask {
+            return try await refreshTask.value
+        }
+
+        let task = Task { () -> String in
+            try await self.refreshTokens()
+
+            guard let refreshed = self.accessTokenValue else {
+                throw APIError.sessionExpired
+            }
+
+            return refreshed
+        }
+
+        refreshTask = task
+        defer { refreshTask = nil }
+
+        return try await task.value
     }
 
     func refreshTokens() async throws {
@@ -142,6 +197,7 @@ final class SessionStore: AuthTokenProvider {
             email: user.email,
             admin: user.admin
         )
+        cacheUser(updated)
         updateState(.loggedIn(updated))
     }
 
@@ -170,7 +226,58 @@ final class SessionStore: AuthTokenProvider {
         refreshTokenValue = nil
         keychain.remove(Key.accessToken)
         keychain.remove(Key.refreshToken)
+        defaults.removeObject(forKey: DefaultsKey.cachedUser)
         self.notice = notice
         updateState(.loggedOut)
+    }
+
+    /// Ante un fallo de red en bootstrap: seguir logueado con el último usuario
+    /// cacheado. Si no hay ninguno, mostrar el login sin borrar los tokens.
+    private func restoreCachedUserOrLoggedOut() {
+        if let cachedUser {
+            updateState(.loggedIn(cachedUser))
+        } else {
+            updateState(.loggedOut)
+        }
+    }
+
+    private func cacheUser(_ user: AuthUser) {
+        guard let data = try? JSONEncoder().encode(user) else { return }
+        defaults.set(data, forKey: DefaultsKey.cachedUser)
+    }
+
+    private var cachedUser: AuthUser? {
+        guard let data = defaults.data(forKey: DefaultsKey.cachedUser) else { return nil }
+        return try? JSONDecoder().decode(AuthUser.self, from: data)
+    }
+
+    private static func isExpiringSoon(_ token: String, margin: TimeInterval = 300) -> Bool {
+        guard let expiration = jwtExpiration(token) else { return false }
+
+        return Date(timeIntervalSince1970: expiration).timeIntervalSinceNow < margin
+    }
+
+    /// Lee `exp` del payload del JWT sin verificar la firma: solo sirve para
+    /// decidir si conviene renovarlo antes de una petición.
+    private static func jwtExpiration(_ token: String) -> TimeInterval? {
+        let parts = token.split(separator: ".")
+
+        guard parts.count >= 2 else { return nil }
+
+        var base64 = String(parts[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+
+        while base64.count % 4 != 0 {
+            base64.append("=")
+        }
+
+        guard let data = Data(base64Encoded: base64),
+              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let expiration = payload["exp"] as? TimeInterval else {
+            return nil
+        }
+
+        return expiration
     }
 }

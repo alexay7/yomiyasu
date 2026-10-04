@@ -37,6 +37,10 @@ export interface Book {
     format?: "mokuro" | "images";
     /** Nombres de las imágenes del tomo (solo tomos "images", lo devuelve el backend). */
     pagePaths?: string[];
+    /** Estado del OCR de caracteres en tomos "images": null/ausente = no ejecutado. */
+    ocrStatus?: "processing" | "done" | "error" | null;
+    /** Progreso (0-100) del OCR en curso. */
+    ocrProgress?: number;
 }
 
 export interface BookProgress {

@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   RotateCcw,
+  ScanText,
   Send,
   SquarePen,
   Tags,
@@ -147,6 +148,18 @@ function BookCardMenu({book, insideSerie, deck, read, setRead, openBook}:Extract
     }
   }
 
+  async function calculateOcrChars(): Promise<void> {
+    if (!await confirmDialog("El OCR de un tomo puede tardar varios minutos y consume CPU del servidor. ¿Continuar?")) return;
+
+    const response = await api.post<unknown, {status:string}>(`books/${book._id}/ocr`, {});
+
+    if (response) {
+      toast.success("OCR encolado: los caracteres aparecerán cuando termine");
+      invalidateBook(book._id);
+      invalidateSerie(book.serie);
+    }
+  }
+
   async function toggleReadlist(): Promise<void> {
     if (book.readlist) {
       await removeFromReadlist(book.serie);
@@ -268,6 +281,17 @@ function BookCardMenu({book, insideSerie, deck, read, setRead, openBook}:Extract
                 <MenuItem onSelect={()=>void recalculateChars(true)}>
                   <Tags />
                   Recalcular caracteres (con bordes)
+                </MenuItem>
+              ) : null}
+              {book.format === "images" && book.variant === "manga" ? (
+                <MenuItem
+                  disabled={book.ocrStatus === "processing"}
+                  onSelect={()=>void calculateOcrChars()}
+                >
+                  <ScanText />
+                  {book.ocrStatus === "processing"
+                    ? `Calculando caracteres… (${book.ocrProgress ?? 0}%)`
+                    : "Calcular caracteres (OCR)"}
                 </MenuItem>
               ) : null}
               {book.variant === "novela" ? (

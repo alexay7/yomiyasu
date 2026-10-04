@@ -1,6 +1,6 @@
 {
   "name": "tfgback",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "author": "",
   "private": true,
@@ -12,6 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "export:stats": "ts-node src/export-stats.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -37,6 +38,8 @@
     "@nestjs/swagger": "^7.1.1",
     "@nestjs/throttler": "^4.2.1",
     "@nestjs/websockets": "^10.1.0",
+    "@tesseract.js-data/jpn": "^1.0.0",
+    "@tesseract.js-data/jpn_vert": "^1.0.0",
     "@types/abstract-leveldown": "^7.2.1",
     "@types/archiver": "^5.3.2",
     "@types/cron": "^2.0.1",
@@ -68,7 +71,8 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "sharp": "^0.35.4",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",

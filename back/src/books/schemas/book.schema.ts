@@ -50,6 +50,14 @@ export class Book {
   @Prop({type:Array, default:[]})
   pageChars:number[];
 
+  // Estado del OCR de caracteres para tomos de imágenes sin mokuro.
+  // null/ausente: nunca se ha ejecutado (o no aplica)
+  @Prop({type:String, enum:["processing", "done", "error"], default:null})
+  ocrStatus?:"processing" | "done" | "error" | null;
+
+  @Prop({type:Number, default:0})
+  ocrProgress:number;
+
   @Prop({type:String, enum:["manga", "novela"], required:true})
   variant:"manga" | "novela";
 

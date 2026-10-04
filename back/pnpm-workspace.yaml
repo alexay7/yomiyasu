@@ -5,3 +5,4 @@ allowBuilds:
   es5-ext: false
   leveldown: true
   msgpackr-extract: true
+  tesseract.js: false

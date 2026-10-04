@@ -15,6 +15,14 @@ import {randomUUID} from "crypto";
 import {ConfigService} from "@nestjs/config";
 import {User} from "../users/schemas/user.schema";
 
+/**
+ * Sesiones de lectura de larga duración: el access token dura 30 días y el
+ * refresh 10 años (se rota en cada renovación). Se pueden sobrescribir con
+ * ACCESS_EXPIRES / REFRESH_EXPIRES en el .env.
+ */
+export const DEFAULT_ACCESS_EXPIRES = "30d";
+export const DEFAULT_REFRESH_EXPIRES = "3650d";
+
 @Injectable()
 export class AuthService {
     constructor(
@@ -25,6 +33,14 @@ export class AuthService {
     ) {}
 
     // INICIO FUNCIONES RELACIONADAS CON TOKENS
+    getAccessTokenExpires(): string {
+        return this.configService.get<string>("ACCESS_EXPIRES") || DEFAULT_ACCESS_EXPIRES;
+    }
+
+    getRefreshTokenExpires(): string {
+        return this.configService.get<string>("REFRESH_EXPIRES") || DEFAULT_REFRESH_EXPIRES;
+    }
+
     async updateRefreshToken(
         uuid: string,
         user: Types.ObjectId,
@@ -51,13 +67,12 @@ export class AuthService {
                 {
                     secret: this.configService.get<string>("ACCESS_SECRET"),
                     /**
-           * El frontend enviará una petición cada 59 minutos para renovar el token.
-           * Es un valor relativamente alto para un token de acceso, pero al ser
-           * un servidor en el que se pretende que los usuarios pasen sesiones largas de tiempo leyendo
-           * sin hacer peticiones directas (serán peticiones del html mediante los src de los tags <img>),
-           * poner un valor pequeño provocaría muchas peticiones.
+           * Los usuarios pasan sesiones largas de tiempo leyendo, a menudo con
+           * peticiones directas de imágenes que no pasan por el refresco
+           * automático. Un access token largo evita que se rompan las páginas
+           * al caducar; el frontend sigue renovando periódicamente.
            */
-                    expiresIn: "1h"
+                    expiresIn: this.getAccessTokenExpires()
                 }
             ),
             this.jwtService.signAsync(
@@ -67,8 +82,7 @@ export class AuthService {
                 },
                 {
                     secret: this.configService.get<string>("REFRESH_SECRET"),
-                    // TODO: ajustar esto para que exista un rememberme que dure 1 mes
-                    expiresIn: "7d"
+                    expiresIn: this.getRefreshTokenExpires()
                 }
             )
         ]);

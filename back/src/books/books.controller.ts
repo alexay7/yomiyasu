@@ -1,4 +1,6 @@
-import {Controller, Get, Inject, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors, Res, BadRequestException} from "@nestjs/common";
+import {Controller, Get, Inject, Post, Req, UnauthorizedException, UseGuards, Query, Param, HttpStatus, Patch, Body, NotFoundException, UseInterceptors, Res, BadRequestException} from "@nestjs/common";
+import {InjectQueue} from "@nestjs/bull";
+import {Queue} from "bull";
 import {BooksService} from "./books.service";
 import {Request, Response} from "express";
 import {Types} from "mongoose";
@@ -27,7 +29,8 @@ export class BooksController {
         private readonly booksService: BooksService,
         private readonly usersService:UsersService,
         private readonly websocketsGateway:WebsocketsGateway,
-        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+        @InjectQueue("ocr-book") private readonly ocrQueue: Queue
     ) {}
   
     @Get("genresAndArtists")
@@ -115,6 +118,48 @@ export class BooksController {
         const chars = await getNovelCharacterCount(bookEpub);
 
         return this.booksService.editBook(book, {characters:chars});
+    }
+
+    /**
+     * Encola un OCR sencillo para contar los caracteres de un tomo de imágenes
+     * sin mokuro. Es lento (minutos por tomo), así que se ejecuta en background
+     * y el resultado se consulta en el propio libro (characters/pageChars).
+     */
+    @Post(":id/ocr")
+    async runOcr(@Req() req:Request, @Param("id", ParseObjectIdPipe) book:Types.ObjectId) {
+        if (!req.user) throw new UnauthorizedException();
+
+        const {userId} = req.user as {userId:Types.ObjectId};
+
+        await this.usersService.isAdmin(userId);
+
+        const foundBook = await this.booksService.findById(book);
+
+        if (!foundBook) throw new NotFoundException();
+
+        if (foundBook.format !== "images" || foundBook.variant !== "manga") {
+            throw new BadRequestException("Solo los tomos de imágenes sin mokuro pueden calcular caracteres por OCR");
+        }
+
+        if (foundBook.ocrStatus === "processing") {
+            throw new BadRequestException("Ya hay un OCR en curso para este tomo");
+        }
+
+        await this.booksService.editBook(book, {ocrStatus:"processing", ocrProgress:0});
+
+        try {
+            await this.ocrQueue.add("ocr", {bookId: book.toString()}, {
+                attempts: 1,
+                removeOnComplete: true,
+                removeOnFail: true
+            });
+        } catch (error) {
+            // Si la cola no acepta el trabajo, no dejar el tomo marcado como procesando
+            await this.booksService.editBook(book, {ocrStatus:null, ocrProgress:0});
+            throw error;
+        }
+
+        return {status:"queued"};
     }
 
     @Get(":id/images")

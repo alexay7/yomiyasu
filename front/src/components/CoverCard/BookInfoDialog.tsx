@@ -8,6 +8,19 @@ interface BookInfoDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function ocrStatusLabel(book: BookWithProgress): string {
+  switch (book.ocrStatus) {
+    case "processing":
+      return `En curso (${book.ocrProgress ?? 0}%)`;
+    case "done":
+      return "Completado";
+    case "error":
+      return "Error";
+    default:
+      return "No ejecutado";
+  }
+}
+
 export function BookInfoDialog({book, open, onOpenChange}:BookInfoDialogProps):React.ReactElement {
   const rows: Array<[string, string]> = [
     ["Nombre visible", book.visibleName],
@@ -15,9 +28,12 @@ export function BookInfoDialog({book, open, onOpenChange}:BookInfoDialogProps):R
     ["Ruta", book.path],
     ["Serie", book.seriePath],
     ["Páginas", String(book.pages)],
-    ...(book.format === "images"
+    ...(book.format === "images" && !book.characters && !book.ocrStatus
       ? []
       : [["Caracteres", String(book.characters ?? 0)] as [string, string]]),
+    ...(book.format === "images"
+      ? [["OCR", ocrStatusLabel(book)] as [string, string]]
+      : []),
     ["Variante", book.variant === "manga" ? "Manga" : "Novela"],
     ["Formato", book.format === "images" ? "Imágenes (sin mokuro)" : "Mokuro"],
     ["Mokuro", book.mokured ? "Sí" : "No"],

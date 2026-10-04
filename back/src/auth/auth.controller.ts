@@ -18,6 +18,7 @@ import {Types} from "mongoose";
 import {JwtAuthGuard} from "./strategies/jwt.strategy";
 import {UsersService} from "../users/users.service";
 import {ApiOkResponse, ApiTags} from "@nestjs/swagger";
+import {durationToMs} from "./helpers/helper";
 
 @Controller("auth")
 @ApiTags("Autenticación")
@@ -38,18 +39,19 @@ export class AuthController {
 
         if (accessToken) {
             // Si la función ha sido llamada con tokens, enviarselos al cliente en las cookies
+            // con la misma expiración que el propio JWT para que no mueran antes
             response
                 .cookie("access_token", accessToken, {
                     httpOnly: true,
                     secure: false,
                     sameSite: "lax",
-                    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2)
+                    expires: new Date(Date.now() + durationToMs(this.authService.getAccessTokenExpires()))
                 })
                 .cookie("refresh_token", refreshToken, {
                     httpOnly: true,
                     secure: false,
                     sameSite: "lax",
-                    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
+                    expires: new Date(Date.now() + durationToMs(this.authService.getRefreshTokenExpires()))
                 });
             return response;
         } else {

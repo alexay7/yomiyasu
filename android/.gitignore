@@ -10,4 +10,5 @@ captures/
 keystore.properties
 *.jks
 *.keystore
+android-keys.tgz
 app/src/androidTest/assets/e2e.json

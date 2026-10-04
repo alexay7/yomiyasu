@@ -4,7 +4,7 @@ import {ContextProps} from "./AuthContext";
 import {useSettingsStore} from "../stores/SettingsStore";
 import {useNavigate} from "react-router";
 import {findBookId} from "../helpers/ttu";
-import {invalidateLibraryUpdate} from "../lib/invalidate";
+import {invalidateBook, invalidateLibraryUpdate} from "../lib/invalidate";
 
 type GlobalContexType = {
     ttuConnector:React.RefObject<HTMLIFrameElement | null>;
@@ -117,10 +117,13 @@ export function GlobalProvider(props:ContextProps):React.ReactElement {
         let cancelled = false;
         let socketInstance: Socket | undefined;
 
-        function handleNotification(data:{action:string}):void {
+        function handleNotification(data:{action:string; bookId?:string}):void {
             if (data.action === "LIBRARY_UPDATE") {
                 // Si el backend ha notificado cambios en la biblioteca, invalidar la caché
                 invalidateLibraryUpdate();
+            } else if (data.action === "BOOK_OCR_PROGRESS" && data.bookId) {
+                // Progreso del OCR de un tomo: refrescar solo ese libro
+                invalidateBook(data.bookId);
             }
         }
 
